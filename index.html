@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>ระบบบันทึกเวลาเข้างาน</title>
+  <title>ระบบบันทึกเวลาปฏิบัติงานนักศึกษาแพทย์</title>
   <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&display=swap" rel="stylesheet">
   <script src="js/api-config.js"></script>
   <style>
@@ -50,12 +50,17 @@
       position: relative; z-index: 1;
       animation: fadeInDown 0.6s ease;
     }
-    .logo-icon {
-      font-size: 52px;
+    
+    /* ตั้งค่ารูปภาพโลโก้ */
+    .logo-image {
+      width: 100px; /* 📌 คุณสามารถปรับขนาดความกว้างโลโก้ได้ที่นี่ (เช่น 120px, 150px) */
+      height: auto;
       display: block;
-      margin-bottom: 12px;
-      filter: drop-shadow(0 0 20px rgba(99,102,241,0.6));
+      margin: 0 auto 16px auto;
+      filter: drop-shadow(0 0 20px rgba(99,102,241,0.6)); /* แสงเงาเรืองแสงด้านหลังโลโก้ */
+      border-radius: 16px; /* 📌 ปรับความโค้งมนของขอบรูปโลโก้ (ถ้าโลโก้เป็นวงกลมอยู่แล้ว ให้ลบบรรทัดนี้ได้) */
     }
+
     h1 {
       font-size: 1.7em;
       font-weight: 700;
@@ -157,21 +162,18 @@
 <body>
 
   <div class="header">
-    <span class="logo-icon">🏢</span>
-    <h1>ระบบบันทึกเวลาเข้างาน</h1>
+    <!-- 📌 เปลี่ยนชื่อไฟล์ "logo.png" เป็นชื่อไฟล์รูปล่าสุดของคุณ -->
+    <img src="logo.jpg" alt="โลโก้" class="logo-image">
+    
+    <h1>ระบบบันทึกเวลาปฏิบัติงานนักศึกษาแพทย์</h1>
     <p class="subtitle">Face Recognition &amp; GPS Attendance</p>
-  </div>
-
-  <div id="apiWarning" class="api-warning">
-    ⚠️ ยังไม่ได้ตั้งค่า API —
-    <a href="config.html">ไปตั้งค่าก่อน</a>
   </div>
 
   <div class="menu-cards">
     <a href="register.html" class="btn-menu btn-register">
       <div class="card-icon">👤</div>
       <div class="card-text">
-        <div class="card-title">ลงทะเบียนพนักงาน</div>
+        <div class="card-title">ลงทะเบียนผู้ใช้งานใหม่</div>
         <div class="card-desc">บันทึกข้อมูลใบหน้าใหม่</div>
       </div>
       <span class="card-arrow">›</span>
