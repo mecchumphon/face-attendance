@@ -57,37 +57,14 @@
     }
     .back-btn:hover { color: #e2e8f0; background: rgba(255,255,255,0.1); }
 
-    h2 {
-      font-size: 1.1em; font-weight: 600; color: #c7d2fe;
-    }
+    h2 { font-size: 1.1em; font-weight: 600; color: #c7d2fe; }
     .spacer { width: 80px; }
 
     /* Status Area */
-    .status-area {
-      width: 100%; text-align: center; margin-bottom: 14px;
-    }
-    #main-status {
-      font-size: 0.9em; color: #94a3b8;
-      min-height: 22px;
-      display: flex; align-items: center; justify-content: center; gap: 8px;
-    }
-    #gps-status {
-      font-size: 0.8em; color: #475569; margin-top: 6px;
-      min-height: 18px;
-    }
-    .status-chip {
-      display: inline-flex; align-items: center; gap: 5px;
-      background: rgba(255,255,255,0.07);
-      border: 1px solid rgba(255,255,255,0.12);
-      border-radius: 20px;
-      padding: 5px 12px; font-size: 0.82em;
-    }
-    .dot-pulse {
-      width: 7px; height: 7px; border-radius: 50%;
-      background: #10b981;
-      animation: pulse 1.5s infinite;
-    }
-
+    .status-area { width: 100%; text-align: center; margin-bottom: 14px; }
+    #main-status { font-size: 0.9em; color: #94a3b8; min-height: 22px; display: flex; align-items: center; justify-content: center; gap: 8px; }
+    #gps-status { font-size: 0.8em; color: #475569; margin-top: 6px; min-height: 18px; }
+    
     /* GPS Alert */
     .gps-alert {
       display: none;
@@ -96,40 +73,23 @@
       color: #fca5a5;
       border-radius: 12px; padding: 12px 16px;
       width: 100%; margin-bottom: 12px;
-      font-size: 0.88em; font-weight: 600;
-      text-align: center;
+      font-size: 0.88em; font-weight: 600; text-align: center;
     }
 
     /* Scanner Container */
     .video-container {
-      position: relative;
-      width: 100%;
-      border-radius: 20px;
-      overflow: hidden;
-      background: #060612;
-      min-height: 280px;
+      position: relative; width: 100%; border-radius: 20px; overflow: hidden;
+      background: #060612; min-height: 280px;
     }
-
     video {
-      width: 100%; height: auto; display: block;
-      transform: scaleX(-1);
-      opacity: 0;
-      transition: opacity 0.5s ease;
-      border-radius: 20px;
+      width: 100%; height: auto; display: block; transform: scaleX(-1);
+      opacity: 0; transition: opacity 0.5s ease; border-radius: 20px;
     }
     video.active { opacity: 1; }
 
     /* Scanner frame corners */
-    .scanner-frame {
-      position: absolute; inset: 0; z-index: 5; pointer-events: none;
-    }
-    .corner {
-      position: absolute;
-      width: 28px; height: 28px;
-      border-color: #10b981;
-      border-style: solid;
-      opacity: 0.8;
-    }
+    .scanner-frame { position: absolute; inset: 0; z-index: 5; pointer-events: none; }
+    .corner { position: absolute; width: 28px; height: 28px; border-color: #10b981; border-style: solid; opacity: 0.8; }
     .corner-tl { top: 14px;    left: 14px;   border-width: 3px 0 0 3px; border-radius: 4px 0 0 0; }
     .corner-tr { top: 14px;    right: 14px;  border-width: 3px 3px 0 0; border-radius: 0 4px 0 0; }
     .corner-bl { bottom: 14px; left: 14px;   border-width: 0 0 3px 3px; border-radius: 0 0 0 4px; }
@@ -137,12 +97,9 @@
 
     /* Scan line */
     .scan-line {
-      display: none;
-      position: absolute; left: 8%; right: 8%;
-      height: 2px;
+      display: none; position: absolute; left: 8%; right: 8%; height: 2px;
       background: linear-gradient(90deg, transparent, #10b981, transparent);
-      box-shadow: 0 0 8px rgba(16,185,129,0.8);
-      z-index: 6;
+      box-shadow: 0 0 8px rgba(16,185,129,0.8); z-index: 6;
       animation: scanMove 2s ease-in-out infinite;
     }
     .scan-line.active { display: block; }
@@ -150,105 +107,48 @@
     /* Overlay status badge */
     #overlay-status {
       position: absolute; top: 16px; left: 50%; transform: translateX(-50%);
-      background: rgba(0,0,0,0.65);
-      backdrop-filter: blur(8px);
-      color: #e2e8f0;
-      padding: 6px 18px; border-radius: 30px;
-      z-index: 10; white-space: nowrap; font-size: 0.84em;
-      border: 1px solid rgba(255,255,255,0.1);
+      background: rgba(0,0,0,0.65); backdrop-filter: blur(8px); color: #e2e8f0;
+      padding: 6px 18px; border-radius: 30px; z-index: 10; white-space: nowrap;
+      font-size: 0.84em; border: 1px solid rgba(255,255,255,0.1);
     }
 
     /* Start Button */
     #btnStart {
-      display: none;
-      background: linear-gradient(135deg, #6366f1, #4f46e5);
+      display: none; background: linear-gradient(135deg, #6366f1, #4f46e5);
       color: white; border: none; border-radius: 50px;
-      padding: 16px 44px; font-size: 18px; font-weight: 600;
-      cursor: pointer; font-family: 'Sarabun', sans-serif;
-      box-shadow: 0 4px 25px rgba(99,102,241,0.45);
-      margin: 20px auto 0;
-      transition: all 0.3s ease;
-      animation: btnPulse 2s ease-in-out infinite;
+      padding: 16px 44px; font-size: 18px; font-weight: 600; cursor: pointer;
+      font-family: 'Sarabun', sans-serif; box-shadow: 0 4px 25px rgba(99,102,241,0.45);
+      margin: 20px auto 0; transition: all 0.3s ease; animation: btnPulse 2s ease-in-out infinite;
     }
-    #btnStart:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 8px 35px rgba(99,102,241,0.6);
-      animation: none;
-    }
+    #btnStart:hover { transform: translateY(-3px); box-shadow: 0 8px 35px rgba(99,102,241,0.6); animation: none; }
 
     /* ===== Modal ===== */
     .modal-overlay {
-      display: none; position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.75);
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
-      z-index: 100;
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75);
+      backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); z-index: 100;
       align-items: center; justify-content: center;
     }
     .modal-content {
       background: linear-gradient(160deg, #1e1e3f 0%, #16213e 100%);
-      border: 1px solid rgba(255,255,255,0.15);
-      padding: 32px 28px;
-      border-radius: 24px;
-      width: 88%; max-width: 360px;
-      text-align: center;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
-      display: flex; flex-direction: column; align-items: center;
+      border: 1px solid rgba(255,255,255,0.15); padding: 32px 28px;
+      border-radius: 24px; width: 88%; max-width: 360px; text-align: center;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5); display: flex; flex-direction: column; align-items: center;
       animation: modalSlideUp 0.35s ease;
     }
-    .modal-avatar {
-      font-size: 52px;
-      background: rgba(99,102,241,0.15);
-      border: 2px solid rgba(99,102,241,0.3);
-      border-radius: 50%;
-      width: 80px; height: 80px;
-      display: flex; align-items: center; justify-content: center;
-      margin-bottom: 14px;
-    }
+    .modal-avatar { font-size: 52px; background: rgba(99,102,241,0.15); border: 2px solid rgba(99,102,241,0.3); border-radius: 50%; width: 80px; height: 80px; display: flex; align-items: center; justify-content: center; margin-bottom: 14px; }
     .modal-title { font-size: 0.82em; color: #64748b; margin-bottom: 4px; }
-    .user-name {
-      font-size: 24px; color: #a5b4fc; font-weight: 700;
-      margin-bottom: 12px;
-    }
-    .time-badge {
-      background: rgba(16,185,129,0.15);
-      border: 1px solid rgba(16,185,129,0.3);
-      color: #34d399;
-      padding: 8px 22px; border-radius: 30px;
-      font-size: 15px; font-weight: 600;
-      margin-bottom: 6px;
-    }
+    .user-name { font-size: 24px; color: #a5b4fc; font-weight: 700; margin-bottom: 12px; }
+    .time-badge { background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.3); color: #34d399; padding: 8px 22px; border-radius: 30px; font-size: 15px; font-weight: 600; margin-bottom: 6px; }
     .score-text { color: #475569; font-size: 13px; margin-bottom: 20px; }
 
-    .btn {
-      border: none; border-radius: 14px; cursor: pointer; width: 100%;
-      margin: 5px 0; font-family: 'Sarabun', sans-serif;
-      transition: all 0.25s ease;
-    }
-    .btn-confirm {
-      background: linear-gradient(135deg, #10b981, #059669);
-      color: white;
-      padding: 17px; font-size: 20px; font-weight: 700;
-      box-shadow: 0 4px 20px rgba(16,185,129,0.35);
-      margin-bottom: 10px;
-    }
-    .btn-confirm:hover:not(:disabled) {
-      box-shadow: 0 8px 30px rgba(16,185,129,0.5);
-      transform: translateY(-1px);
-    }
+    .btn { border: none; border-radius: 14px; cursor: pointer; width: 100%; margin: 5px 0; font-family: 'Sarabun', sans-serif; transition: all 0.25s ease; }
+    .btn-confirm { background: linear-gradient(135deg, #10b981, #059669); color: white; padding: 17px; font-size: 20px; font-weight: 700; box-shadow: 0 4px 20px rgba(16,185,129,0.35); margin-bottom: 10px; }
+    .btn-confirm:hover:not(:disabled) { box-shadow: 0 8px 30px rgba(16,185,129,0.5); transform: translateY(-1px); }
     .btn-confirm:disabled { background: rgba(255,255,255,0.08); color: #475569; box-shadow: none; }
-    .btn-cancel {
-      background: rgba(239,68,68,0.1);
-      border: 1px solid rgba(239,68,68,0.25);
-      color: #fca5a5;
-      padding: 12px; font-size: 15px; font-weight: 600;
-    }
+    .btn-cancel { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.25); color: #fca5a5; padding: 12px; font-size: 15px; font-weight: 600; }
     .btn-cancel:hover { background: rgba(239,68,68,0.18); }
 
-    /* Animations */
     @keyframes fadeIn      { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-    @keyframes pulse       { 0%,100% { box-shadow: 0 0 0 0 rgba(16,185,129,0.4); } 50% { box-shadow: 0 0 0 5px rgba(16,185,129,0); } }
     @keyframes btnPulse    { 0%,100% { box-shadow: 0 4px 25px rgba(99,102,241,0.45); } 50% { box-shadow: 0 4px 40px rgba(99,102,241,0.7); } }
     @keyframes scanMove    { 0% { top: 12%; } 50% { top: 82%; } 100% { top: 12%; } }
     @keyframes modalSlideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
@@ -264,7 +164,7 @@
   </div>
 
   <div class="status-area">
-    <div id="main-status">⏳ กำลังเตรียมระบบ...</div>
+    <div id="main-status">⏳ กำลังเตรียมระบบ (กรุณากดอนุญาตตำแหน่ง GPS)...</div>
     <div id="gps-status"></div>
   </div>
 
@@ -276,10 +176,8 @@
 
   <div class="video-container">
     <div class="scanner-frame">
-      <div class="corner corner-tl"></div>
-      <div class="corner corner-tr"></div>
-      <div class="corner corner-bl"></div>
-      <div class="corner corner-br"></div>
+      <div class="corner corner-tl"></div><div class="corner corner-tr"></div>
+      <div class="corner corner-bl"></div><div class="corner corner-br"></div>
       <div class="scan-line" id="scanLine"></div>
     </div>
     <div id="overlay-status">รอโหลด...</div>
@@ -303,9 +201,9 @@
 
 <script>
   // ==========================================
-  // ใช้ API URL แบบเดียวกับที่อัปเดตไป
   const BACKUP_API_URL = "https://script.google.com/macros/s/AKfycbwcP4hjqvJqyLtbXhd4ifwusSVSB_Y7TP9uYUW6_LSKCzd920_Wv8BRWzH7FmqmHZRmBQ/exec";
   const API_URL = (typeof GAS_API_URL !== 'undefined' && GAS_API_URL) ? GAS_API_URL : BACKUP_API_URL;
+  const MODEL_URL = 'https://justadudewhohacks.github.io/face-api.js/models';
   // ==========================================
 
   const video          = document.getElementById('video');
@@ -324,125 +222,104 @@
   let currentLat   = null;
   let currentLng   = null;
 
-  // ===== Init =====
   if (!API_URL) {
     showError('ยังไม่ได้ตั้งค่า API URL');
   } else {
     window.addEventListener('load', init);
   }
 
+  // ===== อัปเกรดความเร็ว: โหลดข้อมูลและ AI พร้อมกันแบบขนาน (Parallel) =====
   async function init() {
     try {
-      mainStatus.innerText = '1/4 ตรวจสอบ GPS...';
-      await checkGPS();
+      mainStatus.innerText = '⏳ กำลังเตรียมระบบ (กรุณากดอนุญาตตำแหน่ง GPS)...';
+
+      // 1. ส่งคำสั่งดึงข้อมูลทั้งหมดไปพร้อมๆ กัน
+      const pModels = Promise.all([
+        faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL),
+        faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
+        faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL)
+      ]);
+      const pConfig = fetch(API_URL + '?action=getConfig').then(r => r.json());
+      const pFaces  = fetch(API_URL + '?action=getKnownFaces').then(r => r.json());
+      const pGPS    = getGPSLocation();
+
+      // 2. รอให้กระบวนการทุกอย่างเสร็จสิ้น
+      const [_, config, facesData, pos] = await Promise.all([pModels, pConfig, pFaces, pGPS]);
+
+      currentLat = pos.coords.latitude;
+      currentLng = pos.coords.longitude;
+
+      // 3. จัดการข้อมูลใบหน้าพนักงาน
+      if (!facesData || facesData.length === 0) throw new Error('ไม่พบข้อมูลพนักงาน กรุณาลงทะเบียนก่อน');
+      knownFaces = facesData.map(u => ({
+        name: u.label,
+        descriptor: new Float32Array(u.descriptor)
+      }));
+
+      // 4. ตรวจสอบระยะห่างจากสาขาทั้งหมด (รองรับหลายจุดเช็คอิน)
+      verifyLocation(config);
+
     } catch (e) {
       showError(e.message);
     }
   }
 
-  // ===== GPS =====
-  function checkGPS() {
+  // ===== อัปเกรด: กำหนด Timeout ให้ GPS ป้องกันมือถือค้นหานานเกินไป =====
+  function getGPSLocation() {
     return new Promise((resolve, reject) => {
-      if (!navigator.geolocation) {
-        reject(new Error('Browser ไม่รองรับ GPS'));
-        return;
-      }
+      if (!navigator.geolocation) return reject(new Error('Browser ไม่รองรับ GPS'));
       navigator.geolocation.getCurrentPosition(
-        async pos => {
-          currentLat = pos.coords.latitude;
-          currentLng = pos.coords.longitude;
-
-          try {
-            const config = await fetch(API_URL + '?action=getConfig').then(r => r.json());
-
-            let isInsideArea = false;
-            let nearestDistance = 9999;
-            let nearestName = "จุดเช็คอิน";
-            let allowedRadius = 0;
-
-            // กรณีไม่มีการตั้งค่าไว้ ถือว่ายอมให้เช็คอินได้เลย
-            if (!config.locations || config.locations.length === 0) {
-              isInsideArea = true;
-              gpsStatus.innerHTML = '<span style="color:#34d399">📍 GPS: ไม่จำกัดพื้นที่ (ไม่ได้ตั้งค่าสาขา)</span>';
-            } else {
-              // วนลูปเช็คว่าใกล้สาขาไหนที่สุด และอยู่ในรัศมีหรือไม่
-              for (let loc of config.locations) {
-                const d = haversineKm(currentLat, currentLng, loc.lat, loc.lng);
-                
-                // หาพิกัดที่ใกล้ผู้ใช้มากที่สุด เพื่อเอาไว้แจ้งเตือน
-                if (d < nearestDistance) {
-                  nearestDistance = d;
-                  nearestName = loc.name || 'สาขาไม่ระบุชื่อ';
-                  allowedRadius = loc.radius !== undefined ? loc.radius : 0.1;
-                }
-                
-                // ถ้าอยู่ในรัศมีสาขานั้น ให้ถือว่าผ่านทันที
-                if (loc.radius === 0 || d <= (loc.radius !== undefined ? loc.radius : 0.1)) {
-                  isInsideArea = true;
-                  nearestName = loc.name || 'สาขาไม่ระบุชื่อ';
-                  nearestDistance = d;
-                  break;
-                }
-              }
-
-              // แสดงสถานะที่หน้าจอ
-              if (isInsideArea) {
-                gpsStatus.innerHTML = `<span style="color:#34d399">📍 GPS: OK (สาขา ${nearestName} | ห่าง ${nearestDistance.toFixed(3)} km)</span>`;
-              } else {
-                gpsStatus.innerHTML = `<span style="color:#f87171">📍 GPS: ห่างเกินไป (ใกล้สุดสาขา ${nearestName} ระยะ ${nearestDistance.toFixed(3)} km / กำหนดไว้ ${allowedRadius} km)</span>`;
-              }
-            }
-
-            if (isInsideArea) {
-              resolve();
-              initFaceSystem();
-            } else {
-              gpsAlertBox.style.display = 'block';
-              mainStatus.innerText = '⛔ ไม่อนุญาตให้สแกน';
-              overlayStatus.innerText = 'Out of Range';
-            }
-          } catch (e) {
-            reject(new Error('เชื่อมต่อ API ไม่ได้: ' + e.message));
-          }
-        },
-        () => reject(new Error('กรุณาเปิด GPS (Location Service)'))
+        resolve,
+        (err) => reject(new Error('หาสัญญาณ GPS ไม่พบ หรือผู้ใช้ไม่ได้กดอนุญาต')),
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 } // ถ้านานเกิน 10 วินาทีให้แจ้ง Error เลย
       );
     });
   }
 
-  // ===== Load AI =====
-  async function initFaceSystem() {
-    mainStatus.innerText = '2/4 โหลด AI Model...';
-    const MODEL_URL = 'https://justadudewhohacks.github.io/face-api.js/models';
-    try {
-      await Promise.all([
-        faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL),
-        faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
-        faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL)
-      ]);
-      loadFaceDatabase();
-    } catch (e) {
-      showError('โหลด AI Model ล้มเหลว: ' + e.message);
+  // ===== ฟังก์ชันคำนวณ GPS สาขาที่ใกล้ที่สุด =====
+  function verifyLocation(config) {
+    let isInsideArea = false;
+    let nearestDistance = 9999;
+    let nearestName = "จุดเช็คอิน";
+    let allowedRadius = 0;
+
+    if (!config.locations || config.locations.length === 0) {
+      isInsideArea = true;
+      gpsStatus.innerHTML = '<span style="color:#34d399">📍 GPS: ไม่จำกัดพื้นที่ (ไม่ได้ตั้งค่าสาขา)</span>';
+    } else {
+      // เช็คว่าพนักงานอยู่ใกล้สาขาไหนที่สุด
+      for (let loc of config.locations) {
+        const d = haversineKm(currentLat, currentLng, loc.lat, loc.lng);
+        if (d < nearestDistance) {
+          nearestDistance = d;
+          nearestName = loc.name || 'สาขาไม่ระบุชื่อ';
+          allowedRadius = loc.radius !== undefined ? loc.radius : 0.1;
+        }
+        
+        // ถ้าเข้าใกล้สาขาใดสาขาหนึ่งในรัศมี ให้ถือว่าผ่าน
+        if (loc.radius === 0 || d <= allowedRadius) {
+          isInsideArea = true;
+          nearestName = loc.name || 'สาขาไม่ระบุชื่อ';
+          nearestDistance = d;
+          break;
+        }
+      }
+
+      if (isInsideArea) {
+        gpsStatus.innerHTML = `<span style="color:#34d399">📍 GPS: OK (สาขา ${nearestName} | ห่าง ${nearestDistance.toFixed(3)} km)</span>`;
+      } else {
+        gpsStatus.innerHTML = `<span style="color:#f87171">📍 GPS: ห่างเกินไป (ใกล้สุดสาขา ${nearestName} ระยะ ${nearestDistance.toFixed(3)} km / กำหนดไว้ ${allowedRadius} km)</span>`;
+      }
     }
-  }
 
-  // ===== Load DB =====
-  async function loadFaceDatabase() {
-    mainStatus.innerText = '3/4 โหลดฐานข้อมูลพนักงาน...';
-    try {
-      const data = await fetch(API_URL + '?action=getKnownFaces').then(r => r.json());
-      if (!data || data.length === 0) return showError('ไม่พบข้อมูลพนักงาน กรุณาลงทะเบียนก่อน');
-
-      knownFaces = data.map(u => ({
-        name: u.label,
-        descriptor: new Float32Array(u.descriptor)
-      }));
-
+    if (isInsideArea) {
       mainStatus.innerText    = '✅ ระบบพร้อมใช้งาน';
       mainStatus.style.color  = '#34d399';
       btnStart.style.display  = 'inline-block';
-    } catch (e) {
-      showError('โหลดฐานข้อมูลล้มเหลว: ' + e.message);
+    } else {
+      gpsAlertBox.style.display = 'block';
+      mainStatus.innerText = '⛔ ไม่อนุญาตให้สแกน';
+      overlayStatus.innerText = 'Out of Range';
     }
   }
 
@@ -572,7 +449,6 @@
               Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) * Math.sin(dLon/2) ** 2;
     return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   }
-
   function deg2rad(deg) { return deg * Math.PI / 180; }
 </script>
 </body>
