@@ -30,238 +30,262 @@
       background: #6366f1;
       border-radius: 50%;
       filter: blur(100px);
-      opacity: 0.12;
-      top: -80px; left: -80px;
+      opacity: 0.1;
+      top: -100px; left: -100px;
       pointer-events: none; z-index: 0;
     }
 
     .container {
-      width: 100%;
-      max-width: 520px;
+      width: 100%; max-width: 500px;
       position: relative; z-index: 1;
       animation: fadeIn 0.5s ease;
     }
 
     /* Header */
-    .page-header {
-      text-align: center;
-      margin-bottom: 24px;
+    .top-bar {
+      display: flex; align-items: center; justify-content: space-between;
+      width: 100%; margin-bottom: 24px;
     }
     .back-btn {
       display: inline-flex; align-items: center; gap: 6px;
       color: #64748b; text-decoration: none; font-size: 0.88em;
       padding: 6px 12px; border-radius: 20px;
-      background: rgba(255,255,255,0.06);
-      border: 1px solid rgba(255,255,255,0.1);
-      transition: all 0.25s ease;
-      margin-bottom: 16px;
-    }
-    .back-btn:hover { color: #e2e8f0; background: rgba(255,255,255,0.1); }
-
-    h2 {
-      font-size: 1.6em; font-weight: 700;
-      background: linear-gradient(135deg, #a5b4fc, #e2e8f0);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      margin-bottom: 4px;
-    }
-    .instruction {
-      font-size: 0.83em; color: #64748b; line-height: 1.6;
-    }
-
-    /* Step dots */
-    .step-dots {
-      display: flex; justify-content: center; gap: 10px;
-      margin: 16px 0 20px;
-    }
-    .dot {
-      width: 10px; height: 10px; border-radius: 50%;
-      background: rgba(255,255,255,0.15);
-      border: 1px solid rgba(255,255,255,0.2);
-      transition: all 0.3s ease;
-    }
-    .dot.active {
-      background: #6366f1;
-      box-shadow: 0 0 10px rgba(99,102,241,0.6);
-    }
-
-    /* Status */
-    #status {
-      font-size: 0.88em; color: #64748b;
-      margin-bottom: 14px; min-height: 20px;
-      display: flex; align-items: center; justify-content: center; gap: 6px;
-    }
-    .spinner {
-      display: inline-block;
-      width: 14px; height: 14px;
-      border: 2px solid rgba(99,102,241,0.3);
-      border-top-color: #6366f1;
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-    }
-
-    /* Video */
-    .video-wrapper {
-      position: relative;
-      border-radius: 20px;
-      overflow: hidden;
-      border: 2px solid rgba(99,102,241,0.4);
-      box-shadow: 0 0 30px rgba(99,102,241,0.2), inset 0 0 30px rgba(0,0,0,0.3);
-      background: #0a0a1a;
-      width: 100%;
-      max-width: 480px;
-      margin: 0 auto;
-    }
-    video {
-      width: 100%; display: block;
-      transform: scaleX(-1);
-      border-radius: 18px;
-    }
-
-    /* Form Section */
-    .form-section {
-      margin-top: 22px;
       background: rgba(255,255,255,0.05);
       border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 18px;
-      padding: 22px 20px;
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
+      transition: all 0.25s ease;
+    }
+    .back-btn:hover { color: #e2e8f0; background: rgba(255,255,255,0.1); }
+    h2 { font-size: 1.25em; font-weight: 700; color: #c7d2fe; }
+
+    /* New Instruction Styles */
+    .instruction-box {
+      background: rgba(99, 102, 241, 0.1);
+      border: 1px solid rgba(99, 102, 241, 0.2);
+      border-radius: 16px;
+      padding: 16px 20px;
+      margin-bottom: 24px;
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+    }
+    
+    .instruction-icon {
+      font-size: 24px;
+      background: rgba(99, 102, 241, 0.2);
+      width: 44px;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 12px;
+      flex-shrink: 0;
+    }
+    
+    .instruction-content {
+      flex: 1;
+    }
+    
+    .instruction-title {
+      font-weight: 600;
+      color: #e2e8f0;
+      margin-bottom: 6px;
+      font-size: 0.95em;
+    }
+    
+    .instruction-list {
+      list-style: none;
+      font-size: 0.85em;
+      color: #94a3b8;
+    }
+    
+    .instruction-list li {
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    
+    .instruction-list li::before {
+      content: '•';
+      color: #6366f1;
+      font-weight: bold;
     }
 
-    .input-group {
-      position: relative;
-      margin-bottom: 16px;
+    /* Card */
+    .card {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 20px;
+      padding: 24px;
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      margin-bottom: 20px;
     }
-    .input-group input {
-      width: 100%;
-      padding: 14px 16px;
+
+    .form-group { margin-bottom: 20px; }
+    label {
+      display: block; font-size: 0.85em; font-weight: 600;
+      color: #94a3b8; margin-bottom: 8px;
+    }
+    input {
+      width: 100%; padding: 14px 16px;
       background: rgba(255,255,255,0.06);
-      border: 1px solid rgba(255,255,255,0.15);
-      border-radius: 12px;
-      color: #e2e8f0;
-      font-size: 15px;
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 12px; color: #e2e8f0; font-size: 15px;
       font-family: 'Sarabun', sans-serif;
-      outline: none;
-      transition: all 0.3s ease;
+      transition: all 0.3s ease; outline: none;
     }
-    .input-group input::placeholder { color: #475569; }
-    .input-group input:focus {
-      border-color: rgba(99,102,241,0.6);
-      background: rgba(99,102,241,0.06);
+    input:focus {
+      border-color: rgba(99,102,241,0.5);
+      background: rgba(99,102,241,0.08);
       box-shadow: 0 0 0 3px rgba(99,102,241,0.15);
     }
 
-    #btnSave {
-      width: 100%;
-      padding: 15px;
-      background: linear-gradient(135deg, #6366f1, #4f46e5);
-      color: white;
-      border: none;
-      border-radius: 50px;
-      font-size: 16px;
-      font-weight: 600;
-      font-family: 'Sarabun', sans-serif;
-      cursor: pointer;
-      display: flex; align-items: center; justify-content: center; gap: 8px;
-      transition: all 0.3s ease;
-      box-shadow: 0 4px 20px rgba(99,102,241,0.3);
+    /* Video area */
+    .video-wrapper {
+      position: relative;
+      width: 100%; border-radius: 16px; overflow: hidden;
+      background: #060612; border: 1px solid rgba(255,255,255,0.05);
+      margin-bottom: 20px;
     }
-    #btnSave:hover:not(:disabled) {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 30px rgba(99,102,241,0.5);
+    video {
+      width: 100%; height: auto; display: block;
+      transform: scaleX(-1);
     }
-    #btnSave:disabled {
-      background: rgba(255,255,255,0.1);
-      color: #475569;
-      box-shadow: none;
-      cursor: default;
+    .video-overlay {
+      position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(0,0,0,0.6); color: #94a3b8; font-size: 0.9em;
+      z-index: 2; text-align: center; padding: 20px;
     }
 
-    .count-badge {
-      background: rgba(255,255,255,0.2);
-      padding: 2px 10px;
-      border-radius: 20px;
-      font-size: 13px;
+    /* Face Guide */
+    .face-guide {
+      position: absolute; top: 15%; bottom: 15%; left: 20%; right: 20%;
+      border: 2px dashed rgba(255,255,255,0.3);
+      border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+      z-index: 3; pointer-events: none;
     }
-    #btnSave:not(:disabled) .count-badge {
-      background: rgba(255,255,255,0.25);
+
+    /* Progress Dots */
+    .progress-dots {
+      display: flex; justify-content: center; gap: 8px; margin-bottom: 20px;
+    }
+    .dot {
+      width: 10px; height: 10px; border-radius: 50%;
+      background: rgba(255,255,255,0.1);
+      transition: all 0.3s ease;
+    }
+    .dot.active { background: #10b981; box-shadow: 0 0 8px #10b981; }
+
+    /* Buttons */
+    .btn {
+      border: none; border-radius: 12px; cursor: pointer;
+      font-family: 'Sarabun', sans-serif; font-size: 16px; font-weight: 600;
+      padding: 15px; width: 100%;
+      transition: all 0.3s ease;
+    }
+    .btn-save {
+      background: linear-gradient(135deg, #6366f1, #4f46e5);
+      color: white; box-shadow: 0 4px 20px rgba(99,102,241,0.3);
+    }
+    .btn-save:hover:not(:disabled) {
+      box-shadow: 0 8px 30px rgba(99,102,241,0.5);
+      transform: translateY(-2px);
+    }
+    .btn-save:disabled {
+      background: rgba(255,255,255,0.1); color: #64748b;
+      box-shadow: none; cursor: not-allowed; transform: none;
     }
 
     #msg {
-      margin-top: 14px; min-height: 24px;
-      font-size: 0.9em; font-weight: 600;
-      text-align: center;
+      margin-top: 16px; text-align: center; font-size: 0.9em;
+      min-height: 22px; font-weight: 600;
     }
     .msg-success { color: #34d399; }
-    .msg-error   { color: #f87171; }
+    .msg-error { color: #f87171; }
+    .count-badge {
+      display: inline-block; background: rgba(0,0,0,0.3);
+      padding: 2px 8px; border-radius: 10px; font-size: 0.8em; margin-left: 6px;
+    }
 
-    /* Animations */
     @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-    @keyframes spin   { to { transform: rotate(360deg); } }
   </style>
 </head>
 <body>
 <div class="container">
-  <div class="page-header">
+
+  <div class="top-bar">
     <a href="index.html" class="back-btn">← กลับ</a>
     <h2>👤 ลงทะเบียนใบหน้า</h2>
-    <p class="instruction">บันทึก 3 มุม: หน้าตรง / หันซ้ายเล็กน้อย / หันขวาเล็กน้อย<br>เพื่อความแม่นยำสูงสุด</p>
+    <div style="width: 70px;"></div>
   </div>
 
-  <div class="step-dots">
-    <div class="dot" id="dot1"></div>
-    <div class="dot" id="dot2"></div>
-    <div class="dot" id="dot3"></div>
+  <div class="instruction-box">
+    <div class="instruction-icon">💡</div>
+    <div class="instruction-content">
+      <div class="instruction-title">เพื่อความแม่นยำสูงสุด กรุณาบันทึก 3 มุม:</div>
+      <ul class="instruction-list">
+        <li>มองตรงเข้าหากล้อง</li>
+        <li>หันหน้าไปทางซ้ายเล็กน้อย</li>
+        <li>หันหน้าไปทางขวาเล็กน้อย</li>
+      </ul>
+    </div>
   </div>
 
-  <div id="status">
-    <span class="spinner"></span> กำลังโหลด AI Model...
-  </div>
-
-  <div class="video-wrapper">
-    <video id="video" autoplay muted playsinline></video>
-  </div>
-
-  <div class="form-section">
-    <div class="input-group">
-      <input type="text" id="username" placeholder="ชื่อ-นามสกุลพนักงาน">
+  <div class="card">
+    <div class="form-group">
+      <label>ชื่อ-นามสกุลพนักงาน</label>
+      <input type="text" id="empName" placeholder="เช่น สมชาย ใจดี">
     </div>
 
-    <button id="btnSave" onclick="saveFace()" disabled>
-      📸 บันทึกใบหน้า <span id="saveCount" class="count-badge">0</span>
-    </button>
+    <div class="video-wrapper">
+      <div class="face-guide"></div>
+      <div id="videoOverlay" class="video-overlay">⏳ กำลังเตรียมกล้องและ AI...</div>
+      <video id="video" autoplay muted playsinline></video>
+    </div>
 
+    <div class="progress-dots" id="dotContainer">
+      <div class="dot" id="dot1"></div>
+      <div class="dot" id="dot2"></div>
+      <div class="dot" id="dot3"></div>
+    </div>
+
+    <button class="btn btn-save" id="btnSave" onclick="captureAndSave()" disabled>
+      📸 บันทึกใบหน้า <span class="count-badge" id="saveCount">0</span>
+    </button>
     <div id="msg"></div>
   </div>
+  
 </div>
 
 <script>
-  const API_URL   = localStorage.getItem('gasApiUrl') || GAS_API_URL;
-  const video     = document.getElementById('video');
-  const statusDiv = document.getElementById('status');
-  const btnSave   = document.getElementById('btnSave');
-  const msgDiv    = document.getElementById('msg');
+  // ==========================================
+  const BACKUP_API_URL = "https://script.google.com/macros/s/AKfycbwcP4hjqvJqyLtbXhd4ifwusSVSB_Y7TP9uYUW6_LSKCzd920_Wv8BRWzH7FmqmHZRmBQ/exec";
+  const API_URL = (typeof GAS_API_URL !== 'undefined' && GAS_API_URL) ? GAS_API_URL : BACKUP_API_URL;
+  const MODEL_URL = 'https://justadudewhohacks.github.io/face-api.js/models';
+  // ==========================================
+
+  const video = document.getElementById('video');
+  const btnSave = document.getElementById('btnSave');
+  const msgDiv = document.getElementById('msg');
   const countSpan = document.getElementById('saveCount');
+  const overlay = document.getElementById('videoOverlay');
+
   let saveCounter = 0;
+  const MAX_SAVES = 3;
 
-  if (!API_URL) {
-    statusDiv.innerHTML = '<span style="color:#f87171">❌ ยังไม่ได้ตั้งค่า API URL — <a href="config.html" style="color:#fbbf24">ไปตั้งค่า</a></span>';
-  } else {
-    window.addEventListener('load', initModels);
-  }
+  window.addEventListener('load', init);
 
-  function updateDots() {
-    [1,2,3].forEach(i => {
-      const dot = document.getElementById('dot' + i);
-      dot.className = 'dot' + (i <= saveCounter ? ' active' : '');
-    });
-  }
+  // ===== อัปเกรดความเร็ว: โหลด AI พร้อมกัน (Parallel) =====
+  async function init() {
+    if (!API_URL) {
+      overlay.innerHTML = '<span style="color:#f87171">❌ ไม่พบ API URL กรุณาตั้งค่าก่อน</span>';
+      return;
+    }
 
-  async function initModels() {
     try {
-      const MODEL_URL = 'https://justadudewhohacks.github.io/face-api.js/models';
+      // สั่งโหลดโมเดล 3 ตัวพร้อมกันทั้งหมด
       await Promise.all([
         faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL),
         faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
@@ -269,7 +293,7 @@
       ]);
       startCamera();
     } catch (e) {
-      statusDiv.innerHTML = '<span style="color:#f87171">❌ โหลด AI Model ล้มเหลว: ' + e.message + '</span>';
+      overlay.innerHTML = '<span style="color:#f87171">❌ โหลดโมเดลไม่สำเร็จ: ' + e.message + '</span>';
     }
   }
 
@@ -277,16 +301,24 @@
     navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } })
       .then(stream => {
         video.srcObject = stream;
-        statusDiv.innerText = '';
+        overlay.style.display = 'none';
         btnSave.disabled = false;
       })
       .catch(err => {
-        statusDiv.innerHTML = '<span style="color:#f87171">❌ เปิดกล้องไม่ได้: ' + err.message + '</span>';
+        overlay.innerHTML = '<span style="color:#f87171">❌ เปิดกล้องไม่ได้: ' + err.message + '</span>';
       });
   }
 
-  async function saveFace() {
-    const name = document.getElementById('username').value.trim();
+  function updateDots() {
+    for (let i = 1; i <= MAX_SAVES; i++) {
+      const dot = document.getElementById('dot' + i);
+      if (i <= saveCounter) dot.classList.add('active');
+      else dot.classList.remove('active');
+    }
+  }
+
+  async function captureAndSave() {
+    const name = document.getElementById('empName').value.trim();
     if (!name) return alert('กรุณาใส่ชื่อก่อน');
 
     btnSave.disabled = true;
@@ -320,10 +352,16 @@
       msgDiv.innerHTML = '<span class="msg-success">✅ บันทึกครั้งที่ ' + saveCounter + ' สำเร็จ! ขยับหน้าเล็กน้อยแล้วกดอีกครั้ง</span>';
       btnSave.disabled = false;
       btnSave.innerHTML = '📸 บันทึกเพิ่ม <span class="count-badge" id="saveCount">' + saveCounter + '</span>';
+      
+      if (saveCounter >= MAX_SAVES) {
+        msgDiv.innerHTML = '<span class="msg-success" style="font-size:1.1em;">🎉 ลงทะเบียนเสร็จสมบูรณ์!</span>';
+        btnSave.style.display = 'none';
+        setTimeout(() => window.location.href = 'index.html', 2000);
+      }
     } catch (e) {
       msgDiv.innerHTML = '<span class="msg-error">❌ บันทึกล้มเหลว: ' + e.message + '</span>';
       btnSave.disabled = false;
-      btnSave.innerHTML = '📸 บันทึกใบหน้า <span class="count-badge" id="saveCount">' + saveCounter + '</span>';
+      btnSave.innerHTML = '📸 ลองใหม่ <span class="count-badge" id="saveCount">' + saveCounter + '</span>';
     }
   }
 </script>
