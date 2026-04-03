@@ -41,7 +41,7 @@
     }
 
     /* Header */
-    .page-header { margin-bottom: 24px; }
+    .page-header { margin-bottom: 24px; position: relative; }
     .back-btn {
       display: inline-flex; align-items: center; gap: 6px;
       color: #64748b; text-decoration: none; font-size: 0.88em;
@@ -50,8 +50,15 @@
       border: 1px solid rgba(255,255,255,0.1);
       transition: all 0.25s ease;
       margin-bottom: 14px;
+      cursor: pointer;
     }
     .back-btn:hover { color: #e2e8f0; background: rgba(255,255,255,0.1); }
+    
+    .logout-btn {
+      position: absolute;
+      right: 0; top: 0;
+      color: #f87171;
+    }
 
     h2 {
       font-size: 1.6em; font-weight: 700;
@@ -146,6 +153,12 @@
       box-shadow: 0 8px 30px rgba(16,185,129,0.5);
       transform: translateY(-2px);
     }
+    .btn-login {
+      background: linear-gradient(135deg, #6366f1, #4f46e5);
+      color: white;
+      box-shadow: 0 4px 20px rgba(99,102,241,0.3);
+      margin-top: 10px;
+    }
 
     .btn-back {
       display: flex; align-items: center; justify-content: center; gap: 8px;
@@ -164,13 +177,7 @@
       display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
     }
 
-    .divider {
-      border: none;
-      border-top: 1px solid rgba(255,255,255,0.07);
-      margin: 4px 0 18px;
-    }
-
-    #msg {
+    #msg, #loginMsg {
       margin-top: 14px; min-height: 22px;
       font-size: 0.9em; font-weight: 600;
       text-align: center;
@@ -183,10 +190,30 @@
   </style>
 </head>
 <body>
-<div class="container">
+
+<!-- หน้าจอ Login (แสดงเป็นค่าเริ่มต้น) -->
+<div class="container" id="loginContainer">
+  <div class="page-header" style="text-align: center; margin-bottom: 30px; margin-top: 20px;">
+    <h2>🔒 Admin Login</h2>
+    <p class="page-subtitle">กรุณาใส่รหัสผ่านเพื่อเข้าสู่ระบบตั้งค่า</p>
+  </div>
+  
+  <div class="card">
+    <label>รหัสผ่านแอดมิน (Password)</label>
+    <input type="password" id="adminPwd" placeholder="ใส่รหัสผ่านที่นี่..." onkeypress="if(event.key === 'Enter') checkLogin()">
+    <button class="btn btn-login" onclick="checkLogin()">เข้าสู่ระบบ</button>
+    <div id="loginMsg"></div>
+  </div>
+  
+  <a href="index.html" class="btn-back">← กลับเมนูหลัก</a>
+</div>
+
+<!-- หน้าจอตั้งค่า (ซ่อนไว้ก่อนจนกว่าจะล็อกอินผ่าน) -->
+<div class="container" id="mainContainer" style="display: none;">
 
   <div class="page-header">
     <a href="index.html" class="back-btn">← กลับ</a>
+    <button onclick="logoutAdmin()" class="back-btn logout-btn">ออกจากระบบ</button>
     <h2>⚙️ ตั้งค่าระบบ</h2>
     <p class="page-subtitle">จัดการ API และจุดเช็คอิน GPS</p>
   </div>
@@ -236,21 +263,57 @@
   </button>
   <div id="msg"></div>
 
-  <a href="index.html" class="btn-back">← กลับเมนูหลัก</a>
 </div>
 
 <script>
-  const msgDiv = document.getElementById('msg');
+  // ==========================================
+  // ตั้งค่ารหัสผ่านแอดมินของคุณที่นี่
+  // ==========================================
+  const ADMIN_PASSWORD = "ตั้งรหัสผ่านที่ต้องการตรงนี้";
 
-  // โหลดค่าที่บันทึกไว้
+  const msgDiv = document.getElementById('msg');
+  const loginMsgDiv = document.getElementById('loginMsg');
+  const loginContainer = document.getElementById('loginContainer');
+  const mainContainer = document.getElementById('mainContainer');
+
   window.onload = function() {
-    const savedUrl = localStorage.getItem('gasApiUrl') || GAS_API_URL;
+    // เช็คว่าเคยล็อกอินในเซสชั่นนี้แล้วหรือยัง
+    if (sessionStorage.getItem('isAdminLogged') === 'true') {
+      showConfigScreen();
+    }
+  };
+
+  // ฟังก์ชันเช็ครหัสผ่าน
+  function checkLogin() {
+    const pwd = document.getElementById('adminPwd').value;
+    if (pwd === MECCP1234) {
+      sessionStorage.setItem('isAdminLogged', 'true');
+      showConfigScreen();
+    } else {
+      loginMsgDiv.innerText = '❌ รหัสผ่านไม่ถูกต้อง';
+      loginMsgDiv.className = 'msg-error';
+    }
+  }
+
+  // ฟังก์ชันออกจากระบบ
+  function logoutAdmin() {
+    sessionStorage.removeItem('isAdminLogged');
+    location.reload(); // โหลดหน้าใหม่เพื่อให้กลับไปหน้า Login
+  }
+
+  // ฟังก์ชันแสดงหน้าตั้งค่า
+  function showConfigScreen() {
+    loginContainer.style.display = 'none';
+    mainContainer.style.display = 'block';
+    
+    // โหลดค่าที่บันทึกไว้ในระบบ
+    const savedUrl = localStorage.getItem('gasApiUrl') || (typeof GAS_API_URL !== 'undefined' ? GAS_API_URL : '');
     document.getElementById('apiUrl').value = savedUrl;
 
     if (savedUrl) {
       loadGpsConfig(savedUrl);
     }
-  };
+  }
 
   function loadGpsConfig(apiUrl) {
     fetch(apiUrl + '?action=getConfig')
