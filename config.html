@@ -225,9 +225,9 @@
       <span class="section-title-text">Google Apps Script API</span>
     </div>
 
-    <label>WEB APP URL</label>
-    <input type="url" id="apiUrl" placeholder="https://script.google.com/macros/s/.../exec">
-    <p class="note">Deploy GAS แล้วนำ URL มาวางที่นี่ (Execute as: Me / Anyone can access)</p>
+    <label>WEB APP URL (ล็อกค่าไว้ อ่านจากไฟล์ api-config.js)</label>
+    <input type="url" id="apiUrl" readonly style="opacity: 0.6; cursor: not-allowed;" placeholder="https://script.google.com/macros/s/.../exec">
+    <p class="note">URL นี้ถูกตั้งค่าแบบคงที่ในไฟล์ api-config.js แล้ว ไม่ต้องใส่ใหม่</p>
   </div>
 
   <!-- GPS Config Card -->
@@ -306,12 +306,15 @@
     loginContainer.style.display = 'none';
     mainContainer.style.display = 'block';
     
-    // โหลดค่าที่บันทึกไว้ในระบบ
-    const savedUrl = localStorage.getItem('gasApiUrl') || (typeof GAS_API_URL !== 'undefined' ? GAS_API_URL : '');
-    document.getElementById('apiUrl').value = savedUrl;
+    // เคลียร์ค่าเก่าที่เคยค้างในเบราว์เซอร์ทิ้ง เพื่อให้ทุกหน้าใช้ค่าคงที่จากไฟล์ JS
+    localStorage.removeItem('gasApiUrl');
+    
+    // โหลดค่าคงที่จาก api-config.js โดยตรง
+    const fixedUrl = typeof GAS_API_URL !== 'undefined' ? GAS_API_URL : '';
+    document.getElementById('apiUrl').value = fixedUrl;
 
-    if (savedUrl) {
-      loadGpsConfig(savedUrl);
+    if (fixedUrl) {
+      loadGpsConfig(fixedUrl);
     }
   }
 
@@ -344,11 +347,9 @@
     const lng    = document.getElementById('lng').value;
     const radius = document.getElementById('radius').value;
 
-    if (!apiUrl) return showMsg('❌ กรุณากรอก API URL', 'error');
+    if (!apiUrl) return showMsg('❌ ไม่พบ API URL', 'error');
     if (!lat || !lng || !radius) return showMsg('❌ กรุณากรอกข้อมูล GPS ให้ครบ', 'error');
 
-    // บันทึก API URL ลง localStorage
-    localStorage.setItem('gasApiUrl', apiUrl);
     showMsg('⏳ กำลังบันทึก...', '');
 
     try {
