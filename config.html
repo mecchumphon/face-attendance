@@ -286,7 +286,7 @@
   // ฟังก์ชันเช็ครหัสผ่าน
   function checkLogin() {
     const pwd = document.getElementById('adminPwd').value;
-    if (pwd === MECCP1234) {
+    if (pwd === ADMIN_PASSWORD) {
       sessionStorage.setItem('isAdminLogged', 'true');
       showConfigScreen();
     } else {
