@@ -79,6 +79,7 @@
       backdrop-filter: blur(16px);
       -webkit-backdrop-filter: blur(16px);
       margin-bottom: 16px;
+      position: relative;
     }
 
     .section-header {
@@ -92,7 +93,6 @@
       display: flex; align-items: center; justify-content: center;
       font-size: 17px;
     }
-    .section-icon.indigo  { background: rgba(99,102,241,0.2); }
     .section-icon.cyan    { background: rgba(6,182,212,0.2);  }
     .section-title-text { font-weight: 600; font-size: 0.95em; color: #c7d2fe; }
 
@@ -114,11 +114,9 @@
       transition: all 0.3s ease;
       margin-bottom: 14px;
     }
-    input::placeholder { color: #334155; }
     input:focus {
       border-color: rgba(99,102,241,0.5);
       background: rgba(99,102,241,0.07);
-      box-shadow: 0 0 0 3px rgba(99,102,241,0.12);
     }
     .note {
       font-size: 0.78em; color: #475569;
@@ -135,29 +133,25 @@
     }
     .btn-get-loc {
       background: linear-gradient(135deg, #0891b2, #06b6d4);
-      color: white;
-      box-shadow: 0 4px 15px rgba(6,182,212,0.3);
-      margin-bottom: 18px;
-    }
-    .btn-get-loc:hover {
-      box-shadow: 0 6px 25px rgba(6,182,212,0.45);
-      transform: translateY(-1px);
+      color: white; margin-bottom: 14px; font-size: 13px; padding: 10px;
     }
     .btn-save {
       background: linear-gradient(135deg, #10b981, #059669);
-      color: white;
-      box-shadow: 0 4px 20px rgba(16,185,129,0.3);
-      font-size: 16px; padding: 15px;
+      color: white; box-shadow: 0 4px 20px rgba(16,185,129,0.3);
+      font-size: 16px; padding: 15px; margin-top: 10px;
     }
-    .btn-save:hover {
-      box-shadow: 0 8px 30px rgba(16,185,129,0.5);
-      transform: translateY(-2px);
+    .btn-add {
+      background: rgba(59, 130, 246, 0.2);
+      border: 1px dashed #3b82f6; color: #93c5fd;
+      margin-bottom: 20px;
     }
-    .btn-login {
-      background: linear-gradient(135deg, #6366f1, #4f46e5);
-      color: white;
-      box-shadow: 0 4px 20px rgba(99,102,241,0.3);
-      margin-top: 10px;
+    .btn-add:hover { background: rgba(59, 130, 246, 0.3); }
+    .btn-login { background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; margin-top: 10px; }
+    
+    .btn-delete {
+      position: absolute; top: 20px; right: 20px;
+      color: #f87171; background: none; border: none; 
+      font-family: 'Sarabun'; cursor: pointer; font-size: 13px; font-weight: bold;
     }
 
     .btn-back {
@@ -166,32 +160,22 @@
       background: transparent;
       border: 1px solid rgba(255,255,255,0.12);
       color: #64748b; font-size: 15px; font-weight: 600;
-      font-family: 'Sarabun', sans-serif;
-      text-decoration: none; cursor: pointer;
-      transition: all 0.25s ease;
-      margin-top: 10px;
+      font-family: 'Sarabun', sans-serif; text-decoration: none; margin-top: 10px;
     }
-    .btn-back:hover { color: #e2e8f0; border-color: rgba(255,255,255,0.25); background: rgba(255,255,255,0.05); }
 
-    .input-row {
-      display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
-    }
+    .input-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 
     #msg, #loginMsg {
-      margin-top: 14px; min-height: 22px;
-      font-size: 0.9em; font-weight: 600;
-      text-align: center;
+      margin-top: 14px; min-height: 22px; font-size: 0.9em; font-weight: 600; text-align: center;
     }
     .msg-success { color: #34d399; }
     .msg-error   { color: #f87171; }
-
-    /* Animation */
     @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
   </style>
 </head>
 <body>
 
-<!-- หน้าจอ Login (แสดงเป็นค่าเริ่มต้น) -->
+<!-- หน้าจอ Login -->
 <div class="container" id="loginContainer">
   <div class="page-header" style="text-align: center; margin-bottom: 30px; margin-top: 20px;">
     <h2>🔒 Admin Login</h2>
@@ -204,69 +188,47 @@
     <button class="btn btn-login" onclick="checkLogin()">เข้าสู่ระบบ</button>
     <div id="loginMsg"></div>
   </div>
-  
   <a href="index.html" class="btn-back">← กลับเมนูหลัก</a>
 </div>
 
-<!-- หน้าจอตั้งค่า (ซ่อนไว้ก่อนจนกว่าจะล็อกอินผ่าน) -->
+<!-- หน้าจอตั้งค่า -->
 <div class="container" id="mainContainer" style="display: none;">
-
   <div class="page-header">
     <a href="index.html" class="back-btn">← กลับ</a>
     <button onclick="logoutAdmin()" class="back-btn logout-btn">ออกจากระบบ</button>
     <h2>⚙️ ตั้งค่าระบบ</h2>
-    <p class="page-subtitle">จัดการจุดเช็คอิน GPS</p>
+    <p class="page-subtitle">จัดการจุดเช็คอิน (หลายสาขา/จุด)</p>
   </div>
 
-  <!-- GPS Config Card -->
-  <div class="card">
-    <div class="section-header">
-      <div class="section-icon cyan">📍</div>
-      <span class="section-title-text">จุดเช็คอิน GPS</span>
-    </div>
-
-    <button class="btn btn-get-loc" onclick="getCurrentLocation()">
-      📍 ดึงตำแหน่งปัจจุบันของฉัน
-    </button>
-
-    <div class="input-row">
-      <div>
-        <label>LATITUDE</label>
-        <input type="number" step="any" id="lat" placeholder="13.7563">
-      </div>
-      <div>
-        <label>LONGITUDE</label>
-        <input type="number" step="any" id="lng" placeholder="100.5018">
-      </div>
-    </div>
-
-    <label>รัศมีที่ยอมรับ (กิโลเมตร)</label>
-    <input type="number" step="0.01" id="radius" placeholder="เช่น 0.1 คือ 100 เมตร">
-    <p class="note">* ใส่ 0 หากไม่ต้องการจำกัดพื้นที่</p>
+  <div class="section-header">
+    <div class="section-icon cyan">📍</div>
+    <span class="section-title-text">พิกัดจุดเช็คอินที่อนุญาต</span>
   </div>
 
-  <!-- Actions -->
+  <!-- จุดที่จะแสดงพิกัดแบบไดนามิก -->
+  <div id="locationsContainer"></div>
+
+  <button class="btn btn-add" onclick="addLocation()">
+    ➕ เพิ่มจุดเช็คอินใหม่
+  </button>
+
   <button class="btn btn-save" onclick="saveAll()">
     💾 บันทึกการตั้งค่าทั้งหมด
   </button>
   <div id="msg"></div>
-
 </div>
 
 <script>
   // ==========================================
-  // ตั้งค่ารหัสผ่านแอดมินของคุณที่นี่
-  // ==========================================
   const ADMIN_PASSWORD = "MECCP1234";
-
-  // ==========================================
-  // ใส่ API URL สำรองไว้ที่นี่ (กันกรณีระบบหาไฟล์ api-config.js ไม่เจอ)
-  // ==========================================
   const BACKUP_API_URL = "https://script.google.com/macros/s/AKfycbwcP4hjqvJqyLtbXhd4ifwusSVSB_Y7TP9uYUW6_LSKCzd920_Wv8BRWzH7FmqmHZRmBQ/exec";
 
   function getApiUrl() {
     return (typeof GAS_API_URL !== 'undefined' && GAS_API_URL) ? GAS_API_URL : BACKUP_API_URL;
   }
+  // ==========================================
+
+  let locations = [];
 
   const msgDiv = document.getElementById('msg');
   const loginMsgDiv = document.getElementById('loginMsg');
@@ -274,13 +236,11 @@
   const mainContainer = document.getElementById('mainContainer');
 
   window.onload = function() {
-    // เช็คว่าเคยล็อกอินในเซสชั่นนี้แล้วหรือยัง
     if (sessionStorage.getItem('isAdminLogged') === 'true') {
       showConfigScreen();
     }
   };
 
-  // ฟังก์ชันเช็ครหัสผ่าน
   function checkLogin() {
     const pwd = document.getElementById('adminPwd').value;
     if (pwd === ADMIN_PASSWORD) {
@@ -292,63 +252,125 @@
     }
   }
 
-  // ฟังก์ชันออกจากระบบ
   function logoutAdmin() {
     sessionStorage.removeItem('isAdminLogged');
-    location.reload(); // โหลดหน้าใหม่เพื่อให้กลับไปหน้า Login
+    location.reload();
   }
 
-  // ฟังก์ชันแสดงหน้าตั้งค่า
   function showConfigScreen() {
     loginContainer.style.display = 'none';
     mainContainer.style.display = 'block';
     
-    // โหลดค่าคงที่จาก api-config.js หรือใช้ BACKUP_API_URL
     const fixedUrl = getApiUrl();
-
-    if (fixedUrl) {
-      loadGpsConfig(fixedUrl);
-    }
+    if (fixedUrl) loadGpsConfig(fixedUrl);
   }
 
   function loadGpsConfig(apiUrl) {
+    showMsg('⏳ กำลังโหลดพิกัดเดิม...', '');
     fetch(apiUrl + '?action=getConfig')
       .then(r => r.json())
       .then(config => {
-        document.getElementById('lat').value    = config.lat    || '';
-        document.getElementById('lng').value    = config.lng    || '';
-        document.getElementById('radius').value = config.radius || '0.5';
+        showMsg('', '');
+        // ตรวจสอบโครงสร้างแบบใหม่ (Array) หรือแบบเก่า
+        if (config.locations && Array.isArray(config.locations)) {
+          locations = config.locations;
+        } else if (config.lat && config.lng) {
+          locations = [{ name: 'สาขาหลัก', lat: config.lat, lng: config.lng, radius: config.radius || 0.5 }];
+        } else {
+          locations = [];
+        }
+        if(locations.length === 0) addLocation(); // ถ้าว่างให้ขึ้นมา 1 อันอัตโนมัติ
+        else renderLocations();
       })
-      .catch(() => {}); // ถ้าโหลดไม่ได้ก็ข้ามไป
+      .catch(() => { 
+        showMsg('❌ โหลดข้อมูลไม่สำเร็จ', 'error');
+        addLocation(); 
+      });
   }
 
-  function getCurrentLocation() {
+  // ----- จัดการหน้าตาของพิกัด -----
+  function renderLocations() {
+    const container = document.getElementById('locationsContainer');
+    container.innerHTML = '';
+    
+    locations.forEach((loc, idx) => {
+      container.innerHTML += `
+        <div class="card">
+          <button class="btn-delete" onclick="removeLocation(${idx})">❌ ลบทิ้ง</button>
+          
+          <label>ชื่อสถานที่ / สาขา</label>
+          <input type="text" value="${loc.name || ''}" onchange="updateLoc(${idx}, 'name', this.value)" placeholder="เช่น สำนักงานใหญ่">
+          
+          <button class="btn btn-get-loc" onclick="getCurrentLocationFor(${idx})">
+            📍 ดึงตำแหน่งมือถือใส่จุดนี้
+          </button>
+
+          <div class="input-row">
+            <div>
+              <label>LATITUDE</label>
+              <input type="number" step="any" value="${loc.lat || ''}" onchange="updateLoc(${idx}, 'lat', this.value)">
+            </div>
+            <div>
+              <label>LONGITUDE</label>
+              <input type="number" step="any" value="${loc.lng || ''}" onchange="updateLoc(${idx}, 'lng', this.value)">
+            </div>
+          </div>
+
+          <label>รัศมีที่ยอมรับ (กิโลเมตร)</label>
+          <input type="number" step="0.01" value="${loc.radius !== undefined ? loc.radius : 0.1}" onchange="updateLoc(${idx}, 'radius', this.value)">
+        </div>
+      `;
+    });
+  }
+
+  function updateLoc(idx, field, val) {
+    locations[idx][field] = field === 'name' ? val : parseFloat(val);
+  }
+
+  function addLocation() {
+    locations.push({ name: '', lat: '', lng: '', radius: 0.1 });
+    renderLocations();
+  }
+
+  function removeLocation(idx) {
+    if(confirm('ลบจุดเช็คอินนี้?')) {
+      locations.splice(idx, 1);
+      renderLocations();
+    }
+  }
+
+  function getCurrentLocationFor(idx) {
     if (!navigator.geolocation) return alert('Browser นี้ไม่รองรับ Geolocation');
     navigator.geolocation.getCurrentPosition(
       pos => {
-        document.getElementById('lat').value = pos.coords.latitude;
-        document.getElementById('lng').value = pos.coords.longitude;
+        locations[idx].lat = pos.coords.latitude;
+        locations[idx].lng = pos.coords.longitude;
+        renderLocations();
         alert('✅ ดึงพิกัดเรียบร้อย');
       },
       err => alert('❌ ไม่สามารถดึงตำแหน่งได้: ' + err.message)
     );
   }
 
+  // ----- บันทึก -----
   async function saveAll() {
     const apiUrl = getApiUrl();
-    const lat    = document.getElementById('lat').value;
-    const lng    = document.getElementById('lng').value;
-    const radius = document.getElementById('radius').value;
-
     if (!apiUrl) return showMsg('❌ ไม่พบ API URL', 'error');
-    if (!lat || !lng || !radius) return showMsg('❌ กรุณากรอกข้อมูล GPS ให้ครบ', 'error');
+
+    if (locations.length === 0) return showMsg('❌ ต้องมีจุดเช็คอินอย่างน้อย 1 จุด', 'error');
+
+    for (let i = 0; i < locations.length; i++) {
+      if (!locations[i].lat || !locations[i].lng) {
+        return showMsg('❌ กรุณากรอกพิกัดให้ครบทุกจุด', 'error');
+      }
+    }
 
     showMsg('⏳ กำลังบันทึก...', '');
 
     try {
       const res = await fetch(apiUrl, {
         method: 'POST',
-        body: JSON.stringify({ action: 'saveConfig', lat, lng, radius })
+        body: JSON.stringify({ action: 'saveConfig', locations: locations })
       });
       const data = await res.json();
       showMsg('✅ ' + (data.message || 'บันทึกสำเร็จ'), 'success');
