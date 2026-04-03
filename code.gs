@@ -1,5 +1,5 @@
 // ============================================================
-//  GOOGLE APPS SCRIPT — REST API Backend
+//  GOOGLE APPS SCRIPT — REST API Backend (รองรับหลายจุดเช็คอิน)
 //  วิธีใช้: Deploy > New deployment > Web App
 //           Execute as: Me | Who has access: Anyone
 // ============================================================
@@ -39,7 +39,8 @@ function doPost(e) {
   } else if (action === 'logAttendance') {
     result = logAttendance(data.name, data.lat, data.lng);
   } else if (action === 'saveConfig') {
-    result = saveConfig(data.lat, data.lng, data.radius);
+    // เปลี่ยนมารับค่า locations เป็น Array แทนแบบเดิม
+    result = saveConfig(data.locations);
   } else {
     result = { error: 'Unknown action: ' + action };
   }
@@ -105,42 +106,51 @@ function logAttendance(name, lat, lng) {
   return { success: true, message: 'บันทึกเวลาสำเร็จ' };
 }
 
-// --- ส่วนจัดการ Config (GPS) ---
-function saveConfig(lat, lng, radius) {
+// --- ส่วนจัดการ Config (GPS หลายจุด) ---
+function saveConfig(locationsArray) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   let sheet = ss.getSheetByName('Config');
 
   if (!sheet) {
     sheet = ss.insertSheet('Config');
     sheet.getRange('A1:B1').setValues([['Parameter', 'Value']]);
-    sheet.getRange('A2').setValue('Target Latitude');
-    sheet.getRange('A3').setValue('Target Longitude');
-    sheet.getRange('A4').setValue('Allowed Radius (KM)');
     sheet.setColumnWidth(1, 150);
   }
 
-  sheet.getRange('B2').setValue(lat);
-  sheet.getRange('B3').setValue(lng);
-  sheet.getRange('B4').setValue(radius);
+  // บันทึกข้อมูลหลายจุดเป็น JSON ก้อนเดียวลงในช่อง B2
+  sheet.getRange('A2').setValue('Locations (JSON)');
+  sheet.getRange('B2').setValue(JSON.stringify(locationsArray));
+  
+  // ลบข้อมูลบรรทัด 3-4 เก่าทิ้ง (ถ้ามี) เพื่อความสะอาดและไม่สับสน
+  sheet.getRange('A3:B4').clearContent();
 
-  return { success: true, message: 'บันทึกการตั้งค่าลง Google Sheets เรียบร้อย' };
+  return { success: true, message: 'บันทึกพิกัดทุกจุดลง Google Sheets เรียบร้อย' };
 }
 
 function getConfig() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const sheet = ss.getSheetByName('Config');
 
-  let config = { lat: 0, lng: 0, radius: 0.5 };
+  let config = { locations: [] };
 
   if (sheet) {
-    const latVal = sheet.getRange('B2').getValue();
-    const lngVal = sheet.getRange('B3').getValue();
-    const radiusVal = sheet.getRange('B4').getValue();
-
-    if (latVal !== '') config.lat = parseFloat(latVal);
-    if (lngVal !== '') config.lng = parseFloat(lngVal);
-    if (radiusVal !== '') config.radius = parseFloat(radiusVal);
+    const val = sheet.getRange('B2').getValue();
+    
+    // พยายามแกะข้อมูล JSON ที่บันทึกไว้
+    if (val && typeof val === 'string' && val.startsWith('[')) {
+      try {
+        config.locations = JSON.parse(val);
+      } catch(e) {}
+    } 
+    // รองรับข้อมูลแบบเก่า (กรณีเพิ่งอัปเดตโค้ด แล้วยังมีพิกัดเก่าค้างอยู่)
+    else {
+      const latVal = sheet.getRange('B2').getValue();
+      const lngVal = sheet.getRange('B3').getValue();
+      const radVal = sheet.getRange('B4').getValue();
+      if(latVal && lngVal) {
+        config.locations.push({ name: 'สาขาหลัก', lat: latVal, lng: lngVal, radius: radVal || 0.5 });
+      }
+    }
   }
-
   return config;
 }
