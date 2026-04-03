@@ -215,19 +215,7 @@
     <a href="index.html" class="back-btn">← กลับ</a>
     <button onclick="logoutAdmin()" class="back-btn logout-btn">ออกจากระบบ</button>
     <h2>⚙️ ตั้งค่าระบบ</h2>
-    <p class="page-subtitle">จัดการ API และจุดเช็คอิน GPS</p>
-  </div>
-
-  <!-- API URL Card -->
-  <div class="card">
-    <div class="section-header">
-      <div class="section-icon indigo">🔗</div>
-      <span class="section-title-text">Google Apps Script API</span>
-    </div>
-
-    <label>WEB APP URL (ล็อกค่าไว้ อ่านจากไฟล์ api-config.js)</label>
-    <input type="url" id="apiUrl" readonly style="opacity: 0.6; cursor: not-allowed;" placeholder="https://script.google.com/macros/s/.../exec">
-    <p class="note">URL นี้ถูกตั้งค่าแบบคงที่ในไฟล์ api-config.js แล้ว ไม่ต้องใส่ใหม่</p>
+    <p class="page-subtitle">จัดการจุดเช็คอิน GPS</p>
   </div>
 
   <!-- GPS Config Card -->
@@ -306,12 +294,8 @@
     loginContainer.style.display = 'none';
     mainContainer.style.display = 'block';
     
-    // เคลียร์ค่าเก่าที่เคยค้างในเบราว์เซอร์ทิ้ง เพื่อให้ทุกหน้าใช้ค่าคงที่จากไฟล์ JS
-    localStorage.removeItem('gasApiUrl');
-    
     // โหลดค่าคงที่จาก api-config.js โดยตรง
     const fixedUrl = typeof GAS_API_URL !== 'undefined' ? GAS_API_URL : '';
-    document.getElementById('apiUrl').value = fixedUrl;
 
     if (fixedUrl) {
       loadGpsConfig(fixedUrl);
@@ -342,7 +326,7 @@
   }
 
   async function saveAll() {
-    const apiUrl = document.getElementById('apiUrl').value.trim();
+    const apiUrl = typeof GAS_API_URL !== 'undefined' ? GAS_API_URL : '';
     const lat    = document.getElementById('lat').value;
     const lng    = document.getElementById('lng').value;
     const radius = document.getElementById('radius').value;
