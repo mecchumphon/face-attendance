@@ -302,7 +302,12 @@
 </div>
 
 <script>
-  const API_URL        = localStorage.getItem('gasApiUrl') || GAS_API_URL;
+  // ==========================================
+  // ใช้ API URL แบบเดียวกับที่อัปเดตไป
+  const BACKUP_API_URL = "https://script.google.com/macros/s/AKfycbwcP4hjqvJqyLtbXhd4ifwusSVSB_Y7TP9uYUW6_LSKCzd920_Wv8BRWzH7FmqmHZRmBQ/exec";
+  const API_URL = (typeof GAS_API_URL !== 'undefined' && GAS_API_URL) ? GAS_API_URL : BACKUP_API_URL;
+  // ==========================================
+
   const video          = document.getElementById('video');
   const mainStatus     = document.getElementById('main-status');
   const overlayStatus  = document.getElementById('overlay-status');
@@ -321,7 +326,7 @@
 
   // ===== Init =====
   if (!API_URL) {
-    showError('ยังไม่ได้ตั้งค่า API URL — <a href="config.html" style="color:#fbbf24">ไปตั้งค่า</a>');
+    showError('ยังไม่ได้ตั้งค่า API URL');
   } else {
     window.addEventListener('load', init);
   }
@@ -350,21 +355,48 @@
           try {
             const config = await fetch(API_URL + '?action=getConfig').then(r => r.json());
 
-            if (!config.lat || !config.lng || config.radius == 0) {
-              gpsStatus.innerHTML = '<span style="color:#34d399">📍 GPS: ไม่จำกัดพื้นที่</span>';
-              resolve();
-              initFaceSystem();
-              return;
+            let isInsideArea = false;
+            let nearestDistance = 9999;
+            let nearestName = "จุดเช็คอิน";
+            let allowedRadius = 0;
+
+            // กรณีไม่มีการตั้งค่าไว้ ถือว่ายอมให้เช็คอินได้เลย
+            if (!config.locations || config.locations.length === 0) {
+              isInsideArea = true;
+              gpsStatus.innerHTML = '<span style="color:#34d399">📍 GPS: ไม่จำกัดพื้นที่ (ไม่ได้ตั้งค่าสาขา)</span>';
+            } else {
+              // วนลูปเช็คว่าใกล้สาขาไหนที่สุด และอยู่ในรัศมีหรือไม่
+              for (let loc of config.locations) {
+                const d = haversineKm(currentLat, currentLng, loc.lat, loc.lng);
+                
+                // หาพิกัดที่ใกล้ผู้ใช้มากที่สุด เพื่อเอาไว้แจ้งเตือน
+                if (d < nearestDistance) {
+                  nearestDistance = d;
+                  nearestName = loc.name || 'สาขาไม่ระบุชื่อ';
+                  allowedRadius = loc.radius !== undefined ? loc.radius : 0.1;
+                }
+                
+                // ถ้าอยู่ในรัศมีสาขานั้น ให้ถือว่าผ่านทันที
+                if (loc.radius === 0 || d <= (loc.radius !== undefined ? loc.radius : 0.1)) {
+                  isInsideArea = true;
+                  nearestName = loc.name || 'สาขาไม่ระบุชื่อ';
+                  nearestDistance = d;
+                  break;
+                }
+              }
+
+              // แสดงสถานะที่หน้าจอ
+              if (isInsideArea) {
+                gpsStatus.innerHTML = `<span style="color:#34d399">📍 GPS: OK (สาขา ${nearestName} | ห่าง ${nearestDistance.toFixed(3)} km)</span>`;
+              } else {
+                gpsStatus.innerHTML = `<span style="color:#f87171">📍 GPS: ห่างเกินไป (ใกล้สุดสาขา ${nearestName} ระยะ ${nearestDistance.toFixed(3)} km / กำหนดไว้ ${allowedRadius} km)</span>`;
+              }
             }
 
-            const dist = haversineKm(currentLat, currentLng, config.lat, config.lng);
-
-            if (dist <= config.radius) {
-              gpsStatus.innerHTML = '<span style="color:#34d399">📍 GPS: OK (ห่างเป้าหมาย ' + dist.toFixed(3) + ' km)</span>';
+            if (isInsideArea) {
               resolve();
               initFaceSystem();
             } else {
-              gpsStatus.innerHTML = '<span style="color:#f87171">📍 GPS: ห่างเกินไป (' + dist.toFixed(3) + ' km / กำหนด ' + config.radius + ' km)</span>';
               gpsAlertBox.style.display = 'block';
               mainStatus.innerText = '⛔ ไม่อนุญาตให้สแกน';
               overlayStatus.innerText = 'Out of Range';
