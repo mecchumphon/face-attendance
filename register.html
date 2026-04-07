@@ -22,192 +22,57 @@
       position: relative;
     }
 
-    /* Ambient orb */
     body::before {
-      content: '';
-      position: fixed;
-      width: 400px; height: 400px;
-      background: #6366f1;
-      border-radius: 50%;
-      filter: blur(100px);
-      opacity: 0.1;
-      top: -100px; left: -100px;
-      pointer-events: none; z-index: 0;
+      content: ''; position: fixed; width: 400px; height: 400px;
+      background: #6366f1; border-radius: 50%; filter: blur(100px);
+      opacity: 0.1; top: -100px; left: -100px; pointer-events: none; z-index: 0;
     }
 
-    .container {
-      width: 100%; max-width: 500px;
-      position: relative; z-index: 1;
-      animation: fadeIn 0.5s ease;
-    }
+    .container { width: 100%; max-width: 500px; position: relative; z-index: 1; animation: fadeIn 0.5s ease; }
 
     /* Header */
-    .top-bar {
-      display: flex; align-items: center; justify-content: space-between;
-      width: 100%; margin-bottom: 24px;
-    }
-    .back-btn {
-      display: inline-flex; align-items: center; gap: 6px;
-      color: #64748b; text-decoration: none; font-size: 0.88em;
-      padding: 6px 12px; border-radius: 20px;
-      background: rgba(255,255,255,0.05);
-      border: 1px solid rgba(255,255,255,0.1);
-      transition: all 0.25s ease;
-    }
+    .top-bar { display: flex; align-items: center; justify-content: space-between; width: 100%; margin-bottom: 24px; }
+    .back-btn { display: inline-flex; align-items: center; gap: 6px; color: #64748b; text-decoration: none; font-size: 0.88em; padding: 6px 12px; border-radius: 20px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); transition: all 0.25s ease; }
     .back-btn:hover { color: #e2e8f0; background: rgba(255,255,255,0.1); }
     h2 { font-size: 1.25em; font-weight: 700; color: #c7d2fe; }
 
-    /* New Instruction Styles */
-    .instruction-box {
-      background: rgba(99, 102, 241, 0.1);
-      border: 1px solid rgba(99, 102, 241, 0.2);
-      border-radius: 16px;
-      padding: 16px 20px;
-      margin-bottom: 24px;
-      display: flex;
-      align-items: flex-start;
-      gap: 16px;
-    }
-    
-    .instruction-icon {
-      font-size: 24px;
-      background: rgba(99, 102, 241, 0.2);
-      width: 44px;
-      height: 44px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border-radius: 12px;
-      flex-shrink: 0;
-    }
-    
-    .instruction-content {
-      flex: 1;
-    }
-    
-    .instruction-title {
-      font-weight: 600;
-      color: #e2e8f0;
-      margin-bottom: 6px;
-      font-size: 0.95em;
-    }
-    
-    .instruction-list {
-      list-style: none;
-      font-size: 0.85em;
-      color: #94a3b8;
-    }
-    
-    .instruction-list li {
-      margin-bottom: 4px;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-    
-    .instruction-list li::before {
-      content: '•';
-      color: #6366f1;
-      font-weight: bold;
-    }
+    /* Instruction Styles */
+    .instruction-box { background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.2); border-radius: 16px; padding: 16px 20px; margin-bottom: 24px; display: flex; align-items: flex-start; gap: 16px; }
+    .instruction-icon { font-size: 24px; background: rgba(99, 102, 241, 0.2); width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; border-radius: 12px; flex-shrink: 0; }
+    .instruction-content { flex: 1; }
+    .instruction-title { font-weight: 600; color: #e2e8f0; margin-bottom: 6px; font-size: 0.95em; }
+    .instruction-list { list-style: none; font-size: 0.85em; color: #94a3b8; }
+    .instruction-list li { margin-bottom: 4px; display: flex; align-items: center; gap: 6px; }
+    .instruction-list li::before { content: '•'; color: #6366f1; font-weight: bold; }
 
     /* Card */
-    .card {
-      background: rgba(255,255,255,0.05);
-      border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 20px;
-      padding: 24px;
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      margin-bottom: 20px;
-    }
-
-    .form-group { margin-bottom: 20px; }
-    label {
-      display: block; font-size: 0.85em; font-weight: 600;
-      color: #94a3b8; margin-bottom: 8px;
-    }
-    input {
-      width: 100%; padding: 14px 16px;
-      background: rgba(255,255,255,0.06);
-      border: 1px solid rgba(255,255,255,0.12);
-      border-radius: 12px; color: #e2e8f0; font-size: 15px;
-      font-family: 'Sarabun', sans-serif;
-      transition: all 0.3s ease; outline: none;
-    }
-    input:focus {
-      border-color: rgba(99,102,241,0.5);
-      background: rgba(99,102,241,0.08);
-      box-shadow: 0 0 0 3px rgba(99,102,241,0.15);
-    }
+    .card { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 24px; backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); margin-bottom: 20px; }
+    
+    .form-row { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+    .form-group { flex: 1; min-width: 45%; }
+    label { display: block; font-size: 0.85em; font-weight: 600; color: #94a3b8; margin-bottom: 8px; }
+    input { width: 100%; padding: 14px 16px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); border-radius: 12px; color: #e2e8f0; font-size: 15px; font-family: 'Sarabun', sans-serif; transition: all 0.3s ease; outline: none; }
+    input:focus { border-color: rgba(99,102,241,0.5); background: rgba(99,102,241,0.08); box-shadow: 0 0 0 3px rgba(99,102,241,0.15); }
 
     /* Video area */
-    .video-wrapper {
-      position: relative;
-      width: 100%; border-radius: 16px; overflow: hidden;
-      background: #060612; border: 1px solid rgba(255,255,255,0.05);
-      margin-bottom: 20px;
-    }
-    video {
-      width: 100%; height: auto; display: block;
-      transform: scaleX(-1);
-    }
-    .video-overlay {
-      position: absolute; inset: 0;
-      display: flex; align-items: center; justify-content: center;
-      background: rgba(0,0,0,0.6); color: #94a3b8; font-size: 0.9em;
-      z-index: 2; text-align: center; padding: 20px;
-    }
+    .video-wrapper { position: relative; width: 100%; border-radius: 16px; overflow: hidden; background: #060612; border: 1px solid rgba(255,255,255,0.05); margin-bottom: 20px; }
+    video { width: 100%; height: auto; display: block; transform: scaleX(-1); }
+    .video-overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.6); color: #94a3b8; font-size: 0.9em; z-index: 2; text-align: center; padding: 20px; }
+    .face-guide { position: absolute; top: 15%; bottom: 15%; left: 20%; right: 20%; border: 2px dashed rgba(255,255,255,0.3); border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%; z-index: 3; pointer-events: none; }
 
-    /* Face Guide */
-    .face-guide {
-      position: absolute; top: 15%; bottom: 15%; left: 20%; right: 20%;
-      border: 2px dashed rgba(255,255,255,0.3);
-      border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
-      z-index: 3; pointer-events: none;
-    }
-
-    /* Progress Dots */
-    .progress-dots {
-      display: flex; justify-content: center; gap: 8px; margin-bottom: 20px;
-    }
-    .dot {
-      width: 10px; height: 10px; border-radius: 50%;
-      background: rgba(255,255,255,0.1);
-      transition: all 0.3s ease;
-    }
+    .progress-dots { display: flex; justify-content: center; gap: 8px; margin-bottom: 20px; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; background: rgba(255,255,255,0.1); transition: all 0.3s ease; }
     .dot.active { background: #10b981; box-shadow: 0 0 8px #10b981; }
 
-    /* Buttons */
-    .btn {
-      border: none; border-radius: 12px; cursor: pointer;
-      font-family: 'Sarabun', sans-serif; font-size: 16px; font-weight: 600;
-      padding: 15px; width: 100%;
-      transition: all 0.3s ease;
-    }
-    .btn-save {
-      background: linear-gradient(135deg, #6366f1, #4f46e5);
-      color: white; box-shadow: 0 4px 20px rgba(99,102,241,0.3);
-    }
-    .btn-save:hover:not(:disabled) {
-      box-shadow: 0 8px 30px rgba(99,102,241,0.5);
-      transform: translateY(-2px);
-    }
-    .btn-save:disabled {
-      background: rgba(255,255,255,0.1); color: #64748b;
-      box-shadow: none; cursor: not-allowed; transform: none;
-    }
+    .btn { border: none; border-radius: 12px; cursor: pointer; font-family: 'Sarabun', sans-serif; font-size: 16px; font-weight: 600; padding: 15px; width: 100%; transition: all 0.3s ease; }
+    .btn-save { background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; box-shadow: 0 4px 20px rgba(99,102,241,0.3); }
+    .btn-save:hover:not(:disabled) { box-shadow: 0 8px 30px rgba(99,102,241,0.5); transform: translateY(-2px); }
+    .btn-save:disabled { background: rgba(255,255,255,0.1); color: #64748b; box-shadow: none; cursor: not-allowed; transform: none; }
 
-    #msg {
-      margin-top: 16px; text-align: center; font-size: 0.9em;
-      min-height: 22px; font-weight: 600;
-    }
+    #msg { margin-top: 16px; text-align: center; font-size: 0.9em; min-height: 22px; font-weight: 600; }
     .msg-success { color: #34d399; }
     .msg-error { color: #f87171; }
-    .count-badge {
-      display: inline-block; background: rgba(0,0,0,0.3);
-      padding: 2px 8px; border-radius: 10px; font-size: 0.8em; margin-left: 6px;
-    }
+    .count-badge { display: inline-block; background: rgba(0,0,0,0.3); padding: 2px 8px; border-radius: 10px; font-size: 0.8em; margin-left: 6px; }
 
     @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
   </style>
@@ -234,9 +99,16 @@
   </div>
 
   <div class="card">
-    <div class="form-group">
-      <label>ชื่อ-นามสกุล</label>
-      <input type="text" id="empName" placeholder="เช่น สมชาย ใจดี">
+    <!-- 📌 เพิ่มช่องรหัสนักศึกษา -->
+    <div class="form-row">
+      <div class="form-group">
+        <label>รหัสนักศึกษา</label>
+        <input type="text" id="studentId" placeholder="เช่น 640001">
+      </div>
+      <div class="form-group">
+        <label>ชื่อ-นามสกุล</label>
+        <input type="text" id="empName" placeholder="เช่น สมชาย ใจดี">
+      </div>
     </div>
 
     <div class="video-wrapper">
@@ -260,11 +132,9 @@
 </div>
 
 <script>
-  // ==========================================
   const BACKUP_API_URL = "https://script.google.com/macros/s/AKfycbwcP4hjqvJqyLtbXhd4ifwusSVSB_Y7TP9uYUW6_LSKCzd920_Wv8BRWzH7FmqmHZRmBQ/exec";
   const API_URL = (typeof GAS_API_URL !== 'undefined' && GAS_API_URL) ? GAS_API_URL : BACKUP_API_URL;
   const MODEL_URL = 'https://justadudewhohacks.github.io/face-api.js/models';
-  // ==========================================
 
   const video = document.getElementById('video');
   const btnSave = document.getElementById('btnSave');
@@ -277,15 +147,12 @@
 
   window.addEventListener('load', init);
 
-  // ===== อัปเกรดความเร็ว: โหลด AI พร้อมกัน (Parallel) =====
   async function init() {
     if (!API_URL) {
       overlay.innerHTML = '<span style="color:#f87171">❌ ไม่พบ API URL กรุณาตั้งค่าก่อน</span>';
       return;
     }
-
     try {
-      // สั่งโหลดโมเดล 3 ตัวพร้อมกันทั้งหมด
       await Promise.all([
         faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL),
         faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
@@ -299,14 +166,8 @@
 
   function startCamera() {
     navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } })
-      .then(stream => {
-        video.srcObject = stream;
-        overlay.style.display = 'none';
-        btnSave.disabled = false;
-      })
-      .catch(err => {
-        overlay.innerHTML = '<span style="color:#f87171">❌ เปิดกล้องไม่ได้: ' + err.message + '</span>';
-      });
+      .then(stream => { video.srcObject = stream; overlay.style.display = 'none'; btnSave.disabled = false; })
+      .catch(err => { overlay.innerHTML = '<span style="color:#f87171">❌ เปิดกล้องไม่ได้: ' + err.message + '</span>'; });
   }
 
   function updateDots() {
@@ -318,17 +179,17 @@
   }
 
   async function captureAndSave() {
+    const studentId = document.getElementById('studentId').value.trim();
     const name = document.getElementById('empName').value.trim();
-    if (!name) return alert('กรุณาใส่ชื่อก่อน');
+    
+    if (!studentId) return alert('กรุณาใส่รหัสนักศึกษาก่อน');
+    if (!name) return alert('กรุณาใส่ชื่อ-นามสกุลก่อน');
 
     btnSave.disabled = true;
     btnSave.innerHTML = '⏳ กำลังประมวลผล... <span class="count-badge">' + saveCounter + '</span>';
     msgDiv.innerText = '';
 
-    const detection = await faceapi
-      .detectSingleFace(video)
-      .withFaceLandmarks()
-      .withFaceDescriptor();
+    const detection = await faceapi.detectSingleFace(video).withFaceLandmarks().withFaceDescriptor();
 
     if (!detection) {
       alert('ไม่พบใบหน้า! กรุณามองกล้องให้ชัดเจน');
@@ -342,9 +203,12 @@
     try {
       const res = await fetch(API_URL, {
         method: 'POST',
-        body: JSON.stringify({ action: 'registerUser', name, faceDescriptor: descriptorArray })
+        body: JSON.stringify({ action: 'registerUser', studentId: studentId, name: name, faceDescriptor: descriptorArray })
       });
       const data = await res.json();
+      
+      // 📌 ดักจับกรณีข้อมูลซ้ำจากฝั่ง Google Sheets
+      if (data.error) throw new Error(data.error);
 
       saveCounter++;
       countSpan.innerText = saveCounter;
@@ -359,9 +223,18 @@
         setTimeout(() => window.location.href = 'index.html', 2000);
       }
     } catch (e) {
-      msgDiv.innerHTML = '<span class="msg-error">❌ บันทึกล้มเหลว: ' + e.message + '</span>';
+      msgDiv.innerHTML = '<span class="msg-error">' + e.message + '</span>';
       btnSave.disabled = false;
-      btnSave.innerHTML = '📸 ลองใหม่ <span class="count-badge" id="saveCount">' + saveCounter + '</span>';
+      
+      // 📌 ถ้ารหัสซ้ำ ให้รีเซ็ตระบบการบันทึกกลับเป็น 0 เพื่อบังคับให้แก้ชื่อ/รหัสก่อน
+      if (e.message.includes('มีในระบบแล้ว')) {
+         saveCounter = 0;
+         updateDots();
+         countSpan.innerText = saveCounter;
+         btnSave.innerHTML = '📸 บันทึกใบหน้า <span class="count-badge" id="saveCount">0</span>';
+      } else {
+         btnSave.innerHTML = '📸 ลองใหม่ <span class="count-badge" id="saveCount">' + saveCounter + '</span>';
+      }
     }
   }
 </script>
