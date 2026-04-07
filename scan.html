@@ -137,7 +137,11 @@
     }
     .modal-avatar { font-size: 52px; background: rgba(99,102,241,0.15); border: 2px solid rgba(99,102,241,0.3); border-radius: 50%; width: 80px; height: 80px; display: flex; align-items: center; justify-content: center; margin-bottom: 14px; }
     .modal-title { font-size: 0.82em; color: #64748b; margin-bottom: 4px; }
-    .user-name { font-size: 24px; color: #a5b4fc; font-weight: 700; margin-bottom: 12px; }
+    
+    /* เพิ่ม style สำหรับรหัสนักศึกษา */
+    .user-name { font-size: 24px; color: #a5b4fc; font-weight: 700; margin-bottom: 4px; }
+    .user-id { font-size: 0.9em; color: #94a3b8; font-weight: 600; margin-bottom: 12px; background: rgba(255,255,255,0.05); padding: 4px 12px; border-radius: 20px; }
+    
     .time-badge { background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.3); color: #34d399; padding: 8px 22px; border-radius: 30px; font-size: 15px; font-weight: 600; margin-bottom: 6px; }
     .score-text { color: #475569; font-size: 13px; margin-bottom: 20px; }
 
@@ -192,6 +196,8 @@
     <div class="modal-avatar">🙋</div>
     <p class="modal-title">ตรวจพบบุคคล</p>
     <div class="user-name" id="modalName">...</div>
+    <!-- 📌 เพิ่มส่วนแสดงรหัสนักศึกษาในหน้า Modal ยืนยันตัวตน -->
+    <div class="user-id" id="modalStudentId">รหัส: ...</div>
     <div id="modalTime" class="time-badge">00:00</div>
     <div id="modalScore" class="score-text"></div>
     <button class="btn btn-confirm" id="btnConfirm" onclick="confirmAttendance()">✅ ยืนยันเข้างาน</button>
@@ -218,10 +224,13 @@
 
   let knownFaces   = [];
   let scanInterval = null;
-  let currentMatch = null;
   let currentLat   = null;
   let currentLng   = null;
-  let currentLocName = ""; // เพิ่มตัวแปรสำหรับเก็บชื่อสถานที่
+  let currentLocName = "";
+  
+  // 📌 ตัวแปรเก็บข้อมูลคนที่สแกนเจอ
+  let currentMatchName = "";
+  let currentMatchStudentId = "";
 
   if (!API_URL) {
     showError('ยังไม่ได้ตั้งค่า API URL');
@@ -234,7 +243,6 @@
     try {
       mainStatus.innerText = '⏳ กำลังเตรียมระบบ (กรุณากดอนุญาตตำแหน่ง GPS)...';
 
-      // 1. ส่งคำสั่งดึงข้อมูลทั้งหมดไปพร้อมๆ กัน
       const pModels = Promise.all([
         faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL),
         faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
@@ -244,20 +252,17 @@
       const pFaces  = fetch(API_URL + '?action=getKnownFaces').then(r => r.json());
       const pGPS    = getGPSLocation();
 
-      // 2. รอให้กระบวนการทุกอย่างเสร็จสิ้น
       const [_, config, facesData, pos] = await Promise.all([pModels, pConfig, pFaces, pGPS]);
 
       currentLat = pos.coords.latitude;
       currentLng = pos.coords.longitude;
 
-      // 3. จัดการข้อมูลใบหน้าพนักงาน
       if (!facesData || facesData.length === 0) throw new Error('ไม่พบข้อมูลพนักงาน กรุณาลงทะเบียนก่อน');
       knownFaces = facesData.map(u => ({
         name: u.label,
         descriptor: new Float32Array(u.descriptor)
       }));
 
-      // 4. ตรวจสอบระยะห่างจากสาขาทั้งหมด (รองรับหลายจุดเช็คอิน)
       verifyLocation(config);
 
     } catch (e) {
@@ -265,19 +270,17 @@
     }
   }
 
-  // ===== อัปเกรด: กำหนด Timeout ให้ GPS ป้องกันมือถือค้นหานานเกินไป =====
   function getGPSLocation() {
     return new Promise((resolve, reject) => {
       if (!navigator.geolocation) return reject(new Error('Browser ไม่รองรับ GPS'));
       navigator.geolocation.getCurrentPosition(
         resolve,
         (err) => reject(new Error('หาสัญญาณ GPS ไม่พบ หรือผู้ใช้ไม่ได้กดอนุญาต')),
-        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 } // ถ้านานเกิน 10 วินาทีให้แจ้ง Error เลย
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 } 
       );
     });
   }
 
-  // ===== ฟังก์ชันคำนวณ GPS แผนกที่ใกล้ที่สุด =====
   function verifyLocation(config) {
     let isInsideArea = false;
     let nearestDistance = 9999;
@@ -288,7 +291,6 @@
       isInsideArea = true;
       gpsStatus.innerHTML = '<span style="color:#34d399">📍 GPS: ไม่จำกัดพื้นที่ (ไม่ได้ตั้งค่าแผนก)</span>';
     } else {
-      // เช็คว่าพนักงานอยู่ใกล้แผนกไหนที่สุด
       for (let loc of config.locations) {
         const d = haversineKm(currentLat, currentLng, loc.lat, loc.lng);
         if (d < nearestDistance) {
@@ -297,7 +299,6 @@
           allowedRadius = loc.radius !== undefined ? loc.radius : 0.1;
         }
         
-        // ถ้าเข้าใกล้แผนกใดแผนกหนึ่งในรัศมี ให้ถือว่าผ่าน
         if (loc.radius === 0 || d <= allowedRadius) {
           isInsideArea = true;
           nearestName = loc.name || 'แผนกไม่ระบุชื่อ';
@@ -307,7 +308,7 @@
       }
 
       if (isInsideArea) {
-        currentLocName = nearestName; // บันทึกชื่อสถานที่ไว้ใช้ตอนส่งข้อมูล
+        currentLocName = nearestName; 
         gpsStatus.innerHTML = `<span style="color:#34d399">📍 GPS: OK (แผนก ${nearestName} | ห่าง ${nearestDistance.toFixed(3)} km)</span>`;
       } else {
         currentLocName = "";
@@ -326,7 +327,6 @@
     }
   }
 
-  // ===== Camera =====
   function startCamera() {
     btnStart.style.display = 'none';
     mainStatus.innerText   = 'กำลังเปิดกล้อง...';
@@ -347,7 +347,6 @@
       });
   }
 
-  // ===== Scan Loop =====
   function startScanLoop() {
     if (scanInterval) clearInterval(scanInterval);
     overlayStatus.innerText     = 'มองกล้องเพื่อสแกน';
@@ -384,10 +383,19 @@
     return best;
   }
 
-  // ===== Modal =====
   function showModal(match) {
-    currentMatch = match.name;
-    document.getElementById('modalName').innerText  = match.name;
+    // 📌 แยก "รหัสนักศึกษา" ออกจาก "ชื่อ" (รูปแบบคือ รหัส|ชื่อ)
+    const parts = match.name.split('|');
+    if (parts.length === 2) {
+      currentMatchStudentId = parts[0];
+      currentMatchName = parts[1];
+    } else {
+      currentMatchStudentId = "ไม่ระบุ";
+      currentMatchName = match.name;
+    }
+
+    document.getElementById('modalName').innerText  = currentMatchName;
+    document.getElementById('modalStudentId').innerText  = 'รหัส: ' + currentMatchStudentId;
 
     const now = new Date();
     const timeStr = now.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
@@ -410,10 +418,11 @@
         method: 'POST',
         body: JSON.stringify({ 
           action: 'logAttendance', 
-          name: currentMatch, 
+          studentId: currentMatchStudentId, // 📌 ส่งรหัสนักศึกษากลับไปที่ Sheets
+          name: currentMatchName, 
           lat: currentLat, 
           lng: currentLng,
-          locationName: currentLocName // ส่งชื่อสถานที่ไปที่ Google Sheets ด้วย
+          locationName: currentLocName
         })
       });
       const data = await res.json();
@@ -428,7 +437,8 @@
 
   function cancelAttendance() {
     confirmModal.style.display = 'none';
-    currentMatch = null;
+    currentMatchName = "";
+    currentMatchStudentId = "";
     if (scanInterval) clearInterval(scanInterval);
 
     if (video.srcObject) {
