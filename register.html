@@ -99,7 +99,6 @@
   </div>
 
   <div class="card">
-    <!-- 📌 เพิ่มช่องรหัสนักศึกษา -->
     <div class="form-row">
       <div class="form-group">
         <label>รหัสนักศึกษา</label>
@@ -144,6 +143,7 @@
 
   let saveCounter = 0;
   const MAX_SAVES = 3;
+  let collectedDescriptors = []; // 📌 ตัวแปรใหม่สำหรับเก็บ 3 รูปรอส่งทีเดียว
 
   window.addEventListener('load', init);
 
@@ -186,7 +186,7 @@
     if (!name) return alert('กรุณาใส่ชื่อ-นามสกุลก่อน');
 
     btnSave.disabled = true;
-    btnSave.innerHTML = '⏳ กำลังประมวลผล... <span class="count-badge">' + saveCounter + '</span>';
+    btnSave.innerHTML = '⏳ กำลังประมวลผล...';
     msgDiv.innerText = '';
 
     const detection = await faceapi.detectSingleFace(video).withFaceLandmarks().withFaceDescriptor();
@@ -194,46 +194,58 @@
     if (!detection) {
       alert('ไม่พบใบหน้า! กรุณามองกล้องให้ชัดเจน');
       btnSave.disabled = false;
-      btnSave.innerHTML = '📸 บันทึกใบหน้า <span class="count-badge" id="saveCount">' + saveCounter + '</span>';
+      btnSave.innerHTML = `📸 บันทึกใบหน้า <span class="count-badge" id="saveCount">${saveCounter}</span>`;
       return;
     }
 
+    // 📌 นำใบหน้าที่แสกนได้เก็บลง Array ไว้ก่อน
     const descriptorArray = Array.from(detection.descriptor);
+    collectedDescriptors.push(descriptorArray);
 
-    try {
-      const res = await fetch(API_URL, {
-        method: 'POST',
-        body: JSON.stringify({ action: 'registerUser', studentId: studentId, name: name, faceDescriptor: descriptorArray })
-      });
-      const data = await res.json();
-      
-      // 📌 ดักจับกรณีข้อมูลซ้ำจากฝั่ง Google Sheets
-      if (data.error) throw new Error(data.error);
+    saveCounter++;
+    countSpan.innerText = saveCounter;
+    updateDots();
 
-      saveCounter++;
-      countSpan.innerText = saveCounter;
-      updateDots();
-      msgDiv.innerHTML = '<span class="msg-success">✅ บันทึกครั้งที่ ' + saveCounter + ' สำเร็จ! ขยับหน้าเล็กน้อยแล้วกดอีกครั้ง</span>';
+    // 📌 ถ้ายังไม่ครบ 3 รูป ให้ถ่ายต่อ
+    if (saveCounter < MAX_SAVES) {
+      msgDiv.innerHTML = `<span class="msg-success">✅ บันทึกรูปที่ ${saveCounter}/3 สำเร็จ! ขยับหน้าเล็กน้อยแล้วกดอีกครั้ง</span>`;
       btnSave.disabled = false;
-      btnSave.innerHTML = '📸 บันทึกเพิ่ม <span class="count-badge" id="saveCount">' + saveCounter + '</span>';
-      
-      if (saveCounter >= MAX_SAVES) {
+      btnSave.innerHTML = `📸 บันทึกเพิ่ม <span class="count-badge" id="saveCount">${saveCounter}</span>`;
+    
+    // 📌 ถ้าครบ 3 รูปแล้ว ให้ส่งข้อมูลทั้งหมดไป Google Sheets ทีเดียว
+    } else {
+      btnSave.innerHTML = '⏳ กำลังตรวจสอบและบันทึกข้อมูล...';
+      msgDiv.innerHTML = '<span style="color:#fcd34d">กำลังส่งข้อมูลไปที่ฐานข้อมูล กรุณารอสักครู่...</span>';
+
+      try {
+        const res = await fetch(API_URL, {
+          method: 'POST',
+          body: JSON.stringify({ 
+            action: 'registerUser', 
+            studentId: studentId, 
+            name: name, 
+            faceDescriptors: collectedDescriptors // ส่ง Array ทั้ง 3 รูปไปเลย
+          })
+        });
+        const data = await res.json();
+        
+        if (data.error) throw new Error(data.error);
+
         msgDiv.innerHTML = '<span class="msg-success" style="font-size:1.1em;">🎉 ลงทะเบียนเสร็จสมบูรณ์!</span>';
         btnSave.style.display = 'none';
         setTimeout(() => window.location.href = 'index.html', 2000);
-      }
-    } catch (e) {
-      msgDiv.innerHTML = '<span class="msg-error">' + e.message + '</span>';
-      btnSave.disabled = false;
-      
-      // 📌 ถ้ารหัสซ้ำ ให้รีเซ็ตระบบการบันทึกกลับเป็น 0 เพื่อบังคับให้แก้ชื่อ/รหัสก่อน
-      if (e.message.includes('มีในระบบแล้ว')) {
-         saveCounter = 0;
-         updateDots();
-         countSpan.innerText = saveCounter;
-         btnSave.innerHTML = '📸 บันทึกใบหน้า <span class="count-badge" id="saveCount">0</span>';
-      } else {
-         btnSave.innerHTML = '📸 ลองใหม่ <span class="count-badge" id="saveCount">' + saveCounter + '</span>';
+
+      } catch (e) {
+        msgDiv.innerHTML = '<span class="msg-error">' + e.message + '</span>';
+        
+        // ถ้ารหัส/ชื่อซ้ำ หรือมี Error ให้รีเซ็ตระบบการบันทึกกลับเป็น 0
+        collectedDescriptors = [];
+        saveCounter = 0;
+        updateDots();
+        countSpan.innerText = saveCounter;
+        
+        btnSave.disabled = false;
+        btnSave.innerHTML = '📸 เริ่มบันทึกใหม่ <span class="count-badge" id="saveCount">0</span>';
       }
     }
   }
