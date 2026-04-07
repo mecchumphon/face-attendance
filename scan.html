@@ -221,6 +221,7 @@
   let currentMatch = null;
   let currentLat   = null;
   let currentLng   = null;
+  let currentLocName = ""; // เพิ่มตัวแปรสำหรับเก็บชื่อสถานที่
 
   if (!API_URL) {
     showError('ยังไม่ได้ตั้งค่า API URL');
@@ -276,7 +277,7 @@
     });
   }
 
-  // ===== ฟังก์ชันคำนวณ GPS สาขาที่ใกล้ที่สุด =====
+  // ===== ฟังก์ชันคำนวณ GPS แผนกที่ใกล้ที่สุด =====
   function verifyLocation(config) {
     let isInsideArea = false;
     let nearestDistance = 9999;
@@ -285,30 +286,32 @@
 
     if (!config.locations || config.locations.length === 0) {
       isInsideArea = true;
-      gpsStatus.innerHTML = '<span style="color:#34d399">📍 GPS: ไม่จำกัดพื้นที่ (ไม่ได้ตั้งค่าสาขา)</span>';
+      gpsStatus.innerHTML = '<span style="color:#34d399">📍 GPS: ไม่จำกัดพื้นที่ (ไม่ได้ตั้งค่าแผนก)</span>';
     } else {
-      // เช็คว่าพนักงานอยู่ใกล้สาขาไหนที่สุด
+      // เช็คว่าพนักงานอยู่ใกล้แผนกไหนที่สุด
       for (let loc of config.locations) {
         const d = haversineKm(currentLat, currentLng, loc.lat, loc.lng);
         if (d < nearestDistance) {
           nearestDistance = d;
-          nearestName = loc.name || 'สาขาไม่ระบุชื่อ';
+          nearestName = loc.name || 'แผนกไม่ระบุชื่อ';
           allowedRadius = loc.radius !== undefined ? loc.radius : 0.1;
         }
         
-        // ถ้าเข้าใกล้สาขาใดสาขาหนึ่งในรัศมี ให้ถือว่าผ่าน
+        // ถ้าเข้าใกล้แผนกใดแผนกหนึ่งในรัศมี ให้ถือว่าผ่าน
         if (loc.radius === 0 || d <= allowedRadius) {
           isInsideArea = true;
-          nearestName = loc.name || 'สาขาไม่ระบุชื่อ';
+          nearestName = loc.name || 'แผนกไม่ระบุชื่อ';
           nearestDistance = d;
           break;
         }
       }
 
       if (isInsideArea) {
-        gpsStatus.innerHTML = `<span style="color:#34d399">📍 GPS: OK (สาขา ${nearestName} | ห่าง ${nearestDistance.toFixed(3)} km)</span>`;
+        currentLocName = nearestName; // บันทึกชื่อสถานที่ไว้ใช้ตอนส่งข้อมูล
+        gpsStatus.innerHTML = `<span style="color:#34d399">📍 GPS: OK (แผนก ${nearestName} | ห่าง ${nearestDistance.toFixed(3)} km)</span>`;
       } else {
-        gpsStatus.innerHTML = `<span style="color:#f87171">📍 GPS: ห่างเกินไป (ใกล้สุดสาขา ${nearestName} ระยะ ${nearestDistance.toFixed(3)} km / กำหนดไว้ ${allowedRadius} km)</span>`;
+        currentLocName = "";
+        gpsStatus.innerHTML = `<span style="color:#f87171">📍 GPS: ห่างเกินไป (ใกล้สุดแผนก ${nearestName} ระยะ ${nearestDistance.toFixed(3)} km / กำหนดไว้ ${allowedRadius} km)</span>`;
       }
     }
 
@@ -405,7 +408,13 @@
     try {
       const res = await fetch(API_URL, {
         method: 'POST',
-        body: JSON.stringify({ action: 'logAttendance', name: currentMatch, lat: currentLat, lng: currentLng })
+        body: JSON.stringify({ 
+          action: 'logAttendance', 
+          name: currentMatch, 
+          lat: currentLat, 
+          lng: currentLng,
+          locationName: currentLocName // ส่งชื่อสถานที่ไปที่ Google Sheets ด้วย
+        })
       });
       const data = await res.json();
       alert('✅ ' + (data.message || 'บันทึกเวลาสำเร็จ'));
