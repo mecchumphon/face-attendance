@@ -143,7 +143,7 @@
 
   let saveCounter = 0;
   const MAX_SAVES = 3;
-  let collectedDescriptors = []; // 📌 ตัวแปรใหม่สำหรับเก็บ 3 รูปรอส่งทีเดียว
+  let collectedDescriptors = []; // 📌 เก็บรูปรวมไว้ 3 รูปก่อนแล้วค่อยส่ง
 
   window.addEventListener('load', init);
 
@@ -198,7 +198,7 @@
       return;
     }
 
-    // 📌 นำใบหน้าที่แสกนได้เก็บลง Array ไว้ก่อน
+    // 📌 ดึงข้อมูลโครงหน้ามาเก็บไว้ใน Array (ยังไม่ส่งไป Google Sheets)
     const descriptorArray = Array.from(detection.descriptor);
     collectedDescriptors.push(descriptorArray);
 
@@ -206,13 +206,13 @@
     countSpan.innerText = saveCounter;
     updateDots();
 
-    // 📌 ถ้ายังไม่ครบ 3 รูป ให้ถ่ายต่อ
+    // 📌 ถ้ายังไม่ครบ 3 รูป ให้อัปเดตแค่ปุ่ม แล้วหยุดแค่นี้
     if (saveCounter < MAX_SAVES) {
       msgDiv.innerHTML = `<span class="msg-success">✅ บันทึกรูปที่ ${saveCounter}/3 สำเร็จ! ขยับหน้าเล็กน้อยแล้วกดอีกครั้ง</span>`;
       btnSave.disabled = false;
       btnSave.innerHTML = `📸 บันทึกเพิ่ม <span class="count-badge" id="saveCount">${saveCounter}</span>`;
     
-    // 📌 ถ้าครบ 3 รูปแล้ว ให้ส่งข้อมูลทั้งหมดไป Google Sheets ทีเดียว
+    // 📌 ถ้าถ่ายครบ 3 รูปแล้ว ให้ส่งข้อมูลทั้งหมดไป Google Sheets "ทีเดียว"
     } else {
       btnSave.innerHTML = '⏳ กำลังตรวจสอบและบันทึกข้อมูล...';
       msgDiv.innerHTML = '<span style="color:#fcd34d">กำลังส่งข้อมูลไปที่ฐานข้อมูล กรุณารอสักครู่...</span>';
@@ -224,7 +224,7 @@
             action: 'registerUser', 
             studentId: studentId, 
             name: name, 
-            faceDescriptors: collectedDescriptors // ส่ง Array ทั้ง 3 รูปไปเลย
+            faceDescriptors: collectedDescriptors // ส่งทีเดียวทั้ง 3 รูปเลย
           })
         });
         const data = await res.json();
@@ -238,7 +238,7 @@
       } catch (e) {
         msgDiv.innerHTML = '<span class="msg-error">' + e.message + '</span>';
         
-        // ถ้ารหัส/ชื่อซ้ำ หรือมี Error ให้รีเซ็ตระบบการบันทึกกลับเป็น 0
+        // ถ้ารหัส/ชื่อซ้ำ หรือมี Error ให้ล้างข้อมูลรูปเก่าทิ้ง แล้วกลับไปเริ่มรูปที่ 1 ใหม่
         collectedDescriptors = [];
         saveCounter = 0;
         updateDots();
