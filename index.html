@@ -121,6 +121,8 @@
     .btn-menu:nth-child(1) { animation-delay: 0.1s; }
     .btn-menu:nth-child(2) { animation-delay: 0.2s; }
     .btn-menu:nth-child(3) { animation-delay: 0.3s; }
+    .btn-menu:nth-child(4) { animation-delay: 0.4s; }
+    .btn-menu:nth-child(5) { animation-delay: 0.5s; }
 
     .btn-menu:hover {
       transform: translateY(-4px);
@@ -128,9 +130,11 @@
       border-color: rgba(255,255,255,0.25);
     }
 
-    .btn-register:hover { box-shadow: 0 8px 30px rgba(99,102,241,0.35); border-color: rgba(99,102,241,0.5); }
-    .btn-scan:hover     { box-shadow: 0 8px 30px rgba(16,185,129,0.35); border-color: rgba(16,185,129,0.5); }
-    .btn-config:hover   { box-shadow: 0 8px 30px rgba(100,116,139,0.25); border-color: rgba(148,163,184,0.4); }
+    .btn-register:hover  { box-shadow: 0 8px 30px rgba(99,102,241,0.35); border-color: rgba(99,102,241,0.5); }
+    .btn-scan:hover      { box-shadow: 0 8px 30px rgba(16,185,129,0.35); border-color: rgba(16,185,129,0.5); }
+    .btn-shift:hover     { box-shadow: 0 8px 30px rgba(245,158,11,0.35); border-color: rgba(245,158,11,0.5); }
+    .btn-dashboard:hover { box-shadow: 0 8px 30px rgba(236,72,153,0.35); border-color: rgba(236,72,153,0.5); }
+    .btn-config:hover    { box-shadow: 0 8px 30px rgba(100,116,139,0.25); border-color: rgba(148,163,184,0.4); }
 
     .card-icon {
       width: 52px; height: 52px;
@@ -139,9 +143,11 @@
       font-size: 24px;
       flex-shrink: 0;
     }
-    .btn-register .card-icon { background: linear-gradient(135deg, #6366f1, #4f46e5); box-shadow: 0 4px 15px rgba(99,102,241,0.4); }
-    .btn-scan     .card-icon { background: linear-gradient(135deg, #10b981, #059669); box-shadow: 0 4px 15px rgba(16,185,129,0.4); }
-    .btn-config   .card-icon { background: linear-gradient(135deg, #475569, #334155); box-shadow: 0 4px 15px rgba(71,85,105,0.4); }
+    .btn-register .card-icon  { background: linear-gradient(135deg, #6366f1, #4f46e5); box-shadow: 0 4px 15px rgba(99,102,241,0.4); }
+    .btn-scan     .card-icon  { background: linear-gradient(135deg, #10b981, #059669); box-shadow: 0 4px 15px rgba(16,185,129,0.4); }
+    .btn-shift    .card-icon  { background: linear-gradient(135deg, #f59e0b, #d97706); box-shadow: 0 4px 15px rgba(245,158,11,0.4); }
+    .btn-dashboard .card-icon { background: linear-gradient(135deg, #ec4899, #be185d); box-shadow: 0 4px 15px rgba(236,72,153,0.4); }
+    .btn-config   .card-icon  { background: linear-gradient(135deg, #475569, #334155); box-shadow: 0 4px 15px rgba(71,85,105,0.4); }
 
     .card-text { flex: 1; text-align: left; }
     .card-title { font-size: 1.05em; font-weight: 600; color: #f1f5f9; margin-bottom: 2px; }
@@ -162,11 +168,16 @@
 <body>
 
   <div class="header">
-    <!-- 📌 เปลี่ยนชื่อไฟล์ "logo.png" เป็นชื่อไฟล์รูปล่าสุดของคุณ -->
-    <img src="logo.jpg" alt="โลโก้" class="logo-image">
+    <!-- 📌 เปลี่ยนชื่อไฟล์ "logo.jpg" เป็นชื่อไฟล์รูปล่าสุดของคุณ -->
+    <img src="logo.jpg" alt="โลโก้" class="logo-image" onerror="this.src='https://via.placeholder.com/100/1e293b/ffffff?text=Logo'">
     
     <h1>ระบบบันทึกเวลาปฏิบัติงานนักศึกษาแพทย์</h1>
     <p class="subtitle">Face Recognition &amp; GPS Attendance</p>
+  </div>
+
+  <div id="apiWarning" class="api-warning">
+    ⚠️ <b>ยังไม่ได้ตั้งค่า API URL</b><br>
+    กรุณาไปที่ <a href="config.html">ตั้งค่าระบบ</a> เพื่อใส่ URL ก่อนใช้งาน
   </div>
 
   <div class="menu-cards">
@@ -184,6 +195,26 @@
       <div class="card-text">
         <div class="card-title">สแกนเข้างาน</div>
         <div class="card-desc">ยืนยันตัวตนด้วยใบหน้า + GPS</div>
+      </div>
+      <span class="card-arrow">›</span>
+    </a>
+
+    <!-- ฟีเจอร์: สแกนเข้าเวร -->
+    <a href="shift-scan.html" class="btn-menu btn-shift">
+      <div class="card-icon">🌙</div>
+      <div class="card-text">
+        <div class="card-title">สแกนเข้าเวร</div>
+        <div class="card-desc">ยืนยันตัวตนด้วยใบหน้า + GPS</div>
+      </div>
+      <span class="card-arrow">›</span>
+    </a>
+
+    <!-- ฟีเจอร์: แดชบอร์ด -->
+    <a href="dashboard.html" class="btn-menu btn-dashboard">
+      <div class="card-icon">📊</div>
+      <div class="card-text">
+        <div class="card-title">แดชบอร์ดข้อมูล</div>
+        <div class="card-desc">ดูประวัติการเข้างานย้อนหลัง</div>
       </div>
       <span class="card-arrow">›</span>
     </a>
