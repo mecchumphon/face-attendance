@@ -133,7 +133,9 @@
 <script>
   const BACKUP_API_URL = "https://script.google.com/macros/s/AKfycbwcP4hjqvJqyLtbXhd4ifwusSVSB_Y7TP9uYUW6_LSKCzd920_Wv8BRWzH7FmqmHZRmBQ/exec";
   const API_URL = (typeof GAS_API_URL !== 'undefined' && GAS_API_URL) ? GAS_API_URL : BACKUP_API_URL;
-  const MODEL_URL = 'https://justadudewhohacks.github.io/face-api.js/models';
+  
+  // 🟢 แก้ตรงนี้ ให้ดึงจากโฟลเดอร์ models ของเราเอง
+  const MODEL_URL = './models';
 
   const video = document.getElementById('video');
   const btnSave = document.getElementById('btnSave');
