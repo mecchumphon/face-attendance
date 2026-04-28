@@ -148,7 +148,9 @@
   const gpsAlertBox    = document.getElementById('gps-alert-box');
   const btnStart       = document.getElementById('btnStart');
 
-  const MATCH_THRESHOLD = 0.45;
+  // 📌 ปรับค่าความแม่นยำตรงนี้ (ยิ่งน้อยยิ่งเข้มงวด) 
+  // แนะนำ 0.38 หรือ 0.40 เพื่อลดการสแกนผิดคน
+  const MATCH_THRESHOLD = 0.38;
 
   let knownFaces   = [];
   let scanInterval = null;
