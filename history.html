@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ประวัติการเข้างาน / เข้าเวร</title>
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <script src="js/api-config.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Sarabun', sans-serif;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #0f0f23 0%, #1a1a3e 50%, #0d1b2a 100%);
+      color: #e2e8f0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px 16px 50px;
+      position: relative;
+    }
+
+    body::before {
+      content: ''; position: fixed; width: 400px; height: 400px;
+      background: #3b82f6; border-radius: 50%; filter: blur(120px);
+      opacity: 0.1; top: -100px; right: -100px; pointer-events: none; z-index: 0;
+    }
+
+    .page-wrap {
+      width: 100%; max-width: 560px; position: relative; z-index: 1;
+      animation: fadeIn 0.5s ease;
+    }
+
+    /* Header */
+    .top-bar { display: flex; align-items: center; justify-content: space-between; width: 100%; margin-bottom: 20px; }
+    .back-btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      color: #64748b; text-decoration: none; font-size: 0.85em;
+      padding: 6px 12px; border-radius: 20px;
+      background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+      transition: all 0.25s ease;
+    }
+    .back-btn:hover { color: #e2e8f0; background: rgba(255,255,255,0.1); }
+    h2 { font-size: 1.2em; font-weight: 600; color: #93c5fd; }
+    .spacer { width: 70px; }
+
+    /* Search Box */
+    .search-box {
+      width: 100%; padding: 14px 18px; border-radius: 16px;
+      background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12);
+      color: #fff; font-family: 'Sarabun', sans-serif; font-size: 15px;
+      outline: none; transition: all 0.3s ease; margin-bottom: 20px;
+    }
+    .search-box:focus {
+      border-color: #60a5fa; background: rgba(255,255,255,0.1);
+      box-shadow: 0 0 15px rgba(96,165,250,0.2);
+    }
+    .search-box::placeholder { color: #64748b; }
+
+    /* Stats Area */
+    .stats-area {
+      display: flex; gap: 10px; margin-bottom: 20px;
+    }
+    .stat-card {
+      flex: 1; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 14px; padding: 12px; text-align: center;
+    }
+    .stat-value { font-size: 1.5em; font-weight: 700; color: #e2e8f0; margin-bottom: 4px; }
+    .stat-label { font-size: 0.75em; color: #94a3b8; }
+    
+    .text-green { color: #34d399; }
+    .text-yellow { color: #fde047; }
+
+    /* Logs Container */
+    #logsContainer { display: flex; flex-direction: column; gap: 12px; }
+    
+    .log-card {
+      background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 16px; padding: 16px; display: flex; flex-direction: column; gap: 10px;
+      transition: transform 0.2s;
+    }
+    .log-card:hover { transform: translateY(-2px); background: rgba(255,255,255,0.08); }
+
+    .log-header { display: flex; justify-content: space-between; align-items: center; }
+    .log-type {
+      font-size: 0.8em; font-weight: 600; padding: 4px 10px; border-radius: 20px;
+    }
+    .type-normal { background: rgba(16,185,129,0.15); color: #34d399; border: 1px solid rgba(16,185,129,0.3); }
+    .type-shift { background: rgba(234,179,8,0.15); color: #fde047; border: 1px solid rgba(234,179,8,0.3); }
+    .type-total { background: rgba(255,255,255,0.1); color: #e2e8f0; border: 1px solid rgba(255,255,255,0.2); }
+    
+    .log-time { font-size: 0.85em; color: #cbd5e1; font-weight: 600; }
+    
+    .log-body { display: flex; flex-direction: column; gap: 4px; }
+    .log-name { font-size: 1.1em; font-weight: 700; color: #f1f5f9; }
+    .log-id { font-size: 0.85em; color: #94a3b8; }
+    .log-loc { font-size: 0.85em; color: #94a3b8; display: flex; align-items: center; gap: 6px; margin-top: 4px;}
+
+    /* Daily Summary Specific */
+    .sum-date { font-size: 1.1em; font-weight: 700; color: #60a5fa; }
+    .sum-row { display: flex; justify-content: space-between; margin-top: 8px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.05); }
+    .sum-item { display: flex; align-items: center; gap: 6px; font-size: 0.9em; font-weight: 600; }
+
+    .loading { text-align: center; color: #94a3b8; padding: 40px 0; font-size: 0.9em; }
+    .no-data { text-align: center; color: #ef4444; padding: 20px; background: rgba(239,68,68,0.1); border-radius: 12px; margin-top: 20px;}
+
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  </style>
+</head>
+<body>
+
+<div class="page-wrap">
+  <div class="top-bar">
+    <a href="index.html" class="back-btn">← กลับ</a>
+    <h2>📋 ประวัติการเข้างาน</h2>
+    <div class="spacer"></div>
+  </div>
+
+  <div class="stats-area">
+    <div class="stat-card">
+      <div class="stat-value text-green" id="countNormal">0</div>
+      <div class="stat-label">เข้างานปกติ</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value text-yellow" id="countShift">0</div>
+      <div class="stat-label">เข้าเวร</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value" id="countTotal">0</div>
+      <div class="stat-label">รวมทั้งหมด</div>
+    </div>
+  </div>
+
+  <input type="text" id="searchInput" class="search-box" placeholder="🔍 ค้นหา รหัสนักศึกษา, ชื่อ หรือ วันที่..." onkeyup="filterLogs()">
+
+  <div id="logsContainer">
+    <div class="loading">⏳ กำลังโหลดข้อมูลประวัติจากระบบ...</div>
+  </div>
+</div>
+
+<script>
+  const BACKUP_API_URL = "https://script.google.com/macros/s/AKfycbwcP4hjqvJqyLtbXhd4ifwusSVSB_Y7TP9uYUW6_LSKCzd920_Wv8BRWzH7FmqmHZRmBQ/exec";
+  const API_URL = (typeof GAS_API_URL !== 'undefined' && GAS_API_URL) ? GAS_API_URL : BACKUP_API_URL;
+  
+  let allLogs = [];
+
+  window.onload = function() {
+    fetchLogs();
+  };
+
+  async function fetchLogs() {
+    const container = document.getElementById('logsContainer');
+    try {
+      const response = await fetch(API_URL + '?action=getLogs');
+      const data = await response.json();
+      
+      if (data.success && data.logs) {
+        allLogs = data.logs; 
+        updateStats(allLogs);
+        
+        // เมื่อโหลดเสร็จ ให้แสดงหน้าสรุปรายวันเป็นค่าเริ่มต้น
+        renderDailySummary(allLogs);
+      } else {
+        container.innerHTML = '<div class="no-data">❌ ไม่พบข้อมูลประวัติ หรือเกิดข้อผิดพลาด</div>';
+      }
+    } catch (error) {
+      container.innerHTML = `<div class="no-data">❌ ไม่สามารถดึงข้อมูลได้: ${error.message}</div>`;
+    }
+  }
+
+  function updateStats(logs) {
+    let normal = 0, shift = 0;
+    logs.forEach(log => {
+      if (log.type === 'เข้าเวร') shift++;
+      else normal++;
+    });
+    document.getElementById('countNormal').innerText = normal;
+    document.getElementById('countShift').innerText = shift;
+    document.getElementById('countTotal').innerText = logs.length;
+  }
+
+  // ฟังก์ชันใหม่: แสดงแค่ข้อมูลสรุปรายวัน
+  function renderDailySummary(logs) {
+    const container = document.getElementById('logsContainer');
+    container.innerHTML = '';
+
+    if (logs.length === 0) {
+      container.innerHTML = '<div class="loading">ไม่พบข้อมูลประวัติ</div>';
+      return;
+    }
+
+    // จัดกลุ่มข้อมูลตามวันที่
+    const dates = [];
+    const grouped = {};
+
+    logs.forEach(log => {
+      // ดึงเฉพาะวันที่ (ตัดเวลาทิ้ง) เช่น "28/4/2026"
+      const dateStr = log.timestamp.split(' ')[0]; 
+      
+      if (!grouped[dateStr]) {
+        grouped[dateStr] = { normal: 0, shift: 0, total: 0 };
+        dates.push(dateStr);
+      }
+      
+      if (log.type === 'เข้าเวร') grouped[dateStr].shift++;
+      else grouped[dateStr].normal++;
+      
+      grouped[dateStr].total++;
+    });
+
+    // แสดงผลกลุ่มวันที่
+    dates.forEach(date => {
+      const data = grouped[date];
+      const card = document.createElement('div');
+      card.className = 'log-card';
+      card.innerHTML = `
+        <div class="log-header">
+          <span class="sum-date">📅 วันที่ ${date}</span>
+          <span class="log-type type-total">รวม ${data.total} รายการ</span>
+        </div>
+        <div class="sum-row">
+          <div class="sum-item text-green">☀️ ปกติ: ${data.normal}</div>
+          <div class="sum-item text-yellow">🌙 เข้าเวร: ${data.shift}</div>
+        </div>
+      `;
+      container.appendChild(card);
+    });
+  }
+
+  // ฟังก์ชันเดิม: แสดงรายชื่อบุคคล (จะถูกเรียกใช้ก็ต่อเมื่อมีการค้นหา)
+  function renderLogs(logs) {
+    const container = document.getElementById('logsContainer');
+    container.innerHTML = '';
+
+    if (logs.length === 0) {
+      container.innerHTML = '<div class="loading">ไม่พบข้อมูลที่ค้นหา</div>';
+      return;
+    }
+
+    logs.forEach(log => {
+      const isShift = log.type === 'เข้าเวร';
+      const typeClass = isShift ? 'type-shift' : 'type-normal';
+      const typeIcon = isShift ? '🌙' : '☀️';
+
+      const card = document.createElement('div');
+      card.className = 'log-card';
+      card.innerHTML = `
+        <div class="log-header">
+          <span class="log-type ${typeClass}">${typeIcon} ${log.type}</span>
+          <span class="log-time">🕒 ${log.timestamp}</span>
+        </div>
+        <div class="log-body">
+          <div class="log-name">👤 ${log.name}</div>
+          <div class="log-id">💳 รหัส: ${log.studentId}</div>
+          <div class="log-loc">📍 สถานที่: ${log.location}</div>
+        </div>
+      `;
+      container.appendChild(card);
+    });
+  }
+
+  // ระบบค้นหาอัจฉริยะ (สลับหน้าสรุปกับหน้ารายบุคคล)
+  function filterLogs() {
+    const query = document.getElementById('searchInput').value.trim().toLowerCase();
+    
+    // ถ้าช่องค้นหาว่างเปล่า ให้กลับไปแสดง "สรุปรายวัน"
+    if (query === '') {
+      updateStats(allLogs);
+      renderDailySummary(allLogs);
+      return;
+    }
+
+    // ถ้ามีการพิมพ์ค้นหา ให้ค้นหาและแสดงผลแบบ "รายชื่อบุคคล"
+    const filtered = allLogs.filter(log => {
+      return log.name.toLowerCase().includes(query) || 
+             log.studentId.toLowerCase().includes(query) ||
+             log.location.toLowerCase().includes(query) ||
+             log.timestamp.toLowerCase().includes(query); // ค้นหาด้วยวันที่ได้ด้วย
+    });
+    
+    updateStats(filtered);
+    renderLogs(filtered); // โชว์รายชื่อที่ค้นเจอ
+  }
+</script>
+
+</body>
+</html>
