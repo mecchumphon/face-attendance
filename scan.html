@@ -205,31 +205,54 @@
 
   function verifyLocation(config) {
     let isInsideArea = false;
-    let nearestDistance = 9999;
-    let nearestName = "จุดเช็คอิน";
-    let allowedRadius = 0;
+    let minDistance = Infinity;
+    let closestName = "จุดเช็คอิน";
+    let closestRadius = 0;
 
     if (!config.locations || config.locations.length === 0) {
       isInsideArea = true;
       gpsStatus.innerHTML = '<span style="color:#34d399">📍 GPS: ไม่จำกัดพื้นที่ (ไม่ได้ตั้งค่าแผนก)</span>';
     } else {
+      // 1. ค้นหาวอร์ดที่อยู่ใกล้กับตัวเรามากที่สุดก่อน
       for (let loc of config.locations) {
-        const d = haversineKm(currentLat, currentLng, loc.lat, loc.lng);
-        if (d < nearestDistance) { nearestDistance = d; nearestName = loc.name || 'แผนกไม่ระบุชื่อ'; allowedRadius = loc.radius !== undefined ? loc.radius : 0.1; }
-        if (loc.radius === 0 || d <= allowedRadius) { isInsideArea = true; nearestName = loc.name || 'แผนกไม่ระบุชื่อ'; nearestDistance = d; break; }
+        // คำนวณเป็นเมตร
+        const distMeters = getDistanceInMeters(currentLat, currentLng, loc.lat, loc.lng);
+        
+        // แปลงค่ารัศมีเดิมที่เป็น km (ถ้ามี) ให้เป็นเมตร
+        let radiusMeters = loc.radius !== undefined ? loc.radius : 50;
+        if (radiusMeters < 10) radiusMeters = radiusMeters * 1000;
+
+        // บันทึกวอร์ดที่ใกล้ที่สุด
+        if (distMeters < minDistance) { 
+            minDistance = distMeters; 
+            closestName = loc.name || 'แผนกไม่ระบุชื่อ'; 
+            closestRadius = radiusMeters; 
+        }
+      }
+
+      // 2. เช็คว่าจุดที่ใกล้ที่สุดนั้น เราอยู่ในรัศมีที่เขากำหนดหรือเปล่า
+      if (closestRadius === 0 || minDistance <= closestRadius) {
+        isInsideArea = true;
       }
 
       if (isInsideArea) {
-        currentLocName = nearestName;
-        gpsStatus.innerHTML = `<span style="color:#34d399">📍 GPS: OK (แผนก ${nearestName} | ห่าง ${nearestDistance.toFixed(3)} km)</span>`;
+        currentLocName = closestName;
+        gpsStatus.innerHTML = `<span style="color:#34d399">📍 GPS: OK (แผนก ${closestName} | ห่าง ${Math.round(minDistance)} เมตร)</span>`;
       } else {
         currentLocName = "";
-        gpsStatus.innerHTML = `<span style="color:#f87171">📍 GPS: ห่างเกินไป (ใกล้สุดแผนก ${nearestName} ระยะ ${nearestDistance.toFixed(3)} km / กำหนดไว้ ${allowedRadius} km)</span>`;
+        gpsStatus.innerHTML = `<span style="color:#f87171">📍 GPS: ห่างเกินไป (ใกล้สุดแผนก ${closestName} ระยะ ${Math.round(minDistance)} เมตร / กำหนดไว้ ${closestRadius} เมตร)</span>`;
       }
     }
 
-    if (isInsideArea) { mainStatus.innerText = '✅ ระบบพร้อมใช้งาน'; mainStatus.style.color = '#34d399'; btnStart.style.display = 'inline-block'; } 
-    else { gpsAlertBox.style.display = 'block'; mainStatus.innerText = '⛔ ไม่อนุญาตให้สแกน'; overlayStatus.innerText = 'Out of Range'; }
+    if (isInsideArea) { 
+        mainStatus.innerText = '✅ ระบบพร้อมใช้งาน'; 
+        mainStatus.style.color = '#34d399'; 
+        btnStart.style.display = 'inline-block'; 
+    } else { 
+        gpsAlertBox.style.display = 'block'; 
+        mainStatus.innerText = '⛔ ไม่อนุญาตให้สแกน'; 
+        overlayStatus.innerText = 'Out of Range'; 
+    }
   }
 
   function startCamera() {
@@ -315,7 +338,15 @@
   }
 
   function showError(msg) { mainStatus.innerHTML = '<span style="color:#f87171">❌ ' + msg + '</span>'; }
-  function haversineKm(lat1, lon1, lat2, lon2) { const R = 6371; const dLat = deg2rad(lat2 - lat1); const dLon = deg2rad(lon2 - lon1); const a = Math.sin(dLat/2) ** 2 + Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) * Math.sin(dLon/2) ** 2; return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)); }
+  
+  // แปลงระยะทางและรับค่าออกเป็น "เมตร"
+  function getDistanceInMeters(lat1, lon1, lat2, lon2) { 
+    const R = 6371e3; // รัศมีของโลก (เมตร)
+    const dLat = deg2rad(lat2 - lat1); 
+    const dLon = deg2rad(lon2 - lon1); 
+    const a = Math.sin(dLat/2) ** 2 + Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) * Math.sin(dLon/2) ** 2; 
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)); 
+  }
   function deg2rad(deg) { return deg * Math.PI / 180; }
 </script>
 </body>
