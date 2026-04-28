@@ -6,6 +6,8 @@
   <title>ประวัติการเข้างาน / เข้าเวร</title>
   <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&display=swap" rel="stylesheet">
   <script src="js/api-config.js"></script>
+  <!-- เพิ่ม Library สำหรับจัดการไฟล์ Excel -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -59,8 +61,8 @@
     .text-green { color: #34d399; }
     .text-yellow { color: #fde047; }
 
-    /* Search & Toggle Area */
-    .search-container {
+    /* Search & Action Area */
+    .action-container {
       display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;
     }
     .search-box {
@@ -75,15 +77,25 @@
     }
     .search-box::placeholder { color: #64748b; }
 
-    .btn-toggle {
-      width: 100%; padding: 12px; border-radius: 12px;
-      background: rgba(96,165,250,0.1); border: 1px dashed rgba(96,165,250,0.4);
-      color: #93c5fd; font-family: 'Sarabun', sans-serif; font-size: 14px; font-weight: 600;
+    .button-group { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+    .btn-action {
+      padding: 12px; border-radius: 12px;
+      font-family: 'Sarabun', sans-serif; font-size: 13px; font-weight: 600;
       cursor: pointer; transition: all 0.3s ease;
+      display: flex; align-items: center; justify-content: center; gap: 6px;
     }
-    .btn-toggle:hover {
-      background: rgba(96,165,250,0.2); border-style: solid;
+    .btn-toggle {
+      background: rgba(96,165,250,0.1); border: 1px dashed rgba(96,165,250,0.4);
+      color: #93c5fd;
     }
+    .btn-toggle:hover { background: rgba(96,165,250,0.2); border-style: solid; }
+
+    .btn-download {
+      background: rgba(16,185,129,0.1); border: 1px dashed rgba(16,185,129,0.4);
+      color: #34d399;
+    }
+    .btn-download:hover { background: rgba(16,185,129,0.2); border-style: solid; }
 
     /* Logs Container */
     #logsContainer { display: flex; flex-direction: column; gap: 12px; }
@@ -155,9 +167,12 @@
     </div>
   </div>
 
-  <div class="search-container">
+  <div class="action-container">
     <input type="text" id="searchInput" class="search-box" placeholder="🔍 ค้นหา รหัสนักศึกษา, ชื่อ หรือ วันที่..." onkeyup="filterLogs()">
-    <button id="btnToggle" class="btn-toggle" onclick="toggleView()">📄 แสดงรายละเอียดทั้งหมด (ไม่แยกวัน)</button>
+    <div class="button-group">
+      <button id="btnToggle" class="btn-action btn-toggle" onclick="toggleView()">📄 แสดงรายละเอียด</button>
+      <button id="btnExport" class="btn-action btn-download" onclick="exportToExcel()">📊 ดาวน์โหลด Excel</button>
+    </div>
   </div>
 
   <div id="logsContainer">
@@ -170,7 +185,8 @@
   const API_URL = (typeof GAS_API_URL !== 'undefined' && GAS_API_URL) ? GAS_API_URL : BACKUP_API_URL;
   
   let allLogs = [];
-  let isSummaryMode = true; // กำหนดค่าเริ่มต้นให้อยู่ในโหมดสรุปรายวัน
+  let currentFilteredLogs = [];
+  let isSummaryMode = true; 
 
   window.onload = function() {
     fetchLogs();
@@ -184,7 +200,8 @@
       
       if (data.success && data.logs) {
         allLogs = data.logs; 
-        filterLogs(); // ใช้ filterLogs เป็นตัวจัดการการเรนเดอร์ครั้งแรก
+        currentFilteredLogs = [...allLogs];
+        filterLogs(); 
       } else {
         container.innerHTML = '<div class="no-data">❌ ไม่พบข้อมูลประวัติ หรือเกิดข้อผิดพลาด</div>';
       }
@@ -204,32 +221,26 @@
     document.getElementById('countTotal').innerText = logs.length;
   }
 
-  // ฟังก์ชันสลับโหมด (สรุปรายวัน / แสดงทุกรายการ)
   function toggleView() {
     isSummaryMode = !isSummaryMode;
-    document.getElementById('searchInput').value = ''; // ล้างช่องค้นหาทุกครั้งที่สลับโหมด
+    document.getElementById('searchInput').value = ''; 
     filterLogs();
   }
 
-  // เมื่อคลิกที่การ์ดสรุปรายวัน จะดึงวันที่นั้นไปใส่ในช่องค้นหาให้อัตโนมัติ
   function viewDateDetails(dateStr) {
     document.getElementById('searchInput').value = dateStr;
     filterLogs();
   }
 
-  // แสดงแค่ข้อมูลสรุปรายวัน (คลิกได้)
   function renderDailySummary(logs) {
     const container = document.getElementById('logsContainer');
     container.innerHTML = '';
-
     if (logs.length === 0) {
       container.innerHTML = '<div class="loading">ไม่พบข้อมูลประวัติ</div>';
       return;
     }
-
     const dates = [];
     const grouped = {};
-
     logs.forEach(log => {
       const dateStr = log.timestamp.split(' ')[0]; 
       if (!grouped[dateStr]) {
@@ -240,12 +251,11 @@
       else grouped[dateStr].normal++;
       grouped[dateStr].total++;
     });
-
     dates.forEach(date => {
       const data = grouped[date];
       const card = document.createElement('div');
       card.className = 'log-card summary-card';
-      card.onclick = () => viewDateDetails(date); // สั่งให้ค้นหาวันที่เมื่อคลิก
+      card.onclick = () => viewDateDetails(date);
       card.innerHTML = `
         <div class="log-header">
           <span class="sum-date">📅 วันที่ ${date}</span>
@@ -255,27 +265,23 @@
           <div class="sum-item text-green">☀️ ปกติ: ${data.normal}</div>
           <div class="sum-item text-yellow">🌙 เข้าเวร: ${data.shift}</div>
         </div>
-        <div class="click-hint">👆 คลิ๊กที่นี่เพื่อดูรายชื่อของวันนี้</div>
+        <div class="click-hint">👆 คลิ๊กเพื่อดูรายชื่อของวันนี้</div>
       `;
       container.appendChild(card);
     });
   }
 
-  // แสดงรายชื่อบุคคลแบบละเอียด
   function renderLogs(logs) {
     const container = document.getElementById('logsContainer');
     container.innerHTML = '';
-
     if (logs.length === 0) {
       container.innerHTML = '<div class="loading">ไม่พบข้อมูลที่ค้นหา</div>';
       return;
     }
-
     logs.forEach(log => {
       const isShift = log.type === 'เข้าเวร';
       const typeClass = isShift ? 'type-shift' : 'type-normal';
       const typeIcon = isShift ? '🌙' : '☀️';
-
       const card = document.createElement('div');
       card.className = 'log-card';
       card.innerHTML = `
@@ -293,33 +299,67 @@
     });
   }
 
-  // ระบบค้นหาอัจฉริยะ และจัดการแสดงผลตามโหมด
   function filterLogs() {
     const query = document.getElementById('searchInput').value.trim().toLowerCase();
-    
-    // หากช่องค้นหาว่างเปล่า ให้แสดงผลตามโหมดที่เลือกไว้ (Summary หรือ All Details)
     if (query === '') {
+      currentFilteredLogs = [...allLogs];
       updateStats(allLogs);
       if (isSummaryMode) {
-        document.getElementById('btnToggle').innerText = '📄 แสดงรายละเอียดทั้งหมด (ไม่แยกวัน)';
+        document.getElementById('btnToggle').innerText = '📄 แสดงรายละเอียด';
         renderDailySummary(allLogs);
       } else {
-        document.getElementById('btnToggle').innerText = '📅 กลับไปหน้าสรุปรายวัน';
+        document.getElementById('btnToggle').innerText = '📅 หน้าสรุปรายวัน';
         renderLogs(allLogs);
       }
       return;
     }
-
-    // หากมีการกรอกข้อมูล (รหัส, ชื่อ, หรือวันเวลา) ให้กรองข้อมูลและแสดงแบบละเอียด (Specific)
-    const filtered = allLogs.filter(log => {
+    currentFilteredLogs = allLogs.filter(log => {
       return log.name.toLowerCase().includes(query) || 
              String(log.studentId).toLowerCase().includes(query) ||
              log.location.toLowerCase().includes(query) ||
              log.timestamp.toLowerCase().includes(query);
     });
-    
-    updateStats(filtered);
-    renderLogs(filtered); // โชว์รายชื่อที่ค้นเจออย่างเจาะจง
+    updateStats(currentFilteredLogs);
+    renderLogs(currentFilteredLogs);
+  }
+
+  // ฟังก์ชันดาวน์โหลด Excel
+  function exportToExcel() {
+    if (currentFilteredLogs.length === 0) {
+      alert('ไม่มีข้อมูลให้ดาวน์โหลด');
+      return;
+    }
+
+    const confirmExport = confirm(`ต้องการดาวน์โหลดข้อมูลจำนวน ${currentFilteredLogs.length} รายการ เป็นไฟล์ Excel ใช่หรือไม่?`);
+    if (!confirmExport) return;
+
+    // เตรียมข้อมูลสำหรับ Excel
+    const excelData = currentFilteredLogs.map(log => ({
+      'วันที่/เวลา': log.timestamp,
+      'ประเภท': log.type,
+      'รหัสนักศึกษา': log.studentId,
+      'ชื่อ-นามสกุล': log.name,
+      'สถานที่/วอร์ด': log.location
+    }));
+
+    // สร้าง Workbook และ Worksheet
+    const worksheet = XLSX.utils.json_to_sheet(excelData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "AttendanceHistory");
+
+    // ปรับความกว้างคอลัมน์อัตโนมัติ
+    const wscols = [
+      {wch: 25}, // วันที่
+      {wch: 15}, // ประเภท
+      {wch: 15}, // รหัส
+      {wch: 25}, // ชื่อ
+      {wch: 30}  // สถานที่
+    ];
+    worksheet['!cols'] = wscols;
+
+    // ดาวน์โหลดไฟล์
+    const fileName = `Attendance_Report_${new Date().toISOString().slice(0,10)}.xlsx`;
+    XLSX.writeFile(workbook, fileName);
   }
 </script>
 
