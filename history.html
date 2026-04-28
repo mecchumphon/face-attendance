@@ -45,19 +45,6 @@
     h2 { font-size: 1.2em; font-weight: 600; color: #93c5fd; }
     .spacer { width: 70px; }
 
-    /* Search Box */
-    .search-box {
-      width: 100%; padding: 14px 18px; border-radius: 16px;
-      background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12);
-      color: #fff; font-family: 'Sarabun', sans-serif; font-size: 15px;
-      outline: none; transition: all 0.3s ease; margin-bottom: 20px;
-    }
-    .search-box:focus {
-      border-color: #60a5fa; background: rgba(255,255,255,0.1);
-      box-shadow: 0 0 15px rgba(96,165,250,0.2);
-    }
-    .search-box::placeholder { color: #64748b; }
-
     /* Stats Area */
     .stats-area {
       display: flex; gap: 10px; margin-bottom: 20px;
@@ -72,6 +59,32 @@
     .text-green { color: #34d399; }
     .text-yellow { color: #fde047; }
 
+    /* Search & Toggle Area */
+    .search-container {
+      display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;
+    }
+    .search-box {
+      width: 100%; padding: 14px 18px; border-radius: 16px;
+      background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12);
+      color: #fff; font-family: 'Sarabun', sans-serif; font-size: 15px;
+      outline: none; transition: all 0.3s ease;
+    }
+    .search-box:focus {
+      border-color: #60a5fa; background: rgba(255,255,255,0.1);
+      box-shadow: 0 0 15px rgba(96,165,250,0.2);
+    }
+    .search-box::placeholder { color: #64748b; }
+
+    .btn-toggle {
+      width: 100%; padding: 12px; border-radius: 12px;
+      background: rgba(96,165,250,0.1); border: 1px dashed rgba(96,165,250,0.4);
+      color: #93c5fd; font-family: 'Sarabun', sans-serif; font-size: 14px; font-weight: 600;
+      cursor: pointer; transition: all 0.3s ease;
+    }
+    .btn-toggle:hover {
+      background: rgba(96,165,250,0.2); border-style: solid;
+    }
+
     /* Logs Container */
     #logsContainer { display: flex; flex-direction: column; gap: 12px; }
     
@@ -80,7 +93,17 @@
       border-radius: 16px; padding: 16px; display: flex; flex-direction: column; gap: 10px;
       transition: transform 0.2s;
     }
-    .log-card:hover { transform: translateY(-2px); background: rgba(255,255,255,0.08); }
+    .log-card:not(.summary-card):hover { transform: translateY(-2px); background: rgba(255,255,255,0.08); }
+
+    /* Summary Card Specific (Clickable) */
+    .summary-card { cursor: pointer; border: 1px solid rgba(255,255,255,0.12); }
+    .summary-card:hover {
+      transform: translateY(-3px);
+      background: rgba(59,130,246,0.1);
+      border-color: rgba(96,165,250,0.5);
+      box-shadow: 0 4px 15px rgba(59,130,246,0.2);
+    }
+    .click-hint { font-size: 0.75em; color: #60a5fa; text-align: center; margin-top: 12px; font-weight: 600; }
 
     .log-header { display: flex; justify-content: space-between; align-items: center; }
     .log-type {
@@ -132,7 +155,10 @@
     </div>
   </div>
 
-  <input type="text" id="searchInput" class="search-box" placeholder="🔍 ค้นหา รหัสนักศึกษา, ชื่อ หรือ วันที่..." onkeyup="filterLogs()">
+  <div class="search-container">
+    <input type="text" id="searchInput" class="search-box" placeholder="🔍 ค้นหา รหัสนักศึกษา, ชื่อ หรือ วันที่..." onkeyup="filterLogs()">
+    <button id="btnToggle" class="btn-toggle" onclick="toggleView()">📄 แสดงรายละเอียดทั้งหมด (ไม่แยกวัน)</button>
+  </div>
 
   <div id="logsContainer">
     <div class="loading">⏳ กำลังโหลดข้อมูลประวัติจากระบบ...</div>
@@ -144,6 +170,7 @@
   const API_URL = (typeof GAS_API_URL !== 'undefined' && GAS_API_URL) ? GAS_API_URL : BACKUP_API_URL;
   
   let allLogs = [];
+  let isSummaryMode = true; // กำหนดค่าเริ่มต้นให้อยู่ในโหมดสรุปรายวัน
 
   window.onload = function() {
     fetchLogs();
@@ -157,10 +184,7 @@
       
       if (data.success && data.logs) {
         allLogs = data.logs; 
-        updateStats(allLogs);
-        
-        // เมื่อโหลดเสร็จ ให้แสดงหน้าสรุปรายวันเป็นค่าเริ่มต้น
-        renderDailySummary(allLogs);
+        filterLogs(); // ใช้ filterLogs เป็นตัวจัดการการเรนเดอร์ครั้งแรก
       } else {
         container.innerHTML = '<div class="no-data">❌ ไม่พบข้อมูลประวัติ หรือเกิดข้อผิดพลาด</div>';
       }
@@ -180,7 +204,20 @@
     document.getElementById('countTotal').innerText = logs.length;
   }
 
-  // ฟังก์ชันใหม่: แสดงแค่ข้อมูลสรุปรายวัน
+  // ฟังก์ชันสลับโหมด (สรุปรายวัน / แสดงทุกรายการ)
+  function toggleView() {
+    isSummaryMode = !isSummaryMode;
+    document.getElementById('searchInput').value = ''; // ล้างช่องค้นหาทุกครั้งที่สลับโหมด
+    filterLogs();
+  }
+
+  // เมื่อคลิกที่การ์ดสรุปรายวัน จะดึงวันที่นั้นไปใส่ในช่องค้นหาให้อัตโนมัติ
+  function viewDateDetails(dateStr) {
+    document.getElementById('searchInput').value = dateStr;
+    filterLogs();
+  }
+
+  // แสดงแค่ข้อมูลสรุปรายวัน (คลิกได้)
   function renderDailySummary(logs) {
     const container = document.getElementById('logsContainer');
     container.innerHTML = '';
@@ -190,30 +227,25 @@
       return;
     }
 
-    // จัดกลุ่มข้อมูลตามวันที่
     const dates = [];
     const grouped = {};
 
     logs.forEach(log => {
-      // ดึงเฉพาะวันที่ (ตัดเวลาทิ้ง) เช่น "28/4/2026"
       const dateStr = log.timestamp.split(' ')[0]; 
-      
       if (!grouped[dateStr]) {
         grouped[dateStr] = { normal: 0, shift: 0, total: 0 };
         dates.push(dateStr);
       }
-      
       if (log.type === 'เข้าเวร') grouped[dateStr].shift++;
       else grouped[dateStr].normal++;
-      
       grouped[dateStr].total++;
     });
 
-    // แสดงผลกลุ่มวันที่
     dates.forEach(date => {
       const data = grouped[date];
       const card = document.createElement('div');
-      card.className = 'log-card';
+      card.className = 'log-card summary-card';
+      card.onclick = () => viewDateDetails(date); // สั่งให้ค้นหาวันที่เมื่อคลิก
       card.innerHTML = `
         <div class="log-header">
           <span class="sum-date">📅 วันที่ ${date}</span>
@@ -223,12 +255,13 @@
           <div class="sum-item text-green">☀️ ปกติ: ${data.normal}</div>
           <div class="sum-item text-yellow">🌙 เข้าเวร: ${data.shift}</div>
         </div>
+        <div class="click-hint">👆 คลิ๊กที่นี่เพื่อดูรายชื่อของวันนี้</div>
       `;
       container.appendChild(card);
     });
   }
 
-  // ฟังก์ชันเดิม: แสดงรายชื่อบุคคล (จะถูกเรียกใช้ก็ต่อเมื่อมีการค้นหา)
+  // แสดงรายชื่อบุคคลแบบละเอียด
   function renderLogs(logs) {
     const container = document.getElementById('logsContainer');
     container.innerHTML = '';
@@ -260,27 +293,33 @@
     });
   }
 
-  // ระบบค้นหาอัจฉริยะ (สลับหน้าสรุปกับหน้ารายบุคคล)
+  // ระบบค้นหาอัจฉริยะ และจัดการแสดงผลตามโหมด
   function filterLogs() {
     const query = document.getElementById('searchInput').value.trim().toLowerCase();
     
-    // ถ้าช่องค้นหาว่างเปล่า ให้กลับไปแสดง "สรุปรายวัน"
+    // หากช่องค้นหาว่างเปล่า ให้แสดงผลตามโหมดที่เลือกไว้ (Summary หรือ All Details)
     if (query === '') {
       updateStats(allLogs);
-      renderDailySummary(allLogs);
+      if (isSummaryMode) {
+        document.getElementById('btnToggle').innerText = '📄 แสดงรายละเอียดทั้งหมด (ไม่แยกวัน)';
+        renderDailySummary(allLogs);
+      } else {
+        document.getElementById('btnToggle').innerText = '📅 กลับไปหน้าสรุปรายวัน';
+        renderLogs(allLogs);
+      }
       return;
     }
 
-    // ถ้ามีการพิมพ์ค้นหา ให้ค้นหาและแสดงผลแบบ "รายชื่อบุคคล"
+    // หากมีการกรอกข้อมูล (รหัส, ชื่อ, หรือวันเวลา) ให้กรองข้อมูลและแสดงแบบละเอียด (Specific)
     const filtered = allLogs.filter(log => {
       return log.name.toLowerCase().includes(query) || 
-             log.studentId.toLowerCase().includes(query) ||
+             String(log.studentId).toLowerCase().includes(query) ||
              log.location.toLowerCase().includes(query) ||
-             log.timestamp.toLowerCase().includes(query); // ค้นหาด้วยวันที่ได้ด้วย
+             log.timestamp.toLowerCase().includes(query);
     });
     
     updateStats(filtered);
-    renderLogs(filtered); // โชว์รายชื่อที่ค้นเจอ
+    renderLogs(filtered); // โชว์รายชื่อที่ค้นเจออย่างเจาะจง
   }
 </script>
 
