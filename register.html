@@ -5,8 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>ลงทะเบียนใบหน้า</title>
   <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&display=swap" rel="stylesheet">
-  <script src="js/api-config.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -48,38 +47,30 @@
     /* Card */
     .card { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 24px; backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); margin-bottom: 20px; }
     
-    .form-row { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
-    .form-group { flex: 1; min-width: 45%; }
+    .form-group { margin-bottom: 16px; }
     label { display: block; font-size: 0.85em; font-weight: 600; color: #94a3b8; margin-bottom: 8px; }
     input { width: 100%; padding: 14px 16px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); border-radius: 12px; color: #e2e8f0; font-size: 15px; font-family: 'Sarabun', sans-serif; transition: all 0.3s ease; outline: none; }
     input:focus { border-color: rgba(99,102,241,0.5); background: rgba(99,102,241,0.08); box-shadow: 0 0 0 3px rgba(99,102,241,0.15); }
 
     /* Video area */
-    .video-wrapper { position: relative; width: 100%; border-radius: 16px; overflow: hidden; background: #060612; border: 1px solid rgba(255,255,255,0.05); margin-bottom: 20px; }
-    video { width: 100%; height: auto; display: block; transform: scaleX(-1); }
-    .video-overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.6); color: #94a3b8; font-size: 0.9em; z-index: 2; text-align: center; padding: 20px; }
-    .face-guide { position: absolute; top: 15%; bottom: 15%; left: 20%; right: 20%; border: 2px dashed rgba(255,255,255,0.3); border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%; z-index: 3; pointer-events: none; }
+    .video-wrapper { position: relative; width: 100%; border-radius: 16px; overflow: hidden; background: #060612; border: 1px solid rgba(255,255,255,0.05); margin-bottom: 20px; min-height: 250px; }
+    video { width: 100%; height: auto; display: block; transform: scaleX(-1); opacity: 0; transition: opacity 0.5s ease;}
+    video.active { opacity: 1; }
+    
+    .face-guide { position: absolute; top: 15%; bottom: 15%; left: 20%; right: 20%; border: 2px dashed rgba(99,102,241,0.5); border-radius: 50%; z-index: 5; pointer-events: none; }
+    #overlay-text { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #64748b; font-size: 0.9em; z-index: 2; pointer-events: none; }
 
-    .progress-dots { display: flex; justify-content: center; gap: 8px; margin-bottom: 20px; }
-    .dot { width: 10px; height: 10px; border-radius: 50%; background: rgba(255,255,255,0.1); transition: all 0.3s ease; }
-    .dot.active { background: #10b981; box-shadow: 0 0 8px #10b981; }
-
-    .btn { border: none; border-radius: 12px; cursor: pointer; font-family: 'Sarabun', sans-serif; font-size: 16px; font-weight: 600; padding: 15px; width: 100%; transition: all 0.3s ease; }
-    .btn-save { background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; box-shadow: 0 4px 20px rgba(99,102,241,0.3); }
-    .btn-save:hover:not(:disabled) { box-shadow: 0 8px 30px rgba(99,102,241,0.5); transform: translateY(-2px); }
-    .btn-save:disabled { background: rgba(255,255,255,0.1); color: #64748b; box-shadow: none; cursor: not-allowed; transform: none; }
-
-    #msg { margin-top: 16px; text-align: center; font-size: 0.9em; min-height: 22px; font-weight: 600; }
-    .msg-success { color: #34d399; }
-    .msg-error { color: #f87171; }
-    .count-badge { display: inline-block; background: rgba(0,0,0,0.3); padding: 2px 8px; border-radius: 10px; font-size: 0.8em; margin-left: 6px; }
-
+    /* Buttons */
+    .btn { width: 100%; border: none; border-radius: 14px; padding: 16px; font-size: 16px; font-weight: 600; cursor: pointer; font-family: 'Sarabun', sans-serif; transition: all 0.3s ease; }
+    .btn-primary { background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; box-shadow: 0 4px 20px rgba(99,102,241,0.3); }
+    .btn-primary:hover { box-shadow: 0 6px 25px rgba(99,102,241,0.5); transform: translateY(-2px); }
+    
     @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
   </style>
 </head>
 <body>
 <div class="container">
-
+  
   <div class="top-bar">
     <a href="index.html" class="back-btn">← กลับ</a>
     <h2>👤 ลงทะเบียนใบหน้า</h2>
@@ -89,164 +80,132 @@
   <div class="instruction-box">
     <div class="instruction-icon">💡</div>
     <div class="instruction-content">
-      <div class="instruction-title">เพื่อความแม่นยำสูงสุด กรุณาบันทึก 3 มุม:</div>
+      <div class="instruction-title">คำแนะนำการถ่ายภาพ</div>
       <ul class="instruction-list">
-        <li>มองตรงเข้าหากล้อง</li>
-        <li>หันหน้าไปทางซ้ายเล็กน้อย</li>
-        <li>หันหน้าไปทางขวาเล็กน้อย</li>
+        <li>มองกล้องหน้าตรง ไม่สวมแว่นตาดำหรือแมสก์</li>
+        <li>อยู่ในที่มีแสงสว่างเพียงพอ หน้าไม่มืด</li>
+        <li>ให้ใบหน้าอยู่กึ่งกลางกรอบวงกลม</li>
       </ul>
     </div>
   </div>
 
   <div class="card">
-    <div class="form-row">
-      <div class="form-group">
-        <label>รหัสนักศึกษา</label>
-        <input type="text" id="studentId" placeholder="เช่น 640001">
-      </div>
-      <div class="form-group">
-        <label>ชื่อ-นามสกุล</label>
-        <input type="text" id="empName" placeholder="เช่น สมชาย ใจดี">
-      </div>
+    <div class="form-group">
+      <label for="studentId">รหัสพนักงาน / รหัสนักศึกษา</label>
+      <input type="text" id="studentId" placeholder="ระบุรหัสประจำตัว" autocomplete="off">
+    </div>
+    
+    <div class="form-group">
+      <label for="name">ชื่อ - นามสกุล</label>
+      <input type="text" id="name" placeholder="ระบุชื่อ-นามสกุล" autocomplete="off">
     </div>
 
     <div class="video-wrapper">
+      <div id="overlay-text">รอเปิดกล้อง...</div>
       <div class="face-guide"></div>
-      <div id="videoOverlay" class="video-overlay">⏳ กำลังเตรียมกล้องและ AI...</div>
       <video id="video" autoplay muted playsinline></video>
     </div>
 
-    <div class="progress-dots" id="dotContainer">
-      <div class="dot" id="dot1"></div>
-      <div class="dot" id="dot2"></div>
-      <div class="dot" id="dot3"></div>
-    </div>
-
-    <button class="btn btn-save" id="btnSave" onclick="captureAndSave()" disabled>
-      📸 บันทึกใบหน้า <span class="count-badge" id="saveCount">0</span>
-    </button>
-    <div id="msg"></div>
+    <button id="btnAction" class="btn btn-primary" onclick="handleAction()">📷 เปิดกล้อง</button>
   </div>
-  
 </div>
 
+<!-- Canvas สำหรับดึงภาพ -->
+<canvas id="canvas" style="display: none;"></canvas>
+
 <script>
-  const BACKUP_API_URL = "https://script.google.com/macros/s/AKfycbwcP4hjqvJqyLtbXhd4ifwusSVSB_Y7TP9uYUW6_LSKCzd920_Wv8BRWzH7FmqmHZRmBQ/exec";
-  const API_URL = (typeof GAS_API_URL !== 'undefined' && GAS_API_URL) ? GAS_API_URL : BACKUP_API_URL;
-  const MODEL_URL = 'https://justadudewhohacks.github.io/face-api.js/models';
+  // 🚨 ใส่ URL ของ Web App (Google Apps Script) ที่นี่
+  const API_URL = "https://script.google.com/macros/s/AKfycbwcP4hjqvJqyLtbXhd4ifwusSVSB_Y7TP9uYUW6_LSKCzd920_Wv8BRWzH7FmqmHZRmBQ/exec"; 
 
   const video = document.getElementById('video');
-  const btnSave = document.getElementById('btnSave');
-  const msgDiv = document.getElementById('msg');
-  const countSpan = document.getElementById('saveCount');
-  const overlay = document.getElementById('videoOverlay');
+  const canvas = document.getElementById('canvas');
+  const btnAction = document.getElementById('btnAction');
+  const overlayText = document.getElementById('overlay-text');
+  
+  const inputId = document.getElementById('studentId');
+  const inputName = document.getElementById('name');
 
-  let saveCounter = 0;
-  const MAX_SAVES = 3;
-  let collectedDescriptors = []; // 📌 เก็บรูปรวมไว้ 3 รูปก่อนแล้วค่อยส่ง
+  let isCameraActive = false;
 
-  window.addEventListener('load', init);
-
-  async function init() {
-    if (!API_URL) {
-      overlay.innerHTML = '<span style="color:#f87171">❌ ไม่พบ API URL กรุณาตั้งค่าก่อน</span>';
-      return;
-    }
-    try {
-      await Promise.all([
-        faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL),
-        faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
-        faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL)
-      ]);
-      startCamera();
-    } catch (e) {
-      overlay.innerHTML = '<span style="color:#f87171">❌ โหลดโมเดลไม่สำเร็จ: ' + e.message + '</span>';
-    }
-  }
-
-  function startCamera() {
-    navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } })
-      .then(stream => { video.srcObject = stream; overlay.style.display = 'none'; btnSave.disabled = false; })
-      .catch(err => { overlay.innerHTML = '<span style="color:#f87171">❌ เปิดกล้องไม่ได้: ' + err.message + '</span>'; });
-  }
-
-  function updateDots() {
-    for (let i = 1; i <= MAX_SAVES; i++) {
-      const dot = document.getElementById('dot' + i);
-      if (i <= saveCounter) dot.classList.add('active');
-      else dot.classList.remove('active');
-    }
-  }
-
-  async function captureAndSave() {
-    const studentId = document.getElementById('studentId').value.trim();
-    const name = document.getElementById('empName').value.trim();
-    
-    if (!studentId) return alert('กรุณาใส่รหัสนักศึกษาก่อน');
-    if (!name) return alert('กรุณาใส่ชื่อ-นามสกุลก่อน');
-
-    btnSave.disabled = true;
-    btnSave.innerHTML = '⏳ กำลังประมวลผล...';
-    msgDiv.innerText = '';
-
-    const detection = await faceapi.detectSingleFace(video).withFaceLandmarks().withFaceDescriptor();
-
-    if (!detection) {
-      alert('ไม่พบใบหน้า! กรุณามองกล้องให้ชัดเจน');
-      btnSave.disabled = false;
-      btnSave.innerHTML = `📸 บันทึกใบหน้า <span class="count-badge" id="saveCount">${saveCounter}</span>`;
-      return;
-    }
-
-    // 📌 ดึงข้อมูลโครงหน้ามาเก็บไว้ใน Array (ยังไม่ส่งไป Google Sheets)
-    const descriptorArray = Array.from(detection.descriptor);
-    collectedDescriptors.push(descriptorArray);
-
-    saveCounter++;
-    countSpan.innerText = saveCounter;
-    updateDots();
-
-    // 📌 ถ้ายังไม่ครบ 3 รูป ให้อัปเดตแค่ปุ่ม แล้วหยุดแค่นี้
-    if (saveCounter < MAX_SAVES) {
-      msgDiv.innerHTML = `<span class="msg-success">✅ บันทึกรูปที่ ${saveCounter}/3 สำเร็จ! ขยับหน้าเล็กน้อยแล้วกดอีกครั้ง</span>`;
-      btnSave.disabled = false;
-      btnSave.innerHTML = `📸 บันทึกเพิ่ม <span class="count-badge" id="saveCount">${saveCounter}</span>`;
-    
-    // 📌 ถ้าถ่ายครบ 3 รูปแล้ว ให้ส่งข้อมูลทั้งหมดไป Google Sheets "ทีเดียว"
-    } else {
-      btnSave.innerHTML = '⏳ กำลังตรวจสอบและบันทึกข้อมูล...';
-      msgDiv.innerHTML = '<span style="color:#fcd34d">กำลังส่งข้อมูลไปที่ฐานข้อมูล กรุณารอสักครู่...</span>';
-
-      try {
-        const res = await fetch(API_URL, {
-          method: 'POST',
-          body: JSON.stringify({ 
-            action: 'registerUser', 
-            studentId: studentId, 
-            name: name, 
-            faceDescriptors: collectedDescriptors // ส่งทีเดียวทั้ง 3 รูปเลย
-          })
+  function handleAction() {
+    if (!isCameraActive) {
+      // เปิดกล้อง
+      navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } } })
+        .then(stream => { 
+          video.srcObject = stream; 
+          video.classList.add('active'); 
+          overlayText.style.display = 'none';
+          
+          isCameraActive = true;
+          btnAction.innerHTML = '📸 ถ่ายภาพและลงทะเบียน';
+        })
+        .catch(err => { 
+          Swal.fire('ข้อผิดพลาด', 'ไม่สามารถเข้าถึงกล้องได้ กรุณาอนุญาตให้สิทธิ์', 'error');
         });
-        const data = await res.json();
-        
-        if (data.error) throw new Error(data.error);
+    } else {
+      // ตรวจสอบข้อมูล
+      const studentId = inputId.value.trim();
+      const name = inputName.value.trim();
 
-        msgDiv.innerHTML = '<span class="msg-success" style="font-size:1.1em;">🎉 ลงทะเบียนเสร็จสมบูรณ์!</span>';
-        btnSave.style.display = 'none';
-        setTimeout(() => window.location.href = 'index.html', 2000);
-
-      } catch (e) {
-        msgDiv.innerHTML = '<span class="msg-error">' + e.message + '</span>';
-        
-        // ถ้ารหัส/ชื่อซ้ำ หรือมี Error ให้ล้างข้อมูลรูปเก่าทิ้ง แล้วกลับไปเริ่มรูปที่ 1 ใหม่
-        collectedDescriptors = [];
-        saveCounter = 0;
-        updateDots();
-        countSpan.innerText = saveCounter;
-        
-        btnSave.disabled = false;
-        btnSave.innerHTML = '📸 เริ่มบันทึกใหม่ <span class="count-badge" id="saveCount">0</span>';
+      if (!studentId || !name) {
+        Swal.fire('แจ้งเตือน', 'กรุณากรอกรหัสและชื่อให้ครบถ้วน', 'warning');
+        return;
       }
+
+      // ดำเนินการถ่ายและส่ง
+      takePictureAndRegister(studentId, name);
+    }
+  }
+
+  async function takePictureAndRegister(studentId, name) {
+    // วาดรูปลง Canvas
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const ctx = canvas.getContext('2d');
+    ctx.translate(canvas.width, 0); 
+    ctx.scale(-1, 1);
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    
+    // แปลงภาพ
+    const imageBase64 = canvas.toDataURL('image/jpeg', 0.8);
+
+    Swal.fire({
+      title: 'กำลังลงทะเบียน...',
+      html: 'กำลังประมวลผลโครงสร้างใบหน้า',
+      allowOutsideClick: false,
+      didOpen: () => { Swal.showLoading(); }
+    });
+
+    try {
+      const response = await fetch(API_URL, {
+        method: 'POST',
+        body: JSON.stringify({
+          action: 'registerFacePP',
+          studentId: studentId,
+          name: name,
+          imageBase64: imageBase64
+        })
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        Swal.fire({
+          icon: 'success',
+          title: 'สำเร็จ!',
+          text: result.message,
+          confirmButtonColor: '#4f46e5'
+        }).then(() => {
+          // เคลียร์ฟอร์ม
+          inputId.value = '';
+          inputName.value = '';
+        });
+      } else {
+        Swal.fire('ผิดพลาด', result.error, 'error');
+      }
+
+    } catch (error) {
+      Swal.fire('ผิดพลาด', 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้: ' + error.message, 'error');
     }
   }
 </script>
