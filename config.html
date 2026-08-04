@@ -5,7 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>ตั้งค่าระบบ</title>
   <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&display=swap" rel="stylesheet">
-  <script src="js/api-config.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <!-- โหลดไฟล์ Config กลางและป้องกันแคช -->
+  <script src="js/api-config.js?v=2.2.0"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -93,7 +95,8 @@
       display: flex; align-items: center; justify-content: center;
       font-size: 17px;
     }
-    .section-icon.cyan    { background: rgba(6,182,212,0.2);  }
+    .section-icon.cyan   { background: rgba(6,182,212,0.2);  }
+    .section-icon.purple { background: rgba(147,51,234,0.2); }
     .section-title-text { font-weight: 600; font-size: 0.95em; color: #c7d2fe; }
 
     /* Inputs */
@@ -117,10 +120,6 @@
     input:focus {
       border-color: rgba(99,102,241,0.5);
       background: rgba(99,102,241,0.07);
-    }
-    .note {
-      font-size: 0.78em; color: #475569;
-      margin-top: -10px; margin-bottom: 14px; line-height: 1.5;
     }
 
     /* Buttons */
@@ -197,10 +196,21 @@
     <a href="index.html" class="back-btn">← กลับ</a>
     <button onclick="logoutAdmin()" class="back-btn logout-btn">ออกจากระบบ</button>
     <h2>⚙️ ตั้งค่าระบบ</h2>
-    <p class="page-subtitle">จัดการจุดเช็คอิน (หลายสาขา/จุด)</p>
+    <p class="page-subtitle">จัดการ API URL และจุดเช็คอิน (หลายสาขา/จุด)</p>
   </div>
 
-  <div class="section-header">
+  <!-- ส่วนที่ 1: ตั้งค่า API URL -->
+  <div class="card">
+    <div class="section-header">
+      <div class="section-icon purple">🔗</div>
+      <span class="section-title-text">ตั้งค่า Web App URL (Google Apps Script)</span>
+    </div>
+    <label>WEB APP URL (/exec)</label>
+    <input type="text" id="apiUrlInput" placeholder="https://script.google.com/macros/s/.../exec">
+  </div>
+
+  <!-- ส่วนที่ 2: พิกัดจุดเช็คอิน -->
+  <div class="section-header" style="margin-top: 24px;">
     <div class="section-icon cyan">📍</div>
     <span class="section-title-text">พิกัดจุดเช็คอินที่อนุญาต</span>
   </div>
@@ -221,10 +231,10 @@
 <script>
   // ==========================================
   const ADMIN_PASSWORD = "MECCP1234";
-  const BACKUP_API_URL = "https://script.google.com/macros/s/AKfycbwcP4hjqvJqyLtbXhd4ifwusSVSB_Y7TP9uYUW6_LSKCzd920_Wv8BRWzH7FmqmHZRmBQ/exec";
+  const DEFAULT_URL = "https://script.google.com/macros/s/AKfycbwcP4hjqvJqyLtbXhd4ifwusSVSB_Y7TP9uYUW6_LSKCzd920_Wv8BRWzH7FmqmHZRmBQ/exec";
 
   function getApiUrl() {
-    return (typeof GAS_API_URL !== 'undefined' && GAS_API_URL) ? GAS_API_URL : BACKUP_API_URL;
+    return localStorage.getItem('gasApiUrl') || (typeof GAS_API_URL !== 'undefined' ? GAS_API_URL : DEFAULT_URL);
   }
   // ==========================================
 
@@ -234,6 +244,7 @@
   const loginMsgDiv = document.getElementById('loginMsg');
   const loginContainer = document.getElementById('loginContainer');
   const mainContainer = document.getElementById('mainContainer');
+  const apiUrlInput = document.getElementById('apiUrlInput');
 
   window.onload = function() {
     if (sessionStorage.getItem('isAdminLogged') === 'true') {
@@ -261,25 +272,28 @@
     loginContainer.style.display = 'none';
     mainContainer.style.display = 'block';
     
-    const fixedUrl = getApiUrl();
-    if (fixedUrl) loadGpsConfig(fixedUrl);
+    const activeUrl = getApiUrl();
+    apiUrlInput.value = activeUrl;
+    
+    if (activeUrl) loadGpsConfig(activeUrl);
   }
 
   function loadGpsConfig(apiUrl) {
     showMsg('⏳ กำลังโหลดพิกัดเดิม...', '');
     fetch(apiUrl + '?action=getConfig')
-      .then(r => r.json())
+      .then(r => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      })
       .then(config => {
         showMsg('', '');
         if (config.locations && Array.isArray(config.locations)) {
-          // ดึงข้อมูลมาแล้วเช็คว่า ถ้าเป็นค่าเดิมแบบกิโลเมตร (ค่าน้อยกว่า 10) ให้คูณ 1000 เป็นเมตร
           locations = config.locations.map(loc => {
             let r = loc.radius !== undefined ? loc.radius : 50;
             if (r < 10) { r = r * 1000; } // แปลงจาก KM เป็น เมตร
             return { ...loc, radius: r };
           });
         } else if (config.lat && config.lng) {
-          // รองรับระบบเก่ามากๆ
           let r = config.radius || 0.1;
           if (r < 10) r = r * 1000;
           locations = [{ name: 'สาขาหลัก', lat: config.lat, lng: config.lng, radius: r }];
@@ -290,8 +304,8 @@
         if(locations.length === 0) addLocation();
         else renderLocations();
       })
-      .catch(() => { 
-        showMsg('❌ โหลดข้อมูลไม่สำเร็จ', 'error');
+      .catch((err) => { 
+        showMsg('❌ โหลดข้อมูลพิกัดไม่สำเร็จ: ' + err.message, 'error');
         addLocation(); 
       });
   }
@@ -324,7 +338,6 @@
             </div>
           </div>
 
-          <!-- เปลี่ยนจากกิโลเมตรเป็นเมตร -->
           <label>รัศมีที่ยอมรับ (เมตร) - แนะนำ 30 ถึง 50 เมตร</label>
           <input type="number" step="1" value="${loc.radius !== undefined ? loc.radius : 50}" onchange="updateLoc(${idx}, 'radius', this.value)">
         </div>
@@ -337,22 +350,31 @@
   }
 
   function addLocation() {
-    // ค่าเริ่มต้นเวลาเพิ่มจุดใหม่ ให้รัศมีเป็น 50 เมตร
     locations.push({ name: '', lat: '', lng: '', radius: 50 });
     renderLocations();
   }
 
   function removeLocation(idx) {
-    if(confirm('ลบจุดเช็คอินนี้?')) {
-      locations.splice(idx, 1);
-      renderLocations();
-    }
+    Swal.fire({
+      title: 'ยืนยันการลบ?',
+      text: 'คุณต้องการลบจุดเช็คอินนี้หรือไม่',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#ef4444',
+      cancelButtonColor: '#64748b',
+      confirmButtonText: 'ลบ',
+      cancelButtonText: 'ยกเลิก'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        locations.splice(idx, 1);
+        renderLocations();
+      }
+    });
   }
 
   function getCurrentLocationFor(idx) {
-    if (!navigator.geolocation) return alert('Browser นี้ไม่รองรับ Geolocation');
+    if (!navigator.geolocation) return Swal.fire('ข้อผิดพลาด', 'Browser นี้ไม่รองรับ Geolocation', 'error');
     
-    // ตั้งค่าให้ดึงพิกัดแบบแม่นยำสูง (High Accuracy)
     const options = { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 };
     
     navigator.geolocation.getCurrentPosition(
@@ -360,17 +382,23 @@
         locations[idx].lat = pos.coords.latitude;
         locations[idx].lng = pos.coords.longitude;
         renderLocations();
-        alert('✅ ดึงพิกัดเรียบร้อย (ความคลาดเคลื่อน: ' + Math.round(pos.coords.accuracy) + ' เมตร)');
+        Swal.fire({
+          icon: 'success',
+          title: 'ดึงพิกัดสำเร็จ',
+          text: `ความคลาดเคลื่อน: ${Math.round(pos.coords.accuracy)} เมตร`,
+          timer: 2000,
+          showConfirmButton: false
+        });
       },
-      err => alert('❌ ไม่สามารถดึงตำแหน่งได้: ' + err.message),
+      err => Swal.fire('ผิดพลาด', 'ไม่สามารถดึงตำแหน่งได้: ' + err.message, 'error'),
       options
     );
   }
 
   // ----- บันทึก -----
   async function saveAll() {
-    const apiUrl = getApiUrl();
-    if (!apiUrl) return showMsg('❌ ไม่พบ API URL', 'error');
+    const newUrl = apiUrlInput.value.trim();
+    if (!newUrl) return showMsg('❌ กรุณากรอก Web App URL', 'error');
 
     if (locations.length === 0) return showMsg('❌ ต้องมีจุดเช็คอินอย่างน้อย 1 จุด', 'error');
 
@@ -380,17 +408,37 @@
       }
     }
 
-    showMsg('⏳ กำลังบันทึก...', '');
+    // เซ็ตลง LocalStorage ทันที
+    localStorage.setItem('gasApiUrl', newUrl);
+
+    showMsg('⏳ กำลังบันทึกการตั้งค่าไปยังเซิร์ฟเวอร์...', '');
 
     try {
-      const res = await fetch(apiUrl, {
+      const res = await fetch(newUrl, {
         method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: JSON.stringify({ action: 'saveConfig', locations: locations })
       });
+
+      if (!res.ok) throw new Error(`HTTP status ${res.status}`);
+
       const data = await res.json();
-      showMsg('✅ ' + (data.message || 'บันทึกสำเร็จ'), 'success');
+
+      if (data.success || data.message) {
+        Swal.fire({
+          icon: 'success',
+          title: 'บันทึกสำเร็จ!',
+          text: data.message || 'ตั้งค่าระบบเรียบร้อยแล้ว',
+          confirmButtonColor: '#10b981'
+        });
+        showMsg('✅ ' + (data.message || 'บันทึกสำเร็จ'), 'success');
+      } else {
+        showMsg('❌ บันทึกไม่สำเร็จ: ' + (data.error || 'เกิดข้อผิดพลาด'), 'error');
+      }
+
     } catch (e) {
-      showMsg('❌ เชื่อมต่อ API ไม่ได้: ' + e.message, 'error');
+      showMsg('❌ เชื่อมต่อ API ไม่ได้ ( Error 404 หรือ URL ไม่ถูกต้อง ): ' + e.message, 'error');
+      Swal.fire('เกิดข้อผิดพลาด', 'ไม่สามารถเชื่อมต่อ API ได้ กรุณาตรวจสอบ Web App URL', 'error');
     }
   }
 
