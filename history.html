@@ -2,366 +2,390 @@
 <html lang="th">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ประวัติการเข้างาน / เข้าเวร</title>
   <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&display=swap" rel="stylesheet">
-  <script src="js/api-config.js"></script>
-  <!-- เพิ่ม Library สำหรับจัดการไฟล์ Excel -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <!-- SheetJS สำหรับ Export เป็นไฟล์ Excel (.xlsx) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
       font-family: 'Sarabun', sans-serif;
       min-height: 100vh;
-      background: linear-gradient(135deg, #0f0f23 0%, #1a1a3e 50%, #0d1b2a 100%);
+      background: linear-gradient(160deg, #0f0f23 0%, #111827 60%, #0a0f1e 100%);
       color: #e2e8f0;
       display: flex;
       flex-direction: column;
       align-items: center;
       padding: 24px 16px 50px;
-      position: relative;
     }
 
-    body::before {
-      content: ''; position: fixed; width: 400px; height: 400px;
-      background: #3b82f6; border-radius: 50%; filter: blur(120px);
-      opacity: 0.1; top: -100px; right: -100px; pointer-events: none; z-index: 0;
+    .container {
+      width: 100%;
+      max-width: 800px;
+      animation: fadeIn 0.4s ease;
     }
 
-    .page-wrap {
-      width: 100%; max-width: 560px; position: relative; z-index: 1;
-      animation: fadeIn 0.5s ease;
+    /* Top Navigation */
+    .top-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      margin-bottom: 20px;
     }
 
-    /* Header */
-    .top-bar { display: flex; align-items: center; justify-content: space-between; width: 100%; margin-bottom: 20px; }
     .back-btn {
-      display: inline-flex; align-items: center; gap: 6px;
-      color: #64748b; text-decoration: none; font-size: 0.85em;
-      padding: 6px 12px; border-radius: 20px;
-      background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: #94a3b8;
+      text-decoration: none;
+      font-size: 0.88em;
+      padding: 6px 14px;
+      border-radius: 20px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
       transition: all 0.25s ease;
     }
-    .back-btn:hover { color: #e2e8f0; background: rgba(255,255,255,0.1); }
-    h2 { font-size: 1.2em; font-weight: 600; color: #93c5fd; }
-    .spacer { width: 70px; }
+    .back-btn:hover { color: #f8fafc; background: rgba(255,255,255,0.12); }
 
-    /* Stats Area */
-    .stats-area {
-      display: flex; gap: 10px; margin-bottom: 20px;
+    h2 { font-size: 1.25em; font-weight: 700; color: #cbd5e1; }
+
+    /* Summary Stats Grid */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 20px;
     }
+
     .stat-card {
-      flex: 1; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 14px; padding: 12px; text-align: center;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 16px;
+      padding: 16px;
+      text-align: center;
+      backdrop-filter: blur(10px);
     }
-    .stat-value { font-size: 1.5em; font-weight: 700; color: #e2e8f0; margin-bottom: 4px; }
-    .stat-label { font-size: 0.75em; color: #94a3b8; }
-    
-    .text-green { color: #34d399; }
-    .text-yellow { color: #fde047; }
 
-    /* Search & Action Area */
-    .action-container {
-      display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;
+    .stat-number {
+      font-size: 1.8em;
+      font-weight: 700;
+      margin-top: 4px;
     }
-    .search-box {
-      width: 100%; padding: 14px 18px; border-radius: 16px;
-      background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12);
-      color: #fff; font-family: 'Sarabun', sans-serif; font-size: 15px;
-      outline: none; transition: all 0.3s ease;
+
+    .stat-label { font-size: 0.8em; color: #94a3b8; }
+    .stat-normal { color: #34d399; }
+    .stat-shift { color: #facc15; }
+    .stat-total { color: #818cf8; }
+
+    /* Search & Tools Control */
+    .controls-card {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
     }
-    .search-box:focus {
-      border-color: #60a5fa; background: rgba(255,255,255,0.1);
-      box-shadow: 0 0 15px rgba(96,165,250,0.2);
+
+    .search-input {
+      width: 100%;
+      padding: 12px 16px;
+      background: rgba(0,0,0,0.3);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 10px;
+      color: #f8fafc;
+      font-family: 'Sarabun', sans-serif;
+      font-size: 0.95em;
+      outline: none;
     }
-    .search-box::placeholder { color: #64748b; }
+    .search-input:focus { border-color: #6366f1; }
 
-    .button-group { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-
-    .btn-action {
-      padding: 12px; border-radius: 12px;
-      font-family: 'Sarabun', sans-serif; font-size: 13px; font-weight: 600;
-      cursor: pointer; transition: all 0.3s ease;
-      display: flex; align-items: center; justify-content: center; gap: 6px;
+    .btn-group {
+      display: flex;
+      gap: 10px;
     }
-    .btn-toggle {
-      background: rgba(96,165,250,0.1); border: 1px dashed rgba(96,165,250,0.4);
-      color: #93c5fd;
+
+    .btn {
+      flex: 1;
+      padding: 12px;
+      border: none;
+      border-radius: 10px;
+      font-family: 'Sarabun', sans-serif;
+      font-size: 0.9em;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.25s ease;
     }
-    .btn-toggle:hover { background: rgba(96,165,250,0.2); border-style: solid; }
 
-    .btn-download {
-      background: rgba(16,185,129,0.1); border: 1px dashed rgba(16,185,129,0.4);
-      color: #34d399;
+    .btn-detail { background: rgba(99,102,241,0.2); color: #c7d2fe; border: 1px solid rgba(99,102,241,0.4); }
+    .btn-detail:hover { background: rgba(99,102,241,0.35); }
+
+    .btn-excel { background: rgba(16,185,129,0.2); color: #a7f3d0; border: 1px solid rgba(16,185,129,0.4); }
+    .btn-excel:hover { background: rgba(16,185,129,0.35); }
+
+    /* Alert Message Box */
+    .status-alert {
+      padding: 16px;
+      border-radius: 12px;
+      text-align: center;
+      font-size: 0.9em;
+      margin-bottom: 20px;
+      display: none;
     }
-    .btn-download:hover { background: rgba(16,185,129,0.2); border-style: solid; }
-
-    /* Logs Container */
-    #logsContainer { display: flex; flex-direction: column; gap: 12px; }
-    
-    .log-card {
-      background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 16px; padding: 16px; display: flex; flex-direction: column; gap: 10px;
-      transition: transform 0.2s;
+    .status-alert.error {
+      background: rgba(239,68,68,0.15);
+      border: 1px solid rgba(239,68,68,0.3);
+      color: #fca5a5;
     }
-    .log-card:not(.summary-card):hover { transform: translateY(-2px); background: rgba(255,255,255,0.08); }
 
-    /* Summary Card Specific (Clickable) */
-    .summary-card { cursor: pointer; border: 1px solid rgba(255,255,255,0.12); }
-    .summary-card:hover {
-      transform: translateY(-3px);
-      background: rgba(59,130,246,0.1);
-      border-color: rgba(96,165,250,0.5);
-      box-shadow: 0 4px 15px rgba(59,130,246,0.2);
+    /* Logs Table */
+    .table-container {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 16px;
+      overflow-x: auto;
     }
-    .click-hint { font-size: 0.75em; color: #60a5fa; text-align: center; margin-top: 12px; font-weight: 600; }
 
-    .log-header { display: flex; justify-content: space-between; align-items: center; }
-    .log-type {
-      font-size: 0.8em; font-weight: 600; padding: 4px 10px; border-radius: 20px;
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.88em;
     }
-    .type-normal { background: rgba(16,185,129,0.15); color: #34d399; border: 1px solid rgba(16,185,129,0.3); }
-    .type-shift { background: rgba(234,179,8,0.15); color: #fde047; border: 1px solid rgba(234,179,8,0.3); }
-    .type-total { background: rgba(255,255,255,0.1); color: #e2e8f0; border: 1px solid rgba(255,255,255,0.2); }
-    
-    .log-time { font-size: 0.85em; color: #cbd5e1; font-weight: 600; }
-    
-    .log-body { display: flex; flex-direction: column; gap: 4px; }
-    .log-name { font-size: 1.1em; font-weight: 700; color: #f1f5f9; }
-    .log-id { font-size: 0.85em; color: #94a3b8; }
-    .log-loc { font-size: 0.85em; color: #94a3b8; display: flex; align-items: center; gap: 6px; margin-top: 4px;}
 
-    /* Daily Summary Specific */
-    .sum-date { font-size: 1.1em; font-weight: 700; color: #60a5fa; }
-    .sum-row { display: flex; justify-content: space-between; margin-top: 8px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.05); }
-    .sum-item { display: flex; align-items: center; gap: 6px; font-size: 0.9em; font-weight: 600; }
+    th, td {
+      padding: 12px 16px;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
 
-    .loading { text-align: center; color: #94a3b8; padding: 40px 0; font-size: 0.9em; }
-    .no-data { text-align: center; color: #ef4444; padding: 20px; background: rgba(239,68,68,0.1); border-radius: 12px; margin-top: 20px;}
+    th {
+      background: rgba(255,255,255,0.05);
+      color: #94a3b8;
+      font-weight: 600;
+    }
 
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    tr:hover { background: rgba(255,255,255,0.02); }
+
+    .badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 12px;
+      font-size: 0.82em;
+      font-weight: 600;
+    }
+    .badge-normal { background: rgba(16,185,129,0.2); color: #34d399; }
+    .badge-shift { background: rgba(234,179,8,0.2); color: #facc15; }
+
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
   </style>
 </head>
 <body>
 
-<div class="page-wrap">
+<div class="container">
+  
   <div class="top-bar">
     <a href="index.html" class="back-btn">← กลับ</a>
     <h2>📋 ประวัติการเข้างาน</h2>
-    <div class="spacer"></div>
+    <div style="width: 70px;"></div>
   </div>
 
-  <div class="stats-area">
+  <div class="stats-grid">
     <div class="stat-card">
-      <div class="stat-value text-green" id="countNormal">0</div>
+      <div id="cnt-normal" class="stat-number stat-normal">0</div>
       <div class="stat-label">เข้างานปกติ</div>
     </div>
     <div class="stat-card">
-      <div class="stat-value text-yellow" id="countShift">0</div>
+      <div id="cnt-shift" class="stat-number stat-shift">0</div>
       <div class="stat-label">เข้าเวร</div>
     </div>
     <div class="stat-card">
-      <div class="stat-value" id="countTotal">0</div>
+      <div id="cnt-total" class="stat-number stat-total">0</div>
       <div class="stat-label">รวมทั้งหมด</div>
     </div>
   </div>
 
-  <div class="action-container">
-    <input type="text" id="searchInput" class="search-box" placeholder="🔍 ค้นหา รหัสนักศึกษา, ชื่อ หรือ วันที่..." onkeyup="filterLogs()">
-    <div class="button-group">
-      <button id="btnToggle" class="btn-action btn-toggle" onclick="toggleView()">📄 แสดงรายละเอียด</button>
-      <button id="btnExport" class="btn-action btn-download" onclick="exportToExcel()">📊 ดาวน์โหลด Excel</button>
+  <div class="controls-card">
+    <input type="text" id="searchInput" class="search-input" placeholder="🔍 ค้นหา รหัสพนักงาน, ชื่อ หรือ วันที่..." oninput="filterLogs()">
+    <div class="btn-group">
+      <button class="btn btn-detail" onclick="loadLogs()">🔄 โหลดข้อมูลใหม่</button>
+      <button class="btn btn-excel" onclick="exportExcel()">📊 ดาวน์โหลด Excel</button>
     </div>
   </div>
 
-  <div id="logsContainer">
-    <div class="loading">⏳ กำลังโหลดข้อมูลประวัติจากระบบ...</div>
+  <div id="alertBox" class="status-alert"></div>
+
+  <div class="table-container">
+    <table>
+      <thead>
+        <tr>
+          <th>วัน-เวลา</th>
+          <th>รหัส</th>
+          <th>ชื่อ-นามสกุล</th>
+          <th>ประเภท</th>
+          <th>สถานที่ / จุดสแกน</th>
+        </tr>
+      </thead>
+      <tbody id="logsTableBody">
+        <tr>
+          <td colspan="5" style="text-align: center; color: #64748b; padding: 24px;">⏳ กำลังโหลดข้อมูล...</td>
+        </tr>
+      </tbody>
+    </table>
   </div>
+
 </div>
 
 <script>
-  const BACKUP_API_URL = "https://script.google.com/macros/s/AKfycbwcP4hjqvJqyLtbXhd4ifwusSVSB_Y7TP9uYUW6_LSKCzd920_Wv8BRWzH7FmqmHZRmBQ/exec";
-  const API_URL = (typeof GAS_API_URL !== 'undefined' && GAS_API_URL) ? GAS_API_URL : BACKUP_API_URL;
-  
-  let allLogs = [];
-  let currentFilteredLogs = [];
-  let isSummaryMode = true; 
+  // 🚨 สำคัญมาก: ใส่ Web App URL ของคุณที่ได้จากการ Deploy ล่าสุด (ต้องลงท้ายด้วย /exec)
+  const API_URL = "https://script.google.com/macros/s/AKfycbwcP4hjqvJqyLtbXhd4ifwusSVSB_Y7TP9uYUW6_LSKCzd920_Wv8BRWzH7FmqmHZRmBQ/exec"; 
 
-  window.onload = function() {
-    fetchLogs();
-  };
+  let allLogsData = [];
 
-  async function fetchLogs() {
-    const container = document.getElementById('logsContainer');
+  window.addEventListener('load', loadLogs);
+
+  async function loadLogs() {
+    const alertBox = document.getElementById('alertBox');
+    const tableBody = document.getElementById('logsTableBody');
+    alertBox.style.display = 'none';
+
+    if (API_URL === "YOUR_WEB_APP_URL_HERE" || API_URL.includes("YOUR_URL_HERE")) {
+      showError('กรุณาตั้งค่า API_URL ในไฟล์ history.html เป็น Web App URL ของคุณก่อนใช้งาน');
+      tableBody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#f87171; padding:20px;">⚠️ ไม่ได้ตั้งค่า API_URL</td></tr>';
+      return;
+    }
+
+    tableBody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #94a3b8; padding: 24px;">⏳ กำลังดึงข้อมูลประวัติ...</td></tr>';
+
     try {
       const response = await fetch(API_URL + '?action=getLogs');
-      const data = await response.json();
-      
-      if (data.success && data.logs) {
-        allLogs = data.logs; 
-        currentFilteredLogs = [...allLogs];
-        filterLogs(); 
-      } else {
-        container.innerHTML = '<div class="no-data">❌ ไม่พบข้อมูลประวัติ หรือเกิดข้อผิดพลาด</div>';
+      const responseText = await response.text();
+
+      // ตรวจสอบว่าผลลัพธ์เป็น HTML แทนที่จะเป็น JSON หรือไม่
+      if (responseText.trim().startsWith('<')) {
+        throw new Error('ได้รับข้อมูลเป็น HTML แทนที่จะเป็น JSON. โปรดตรวจสอบการ Deploy ใน Google Apps Script ว่าตั้งค่า "Who has access" เป็น "Anyone" หรือไม่');
       }
-    } catch (error) {
-      container.innerHTML = `<div class="no-data">❌ ไม่สามารถดึงข้อมูลได้: ${error.message}</div>`;
+
+      const result = JSON.parse(responseText);
+
+      if (result.success) {
+        allLogsData = result.logs || [];
+        updateStats(allLogsData);
+        renderTable(allLogsData);
+      } else {
+        showError('ไม่สามารถดึงข้อมูลได้: ' + (result.error || 'เกิดข้อผิดพลาดไม่ทราบสาเหตุ'));
+      }
+
+    } catch (e) {
+      console.error("Fetch Error:", e);
+      showError('ไม่สามารถดึงข้อมูลได้: ' + e.message);
+      tableBody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#f87171; padding:20px;">❌ เกิดข้อผิดพลาดในการโหลดข้อมูล</td></tr>`;
+      
+      Swal.fire({
+        icon: 'error',
+        title: 'ดึงข้อมูลไม่สำเร็จ',
+        html: `<div style="text-align:left; font-size:0.88em; color:#cbd5e1;">
+          <b>วิธีแก้ไขปัญหา:</b><br>
+          1. ตรวจสอบว่าใน Apps Script เลือก <b>Who has access</b> เป็น <b>Anyone (ทุกคน)</b> แล้วหรือยัง<br>
+          2. ตรวจสอบว่าใช้ลิงก์ที่ลงท้ายด้วย <b>/exec</b> (ไม่ใช่ /dev)<br>
+          3. หากเพิ่งแก้โค้ดใน Apps Script ต้องกด <b>Deploy > New deployment</b> เสมอ
+        </div>`,
+        confirmButtonColor: '#ef4444'
+      });
     }
   }
 
   function updateStats(logs) {
     let normal = 0, shift = 0;
-    logs.forEach(log => {
-      if (log.type === 'เข้าเวร') shift++;
-      else normal++;
+    logs.forEach(l => {
+      if (l.type === "เข้างานปกติ") normal++;
+      else if (l.type === "เข้าเวร") shift++;
     });
-    document.getElementById('countNormal').innerText = normal;
-    document.getElementById('countShift').innerText = shift;
-    document.getElementById('countTotal').innerText = logs.length;
+    document.getElementById('cnt-normal').innerText = normal;
+    document.getElementById('cnt-shift').innerText = shift;
+    document.getElementById('cnt-total').innerText = logs.length;
   }
 
-  function toggleView() {
-    isSummaryMode = !isSummaryMode;
-    document.getElementById('searchInput').value = ''; 
-    filterLogs();
-  }
-
-  function viewDateDetails(dateStr) {
-    document.getElementById('searchInput').value = dateStr;
-    filterLogs();
-  }
-
-  function renderDailySummary(logs) {
-    const container = document.getElementById('logsContainer');
-    container.innerHTML = '';
+  function renderTable(logs) {
+    const tableBody = document.getElementById('logsTableBody');
     if (logs.length === 0) {
-      container.innerHTML = '<div class="loading">ไม่พบข้อมูลประวัติ</div>';
+      tableBody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #64748b; padding: 24px;">📭 ไม่พบประวัติการเข้างาน</td></tr>';
       return;
     }
-    const dates = [];
-    const grouped = {};
-    logs.forEach(log => {
-      const dateStr = log.timestamp.split(' ')[0]; 
-      if (!grouped[dateStr]) {
-        grouped[dateStr] = { normal: 0, shift: 0, total: 0 };
-        dates.push(dateStr);
-      }
-      if (log.type === 'เข้าเวร') grouped[dateStr].shift++;
-      else grouped[dateStr].normal++;
-      grouped[dateStr].total++;
-    });
-    dates.forEach(date => {
-      const data = grouped[date];
-      const card = document.createElement('div');
-      card.className = 'log-card summary-card';
-      card.onclick = () => viewDateDetails(date);
-      card.innerHTML = `
-        <div class="log-header">
-          <span class="sum-date">📅 วันที่ ${date}</span>
-          <span class="log-type type-total">รวม ${data.total} รายการ</span>
-        </div>
-        <div class="sum-row">
-          <div class="sum-item text-green">☀️ ปกติ: ${data.normal}</div>
-          <div class="sum-item text-yellow">🌙 เข้าเวร: ${data.shift}</div>
-        </div>
-        <div class="click-hint">👆 คลิ๊กเพื่อดูรายชื่อของวันนี้</div>
-      `;
-      container.appendChild(card);
-    });
-  }
 
-  function renderLogs(logs) {
-    const container = document.getElementById('logsContainer');
-    container.innerHTML = '';
-    if (logs.length === 0) {
-      container.innerHTML = '<div class="loading">ไม่พบข้อมูลที่ค้นหา</div>';
-      return;
-    }
-    logs.forEach(log => {
-      const isShift = log.type === 'เข้าเวร';
-      const typeClass = isShift ? 'type-shift' : 'type-normal';
-      const typeIcon = isShift ? '🌙' : '☀️';
-      const card = document.createElement('div');
-      card.className = 'log-card';
-      card.innerHTML = `
-        <div class="log-header">
-          <span class="log-type ${typeClass}">${typeIcon} ${log.type}</span>
-          <span class="log-time">🕒 ${log.timestamp}</span>
-        </div>
-        <div class="log-body">
-          <div class="log-name">👤 ${log.name}</div>
-          <div class="log-id">💳 รหัส: ${log.studentId}</div>
-          <div class="log-loc">📍 สถานที่: ${log.location}</div>
-        </div>
+    let html = '';
+    logs.forEach(item => {
+      const isShift = item.type === 'เข้าเวร';
+      const badgeClass = isShift ? 'badge-shift' : 'badge-normal';
+      html += `
+        <tr>
+          <td>${item.timestamp || '-'}</td>
+          <td style="font-weight:600; color:#c7d2fe;">${item.studentId || '-'}</td>
+          <td>${item.name || '-'}</td>
+          <td><span class="badge ${badgeClass}">${item.type || 'เข้างาน'}</span></td>
+          <td style="color:#94a3b8;">${item.location || '-'}</td>
+        </tr>
       `;
-      container.appendChild(card);
     });
+    tableBody.innerHTML = html;
   }
 
   function filterLogs() {
-    const query = document.getElementById('searchInput').value.trim().toLowerCase();
-    if (query === '') {
-      currentFilteredLogs = [...allLogs];
-      updateStats(allLogs);
-      if (isSummaryMode) {
-        document.getElementById('btnToggle').innerText = '📄 แสดงรายละเอียด';
-        renderDailySummary(allLogs);
-      } else {
-        document.getElementById('btnToggle').innerText = '📅 หน้าสรุปรายวัน';
-        renderLogs(allLogs);
-      }
+    const query = document.getElementById('searchInput').value.toLowerCase().trim();
+    if (!query) {
+      renderTable(allLogsData);
       return;
     }
-    currentFilteredLogs = allLogs.filter(log => {
-      return log.name.toLowerCase().includes(query) || 
-             String(log.studentId).toLowerCase().includes(query) ||
-             log.location.toLowerCase().includes(query) ||
-             log.timestamp.toLowerCase().includes(query);
-    });
-    updateStats(currentFilteredLogs);
-    renderLogs(currentFilteredLogs);
+    const filtered = allLogsData.filter(item => 
+      String(item.studentId).toLowerCase().includes(query) ||
+      String(item.name).toLowerCase().includes(query) ||
+      String(item.timestamp).toLowerCase().includes(query) ||
+      String(item.location).toLowerCase().includes(query)
+    );
+    renderTable(filtered);
   }
 
-  // ฟังก์ชันดาวน์โหลด Excel
-  function exportToExcel() {
-    if (currentFilteredLogs.length === 0) {
-      alert('ไม่มีข้อมูลให้ดาวน์โหลด');
+  function exportExcel() {
+    if (allLogsData.length === 0) {
+      Swal.fire('แจ้งเตือน', 'ไม่มีข้อมูลประวัติสำหรับดาวน์โหลด', 'warning');
       return;
     }
 
-    const confirmExport = confirm(`ต้องการดาวน์โหลดข้อมูลจำนวน ${currentFilteredLogs.length} รายการ เป็นไฟล์ Excel ใช่หรือไม่?`);
-    if (!confirmExport) return;
-
-    // เตรียมข้อมูลสำหรับ Excel
-    const excelData = currentFilteredLogs.map(log => ({
-      'วันที่/เวลา': log.timestamp,
-      'ประเภท': log.type,
-      'รหัสนักศึกษา': log.studentId,
-      'ชื่อ-นามสกุล': log.name,
-      'สถานที่/วอร์ด': log.location
+    const excelData = allLogsData.map((item, index) => ({
+      'ลำดับ': index + 1,
+      'วัน-เวลา': item.timestamp,
+      'รหัสพนักงาน/นักศึกษา': item.studentId,
+      'ชื่อ-นามสกุล': item.name,
+      'ประเภทการเช็คอิน': item.type,
+      'สถานที่/จุดสแกน': item.location
     }));
 
-    // สร้าง Workbook และ Worksheet
     const worksheet = XLSX.utils.json_to_sheet(excelData);
     const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "AttendanceHistory");
+    XLSX.utils.book_append_sheet(workbook, worksheet, "ประวัติการเข้างาน");
 
-    // ปรับความกว้างคอลัมน์อัตโนมัติ
-    const wscols = [
-      {wch: 25}, // วันที่
-      {wch: 15}, // ประเภท
-      {wch: 15}, // รหัส
-      {wch: 25}, // ชื่อ
-      {wch: 30}  // สถานที่
-    ];
-    worksheet['!cols'] = wscols;
+    // กำหนดชื่อไฟล์ตามวันที่ปัจจุบัน
+    const today = new Date().toISOString().slice(0, 10);
+    XLSX.writeFile(workbook, `Attendance_Logs_${today}.xlsx`);
+  }
 
-    // ดาวน์โหลดไฟล์
-    const fileName = `Attendance_Report_${new Date().toISOString().slice(0,10)}.xlsx`;
-    XLSX.writeFile(workbook, fileName);
+  function showError(msg) {
+    const alertBox = document.getElementById('alertBox');
+    alertBox.className = 'status-alert error';
+    alertBox.innerHTML = '❌ ' + msg;
+    alertBox.style.display = 'block';
   }
 </script>
-
 </body>
 </html>
