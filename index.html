@@ -5,8 +5,23 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>ระบบบันทึกเวลาปฏิบัติงานนักศึกษาแพทย์</title>
   <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&display=swap" rel="stylesheet">
-  <!-- โหลดไฟล์ Config กลางและป้องกันแคช -->
-  <script src="js/api-config.js?v=2.2.0"></script>
+  
+  <script>
+    // 🔑 ฝังค่า URL หลักของ Google Apps Script เพื่อใช้งานได้ทันทีทุกเครื่อง
+    const DEFAULT_API_URL = "https://script.google.com/macros/s/AKfycbwcP4hjqvJqyLtbXhd4ifwusSVSB_Y7TP9uYUW6_LSKCzd920_Wv8BRWzH7FmqmHZRmBQ/exec";
+
+    // ตรวจสอบความจำเครื่อง หากไม่มีค่า ให้บันทึกค่าเริ่มต้นลงเครื่องให้อัตโนมัติ
+    if (!localStorage.getItem('gasApiUrl')) {
+      localStorage.setItem('gasApiUrl', DEFAULT_API_URL);
+    }
+    if (!localStorage.getItem('API_URL')) {
+      localStorage.setItem('API_URL', DEFAULT_API_URL);
+    }
+
+    // กำหนดตัวแปรสำหรับเรียกใช้งานส่วนกลาง
+    window.GAS_API_URL = localStorage.getItem('gasApiUrl') || DEFAULT_API_URL;
+  </script>
+
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -194,7 +209,7 @@
       font-size: 0.75rem;
     }
 
-    @keyframes fadeIn    { from { opacity: 0; }                       to { opacity: 1; } }
+    @keyframes fadeIn    { from { opacity: 0; }                        to { opacity: 1; } }
     @keyframes fadeInDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
     @keyframes fadeInUp  { from { opacity: 0; transform: translateY(20px);  } to { opacity: 1; transform: translateY(0); } }
   </style>
@@ -270,15 +285,17 @@
   </footer>
 
   <script>
-    // ตรวจสอบความถูกต้องของ API URL อีกครั้ง
-    const currentApiUrl = localStorage.getItem('gasApiUrl') || (typeof GAS_API_URL !== 'undefined' ? GAS_API_URL : null);
-    const warningEl = document.getElementById('apiWarning');
+    // ตรวจสอบและซ่อนป้ายเตือนเมื่อโหลดหน้าเว็บเรียบร้อย
+    document.addEventListener('DOMContentLoaded', () => {
+      const currentApiUrl = localStorage.getItem('gasApiUrl') || localStorage.getItem('API_URL');
+      const warningEl = document.getElementById('apiWarning');
 
-    if (!currentApiUrl || currentApiUrl.includes("YOUR_WEB_APP_URL_HERE")) {
-      if (warningEl) warningEl.style.display = 'block';
-    } else {
-      if (warningEl) warningEl.style.display = 'none';
-    }
+      if (!currentApiUrl || currentApiUrl.includes("YOUR_WEB_APP_URL_HERE")) {
+        if (warningEl) warningEl.style.display = 'block';
+      } else {
+        if (warningEl) warningEl.style.display = 'none';
+      }
+    });
   </script>
 
 </body>
