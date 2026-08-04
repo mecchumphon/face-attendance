@@ -223,5 +223,58 @@
       document.getElementById('apiWarning').style.display = 'block';
     }
   </script>
+  <!-- ================= FOOTER SECTION ================= -->
+<footer class="app-footer">
+  <div class="footer-container">
+    <p class="developer-credit">
+      Developed with ❤️ by <span>MEC Chumphon Admin</span>
+    </p>
+    <p class="system-version">
+      System Version <span class="version-badge">v2.1.0</span> | © 2026 All Rights Reserved
+    </p>
+  </div>
+</footer>
+
+<style>
+  /* Footer Styling */
+  .app-footer {
+    width: 100%;
+    padding: 20px 15px;
+    margin-top: 40px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(15, 23, 42, 0.6); /* พื้นหลังเข้ากับดีไซน์เดิม */
+    backdrop-filter: blur(8px);
+    text-align: center;
+    color: #94a3b8;
+    font-size: 0.85rem;
+  }
+
+  .footer-container {
+    max-width: 600px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .developer-credit span {
+    color: #38bdf8; /* สีไฮไลต์ชื่อทีมพัฒนา */
+    font-weight: 600;
+  }
+
+  .system-version {
+    font-size: 0.8rem;
+    color: #64748b;
+  }
+
+  .version-badge {
+    background: rgba(56, 189, 248, 0.15);
+    color: #38bdf8;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 0.75rem;
+  }
+</style>
 </body>
 </html>
