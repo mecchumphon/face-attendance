@@ -80,13 +80,20 @@
   <div class="instruction-box">
     <div class="instruction-icon">💡</div>
     <div class="instruction-content">
-      <div class="instruction-title">คำแนะนำการถ่ายภาพ</div>
+      <div class="instruction-title">คำแนะนำการถ่ายภาพ (3 มุม)</div>
       <ul class="instruction-list">
-        <li>มองกล้องหน้าตรง ไม่สวมแว่นตาดำหรือแมสก์</li>
-        <li>อยู่ในที่มีแสงสว่างเพียงพอ หน้าไม่มืด</li>
-        <li>ให้ใบหน้าอยู่กึ่งกลางกรอบวงกลม</li>
+        <li>ระบบจะทำการบันทึกใบหน้า 3 มุม: หน้าตรง -> หันขวา -> หันซ้าย</li>
+        <li>มองกล้องในระยะพอดี ไม่สวมแว่นตาดำหรือแมสก์</li>
+        <li>อยู่ในที่มีแสงสว่างเพียงพอ และขยับใบหน้าตามคำแนะนำ</li>
       </ul>
     </div>
+  </div>
+
+  <!-- Step Progress Indicator -->
+  <div id="step-indicator" style="display: flex; justify-content: space-between; margin-bottom: 16px; background: rgba(255,255,255,0.05); padding: 10px 16px; border-radius: 12px; font-size: 0.85em; text-align: center;">
+    <div id="step1" style="color: #6366f1; font-weight: bold;">1. หน้าตรง ⏳</div>
+    <div id="step2" style="color: #64748b;">2. หันขวา ⭕</div>
+    <div id="step3" style="color: #64748b;">3. หันซ้าย ⭕</div>
   </div>
 
   <div class="card">
@@ -114,7 +121,7 @@
 <canvas id="canvas" style="display: none;"></canvas>
 
 <script>
-  // 🚨 ใส่ URL ของ Web App (Google Apps Script) ที่นี่
+  // 🚨 สำคัญมาก: เปลี่ยนเป็น Web App URL ของคุณที่ได้จากการ Deploy ล่าสุด (ต้องลงท้ายด้วย /exec)
   const API_URL = "https://script.google.com/macros/s/AKfycbwcP4hjqvJqyLtbXhd4ifwusSVSB_Y7TP9uYUW6_LSKCzd920_Wv8BRWzH7FmqmHZRmBQ/exec"; 
 
   const video = document.getElementById('video');
@@ -126,6 +133,8 @@
   const inputName = document.getElementById('name');
 
   let isCameraActive = false;
+  let currentStep = 1; // 1: หน้าตรง, 2: ข้างขวา, 3: ข้างซ้าย
+  let capturedImages = [];
 
   function handleAction() {
     if (!isCameraActive) {
@@ -137,41 +146,94 @@
           overlayText.style.display = 'none';
           
           isCameraActive = true;
-          btnAction.innerHTML = '📸 ถ่ายภาพและลงทะเบียน';
+          updateStepUI();
         })
         .catch(err => { 
           Swal.fire('ข้อผิดพลาด', 'ไม่สามารถเข้าถึงกล้องได้ กรุณาอนุญาตให้สิทธิ์', 'error');
         });
     } else {
-      // ตรวจสอบข้อมูล
+      // ตรวจสอบข้อมูลก่อนถ่าย
       const studentId = inputId.value.trim();
       const name = inputName.value.trim();
 
       if (!studentId || !name) {
-        Swal.fire('แจ้งเตือน', 'กรุณากรอกรหัสและชื่อให้ครบถ้วน', 'warning');
+        Swal.fire('แจ้งเตือน', 'กรุณากรอกรหัสและชื่อให้ครบถ้วนก่อนสแกน', 'warning');
         return;
       }
 
-      // ดำเนินการถ่ายและส่ง
-      takePictureAndRegister(studentId, name);
+      if (API_URL === "YOUR_WEB_APP_URL_HERE" || API_URL.includes("AKfycby_YOUR_URL_HERE")) {
+        Swal.fire({
+          icon: 'error',
+          title: 'ตั้งค่า API_URL ไม่ถูกต้อง',
+          text: 'กรุณาใส่ Web App URL ของคุณในไฟล์ register.html'
+        });
+        return;
+      }
+
+      captureStepImage(studentId, name);
     }
   }
 
-  async function takePictureAndRegister(studentId, name) {
-    // วาดรูปลง Canvas
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
+  function updateStepUI() {
+    const s1 = document.getElementById('step1');
+    const s2 = document.getElementById('step2');
+    const s3 = document.getElementById('step3');
+
+    if (currentStep === 1) {
+      btnAction.innerHTML = '📸 1/3 ถ่ายภาพหน้าตรง';
+      s1.style.color = '#6366f1'; s1.innerHTML = '1. หน้าตรง ⏳';
+      s2.style.color = '#64748b'; s2.innerHTML = '2. หันขวา ⭕';
+      s3.style.color = '#64748b'; s3.innerHTML = '3. หันซ้าย ⭕';
+    } else if (currentStep === 2) {
+      btnAction.innerHTML = '📸 2/3 ถ่ายภาพหันขวา';
+      s1.style.color = '#10b981'; s1.innerHTML = '1. หน้าตรง ✅';
+      s2.style.color = '#6366f1'; s2.innerHTML = '2. หันขวา ⏳';
+      s3.style.color = '#64748b'; s3.innerHTML = '3. หันซ้าย ⭕';
+    } else if (currentStep === 3) {
+      btnAction.innerHTML = '📸 3/3 ถ่ายภาพหันซ้าย';
+      s1.style.color = '#10b981'; s1.innerHTML = '1. หน้าตรง ✅';
+      s2.style.color = '#10b981'; s2.innerHTML = '2. หันขวา ✅';
+      s3.style.color = '#6366f1'; s3.innerHTML = '3. หันซ้าย ⏳';
+    }
+  }
+
+  function captureStepImage(studentId, name) {
+    // ปรับขนาดรูปเป็นความกว้างไม่เกิน 480px เพื่อประมวลผลเร็วขึ้นมาก
+    const targetWidth = Math.min(video.videoWidth || 480, 480);
+    const scale = targetWidth / video.videoWidth;
+    const targetHeight = video.videoHeight * scale;
+
+    canvas.width = targetWidth;
+    canvas.height = targetHeight;
     const ctx = canvas.getContext('2d');
     ctx.translate(canvas.width, 0); 
     ctx.scale(-1, 1);
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
     
-    // แปลงภาพ
-    const imageBase64 = canvas.toDataURL('image/jpeg', 0.8);
+    // แปลงภาพเป็น base64 ที่มีขนาดเล็กลง (คุณภาพ 0.65)
+    const imageBase64 = canvas.toDataURL('image/jpeg', 0.65);
+    capturedImages.push(imageBase64);
 
+    if (currentStep < 3) {
+      currentStep++;
+      updateStepUI();
+      Swal.fire({
+        icon: 'info',
+        title: `มุมที่ ${currentStep - 1} สำเร็จ!`,
+        text: currentStep === 2 ? 'กรุณาค่อยๆ หันหน้าไปทางขวาเล็กน้อย แล้วกดถ่าย' : 'กรุณาค่อยๆ หันหน้าไปทางซ้ายเล็กน้อย แล้วกดถ่าย',
+        timer: 1800,
+        showConfirmButton: false
+      });
+    } else {
+      // ถ่ายครบ 3 มุม ส่งขึ้นเซิร์ฟเวอร์
+      registerAllFaces(studentId, name);
+    }
+  }
+
+  async function registerAllFaces(studentId, name) {
     Swal.fire({
-      title: 'กำลังลงทะเบียน...',
-      html: 'กำลังประมวลผลโครงสร้างใบหน้า',
+      title: 'กำลังลงทะเบียน 3 มุม...',
+      html: 'กำลังส่งข้อมูลประมวลผลโครงสร้างใบหน้า',
       allowOutsideClick: false,
       didOpen: () => { Swal.showLoading(); }
     });
@@ -179,32 +241,49 @@
     try {
       const response = await fetch(API_URL, {
         method: 'POST',
+        headers: {
+          'Content-Type': 'text/plain;charset=utf-8', 
+        },
         body: JSON.stringify({
           action: 'registerFacePP',
           studentId: studentId,
           name: name,
-          imageBase64: imageBase64
+          imagesBase64: capturedImages // ส่งเป็น Array 3 ภาพ
         })
       });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
 
       const result = await response.json();
 
       if (result.success) {
         Swal.fire({
           icon: 'success',
-          title: 'สำเร็จ!',
+          title: 'ลงทะเบียนสำเร็จ!',
           text: result.message,
           confirmButtonColor: '#4f46e5'
         }).then(() => {
-          // เคลียร์ฟอร์ม
+          // เคลียร์ฟอร์มและสถานะ
           inputId.value = '';
           inputName.value = '';
+          capturedImages = [];
+          currentStep = 1;
+          updateStepUI();
         });
       } else {
+        capturedImages = [];
+        currentStep = 1;
+        updateStepUI();
         Swal.fire('ผิดพลาด', result.error, 'error');
       }
 
     } catch (error) {
+      console.error("Registration Error:", error);
+      capturedImages = [];
+      currentStep = 1;
+      updateStepUI();
       Swal.fire('ผิดพลาด', 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้: ' + error.message, 'error');
     }
   }
