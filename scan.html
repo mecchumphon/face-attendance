@@ -87,8 +87,6 @@
     ⚠️ คุณอยู่นอกพื้นที่ที่กำหนด!<br>กรุณาเข้าใกล้จุดเช็คอินแล้วรีเฟรชหน้าจอ
   </div>
 
-  <button id="btnAction" onclick="handleAction()">📷 แตะเพื่อเปิดกล้อง</button>
-
   <div class="video-container">
     <div class="scanner-frame">
       <div class="corner corner-tl"></div><div class="corner corner-tr"></div>
@@ -99,13 +97,16 @@
     <video id="video" autoplay muted playsinline></video>
   </div>
 
+  <!-- ย้ายปุ่มสแกนลงมาอยู่ด้านล่างกรอบวิดีโอ -->
+  <button id="btnAction" onclick="handleAction()">📷 แตะเพื่อเปิดกล้อง</button>
+
 </div>
 
 <!-- Canvas สำหรับประมวลผลรูป (ซ่อนไว้) -->
 <canvas id="canvas" style="display: none;"></canvas>
 
 <script>
-  // 🚨 ใส่ URL ของ Web App (Google Apps Script) ที่นี่
+  // 🚨 สำคัญมาก: เปลี่ยนเป็น Web App URL ของคุณที่ได้จากการ Deploy ล่าสุด (ต้องลงท้ายด้วย /exec)
   const API_URL = "https://script.google.com/macros/s/AKfycbwcP4hjqvJqyLtbXhd4ifwusSVSB_Y7TP9uYUW6_LSKCzd920_Wv8BRWzH7FmqmHZRmBQ/exec"; 
 
   const video          = document.getElementById('video');
@@ -124,11 +125,26 @@
   window.addEventListener('load', init);
 
   async function init() {
+    if (API_URL === "YOUR_WEB_APP_URL_HERE" || API_URL.includes("AKfycby_YOUR_URL_HERE")) {
+      Swal.fire({
+        icon: 'error',
+        title: 'ตั้งค่า API_URL ไม่ถูกต้อง',
+        text: 'กรุณาใส่ Web App URL ของคุณในไฟล์ scan.html บรรทัดที่ 103'
+      });
+      showError('กรุณาตั้งค่า API_URL ให้ถูกต้อง');
+      return;
+    }
+
     try {
       mainStatus.innerText = '⏳ กำลังเตรียมระบบ (กรุณากดอนุญาตตำแหน่ง GPS)...';
       
       // ดึงค่า Config พื้นที่จาก Apps Script
-      const pConfig = fetch(API_URL + '?action=getConfig').then(r => r.json());
+      const pConfig = fetch(API_URL + '?action=getConfig').then(r => {
+        if (!r.ok) {
+           throw new Error(`HTTP error! status: ${r.status}`);
+        }
+        return r.json();
+      });
       const pGPS    = getGPSLocation();
 
       const [config, pos] = await Promise.all([pConfig, pGPS]);
@@ -139,7 +155,12 @@
       verifyLocation(config);
 
     } catch (e) {
-      showError(e.message);
+      console.error("Initialization Error:", e);
+      if (e.message.includes('404')) {
+        showError('ไม่สามารถเชื่อมต่อระบบ (Error 404). โปรดตรวจสอบ API_URL และการ Deploy.');
+      } else {
+        showError('ข้อผิดพลาดการเตรียมระบบ: ' + e.message);
+      }
     }
   }
 
@@ -233,15 +254,20 @@
   }
 
   async function takePictureAndSend() {
-    // 1. ถ่ายรูปจาก Video ลง Canvas
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
+    // 1. ถ่ายรูปจาก Video ลง Canvas และบีบอัดภาพเพื่อความรวดเร็วในการส่งข้อมูล
+    const targetWidth = Math.min(video.videoWidth || 480, 480);
+    const scale = targetWidth / video.videoWidth;
+    const targetHeight = video.videoHeight * scale;
+
+    canvas.width = targetWidth;
+    canvas.height = targetHeight;
     const ctx = canvas.getContext('2d');
     ctx.translate(canvas.width, 0); 
     ctx.scale(-1, 1); // พลิกซ้ายขวาให้เหมือนกระจก
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
     
-    const imageBase64 = canvas.toDataURL('image/jpeg', 0.8);
+    // บีบอัดขนาดรูปภาพเหลือคุณภาพ 0.6 เพื่อสปีดการส่งข้อมูลผ่าน API เร็วขึ้นหลายเท่า
+    const imageBase64 = canvas.toDataURL('image/jpeg', 0.6);
 
     // 2. แสดงหน้าต่างโหลด
     Swal.fire({
@@ -255,6 +281,9 @@
     try {
       const response = await fetch(API_URL, {
         method: 'POST',
+        headers: {
+          'Content-Type': 'text/plain;charset=utf-8', 
+        },
         body: JSON.stringify({
           action: 'scanFacePP',
           type: 'attendance', 
@@ -264,6 +293,10 @@
           locationName: currentLocName
         })
       });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
 
       const result = await response.json();
 
@@ -286,7 +319,8 @@
       }
 
     } catch (error) {
-      Swal.fire('ผิดพลาด', 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้: ' + error.message, 'error');
+      console.error("Scanning Error:", error);
+      Swal.fire('ผิดพลาด', 'การเชื่อมต่อหรือประมวลผลล้มเหลว: ' + error.message, 'error');
     }
   }
 
