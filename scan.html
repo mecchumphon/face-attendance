@@ -6,6 +6,8 @@
   <title>สแกนเข้างาน</title>
   <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <!-- โหลดไฟล์ Config กลางและป้องกันแคช -->
+  <script src="js/api-config.js?v=2.1.0"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -96,17 +98,18 @@
     <video id="video" autoplay muted playsinline></video>
   </div>
 
-  <!-- ปุ่มสแกนเข้างาน (จะแสดงอัตโนมัติเมื่อกล้องและ GPS พร้อม) -->
+  <!-- ปุ่มสแกนเข้างาน -->
   <button id="btnAction" onclick="handleAction()">📸 กดสแกนเข้างาน</button>
 
 </div>
 
-<!-- Canvas สำหรับประมวลผลรูปภาพ (ซ่อนไว้) -->
+<!-- Canvas สำหรับประมวลผลรูปภาพ -->
 <canvas id="canvas" style="display: none;"></canvas>
 
 <script>
-  // 🚨 Web App URL จากการ Deploy ของคุณ
-  const API_URL = "https://script.google.com/macros/s/AKfycbwcP4hjqvJqyLtbXhd4ifwusSVSB_Y7TP9uYUW6_LSKCzd920_Wv8BRWzH7FmqmHZRmBQ/exec"; 
+  // 🔹 ดึง API_URL จาก localStorage ก่อน หากไม่มีจะใช้ค่า Default
+  const DEFAULT_URL = "https://script.google.com/macros/s/AKfycbwcP4hjqvJqyLtbXhd4ifwusSVSB_Y7TP9uYUW6_LSKCzd920_Wv8BRWzH7FmqmHZRmBQ/exec";
+  const API_URL = localStorage.getItem('gasApiUrl') || (typeof GAS_API_URL !== 'undefined' ? GAS_API_URL : DEFAULT_URL); 
 
   const video         = document.getElementById('video');
   const canvas        = document.getElementById('canvas');
@@ -125,22 +128,21 @@
   window.addEventListener('load', init);
 
   function init() {
-    if (API_URL === "YOUR_WEB_APP_URL_HERE" || API_URL.includes("AKfycby_YOUR_URL_HERE")) {
+    if (!API_URL || API_URL.includes("YOUR_WEB_APP_URL_HERE")) {
       Swal.fire({
         icon: 'error',
         title: 'ตั้งค่า API_URL ไม่ถูกต้อง',
-        text: 'กรุณาใส่ Web App URL ของคุณในโค้ดส่วน API_URL'
+        text: 'กรุณาตั้งค่า Web App URL ในหน้าตั้งค่าระบบก่อนใช้งาน'
       });
       showError('กรุณาตั้งค่า API_URL ให้ถูกต้อง');
       return;
     }
 
-    // 🚀 เปิดกล้อง และ เช็ค GPS/Config ขนานกันทันทีที่เปิดหน้าเว็บ
     startCamera();
     loadLocationAndConfig();
   }
 
-  // 1. เปิดกล้องทันทีโดยไม่ต้องรอปุ่มกด
+  // 1. เปิดกล้อง
   async function startCamera() {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ 
@@ -163,24 +165,31 @@
     }
   }
 
-  // 2. ดึง GPS และ Config ควบคู่กันในเบื้องหลัง
+  // 2. ดึง GPS และ Config พร้อมใส่ระบบ Timeout ตัดการรอนาน
   async function loadLocationAndConfig() {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 12000); // Timeout 12 วินาที
+
     try {
-      const pConfig = fetch(API_URL + '?action=getConfig').then(r => {
+      const pConfig = fetch(API_URL + '?action=getConfig', { signal: controller.signal }).then(r => {
         if (!r.ok) throw new Error(`HTTP error! status: ${r.status}`);
         return r.json();
       });
       const pGPS = getGPSLocation();
 
       const [config, pos] = await Promise.all([pConfig, pGPS]);
+      clearTimeout(timeoutId);
 
       currentLat = pos.coords.latitude;
       currentLng = pos.coords.longitude;
 
       verifyLocation(config);
     } catch (e) {
+      clearTimeout(timeoutId);
       console.error("Initialization Error:", e);
-      if (e.message.includes('404')) {
+      if (e.name === 'AbortError') {
+        showError('เชื่อมต่อเซิร์ฟเวอร์ล่าช้า โปรดรีเฟรชหน้าจอ');
+      } else if (e.message.includes('404')) {
         showError('ไม่สามารถเชื่อมต่อระบบ (Error 404). โปรดตรวจสอบ API_URL');
       } else {
         showError('ข้อผิดพลาดการเตรียมระบบ: ' + e.message);
@@ -205,7 +214,7 @@
     let closestName = "จุดเช็คอิน";
     let closestRadius = 0;
 
-    if (!config.locations || config.locations.length === 0) {
+    if (!config || !config.locations || config.locations.length === 0) {
       isInsideArea = true;
       gpsStatus.innerHTML = '<span style="color:#38bdf8">📍 GPS: ไม่จำกัดพื้นที่</span>';
     } else {
@@ -215,9 +224,9 @@
         if (radiusMeters < 10) radiusMeters = radiusMeters * 1000;
 
         if (distMeters < minDistance) { 
-            minDistance = distMeters; 
-            closestName = loc.name || 'แผนกไม่ระบุชื่อ'; 
-            closestRadius = radiusMeters; 
+          minDistance = distMeters; 
+          closestName = loc.name || 'แผนกไม่ระบุชื่อ'; 
+          closestRadius = radiusMeters; 
         }
       }
 
@@ -235,18 +244,17 @@
     }
 
     if (isInsideArea) { 
-        mainStatus.innerText = '✅ ระบบพร้อมใช้งาน'; 
-        mainStatus.style.color = '#38bdf8'; 
-        isLocationVerified = true;
-        checkReadyState();
+      mainStatus.innerText = '✅ ระบบพร้อมใช้งาน'; 
+      mainStatus.style.color = '#38bdf8'; 
+      isLocationVerified = true;
+      checkReadyState();
     } else { 
-        gpsAlertBox.style.display = 'block'; 
-        mainStatus.innerText = '⛔ ไม่อนุญาตให้สแกน'; 
-        overlayStatus.innerText = 'Out of Range'; 
+      gpsAlertBox.style.display = 'block'; 
+      mainStatus.innerText = '⛔ ไม่อนุญาตให้สแกน'; 
+      overlayStatus.innerText = 'Out of Range'; 
     }
   }
 
-  // ปลดล็อกให้แสดงปุ่มกดสแกน เมื่อทั้งกล้อง และ GPS พร้อมใช้งานทั้งคู่
   function checkReadyState() {
     if (isCameraActive && isLocationVerified) {
       btnAction.style.display = 'inline-block';
@@ -259,11 +267,14 @@
     }
   }
 
+  // 3. ถ่ายภาพและส่งไปสแกน (พร้อม Timeout 18 วินาที ดักหมุนค้าง)
   async function takePictureAndSend() {
-    // ย่อขนาดภาพให้เล็กเพื่อการส่ง API ที่รวดเร็ว
-    const targetWidth = Math.min(video.videoWidth || 480, 480);
-    const scale = targetWidth / video.videoWidth;
-    const targetHeight = video.videoHeight * scale;
+    // กำหนดขนาดภาพอย่างปลอดภัยเพื่อป้องกัน NaN
+    const vWidth = video.videoWidth || 640;
+    const vHeight = video.videoHeight || 480;
+    const targetWidth = Math.min(vWidth, 480);
+    const scale = targetWidth / vWidth;
+    const targetHeight = vHeight * scale;
 
     canvas.width = targetWidth;
     canvas.height = targetHeight;
@@ -272,6 +283,7 @@
     ctx.scale(-1, 1);
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
     
+    // บีบอัดไฟล์ JPEG ให้มีขนาดเล็ก (~60-80KB) ส่งได้เร็วขึ้น
     const imageBase64 = canvas.toDataURL('image/jpeg', 0.6);
 
     Swal.fire({
@@ -281,19 +293,26 @@
       didOpen: () => { Swal.showLoading(); }
     });
 
+    // ⏳ ดักการส่ง API หากรอนานเกิน 18 วินาทีให้ตัดการทำงานทันที
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 18000);
+
     try {
       const response = await fetch(API_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: JSON.stringify({
           action: 'scanFacePP',
-          type: 'checkin', // ระบุประเภทเป็นการเข้างาน
+          type: 'checkin',
           imageBase64: imageBase64,
           lat: currentLat,
           lng: currentLng,
           locationName: currentLocName
-        })
+        }),
+        signal: controller.signal
       });
+
+      clearTimeout(timeoutId);
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -314,14 +333,24 @@
         Swal.fire({
           icon: 'error',
           title: 'สแกนไม่ผ่าน',
-          text: result.error,
+          text: result.error || 'ไม่พบข้อมูลใบหน้าหรือข้อมูลไม่ถูกต้อง',
           confirmButtonColor: '#ef4444'
         });
       }
 
     } catch (error) {
+      clearTimeout(timeoutId);
       console.error("Scanning Error:", error);
-      Swal.fire('ผิดพลาด', 'การเชื่อมต่อหรือประมวลผลล้มเหลว: ' + error.message, 'error');
+      if (error.name === 'AbortError') {
+        Swal.fire({
+          icon: 'warning',
+          title: 'การเชื่อมต่อล่าช้า',
+          text: 'ระบบตอบสนองช้าเกินไป (Timeout) กรุณากดสแกนใหม่อีกครั้ง',
+          confirmButtonColor: '#0284c7'
+        });
+      } else {
+        Swal.fire('ผิดพลาด', 'การเชื่อมต่อหรือประมวลผลล้มเหลว: ' + error.message, 'error');
+      }
     }
   }
 
