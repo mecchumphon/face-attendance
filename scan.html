@@ -165,16 +165,23 @@
     }
   }
 
-  // 2. ดึง GPS และ Config พร้อมใส่ระบบ Timeout ตัดการรอนาน
+  // 2. ดึง GPS และ Config (ปรับ Timeout เพิ่มเป็น 35 วินาที พร้อมระบบ Backup จาก Cache)
   async function loadLocationAndConfig() {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 12000); // Timeout 12 วินาที
+    const timeoutId = setTimeout(() => controller.abort(), 35000); // ⚡ ปรับขยายเวลาเพิ่มเป็น 35 วินาที
 
     try {
-      const pConfig = fetch(API_URL + '?action=getConfig', { signal: controller.signal }).then(r => {
-        if (!r.ok) throw new Error(`HTTP error! status: ${r.status}`);
-        return r.json();
-      });
+      const pConfig = fetch(API_URL + '?action=getConfig', { signal: controller.signal })
+        .then(r => {
+          if (!r.ok) throw new Error(`HTTP error! status: ${r.status}`);
+          return r.json();
+        })
+        .then(config => {
+          // เซฟลง LocalStorage สำรองไว้ใช้งานคราวหน้า
+          localStorage.setItem('cachedConfig', JSON.stringify(config));
+          return config;
+        });
+
       const pGPS = getGPSLocation();
 
       const [config, pos] = await Promise.all([pConfig, pGPS]);
@@ -187,6 +194,20 @@
     } catch (e) {
       clearTimeout(timeoutId);
       console.error("Initialization Error:", e);
+
+      // ⚡ หากดึง Config ไม่สำเร็จ ให้ลองอ่านจาก Cache เก่าเพื่อไม่ให้ผู้ใช้งานค้าง
+      const cachedConfig = localStorage.getItem('cachedConfig');
+      if (cachedConfig) {
+        try {
+          const config = JSON.parse(cachedConfig);
+          const pos = await getGPSLocation();
+          currentLat = pos.coords.latitude;
+          currentLng = pos.coords.longitude;
+          verifyLocation(config);
+          return;
+        } catch (err) { console.error(err); }
+      }
+
       if (e.name === 'AbortError') {
         showError('เชื่อมต่อเซิร์ฟเวอร์ล่าช้า โปรดรีเฟรชหน้าจอ');
       } else if (e.message.includes('404')) {
@@ -203,7 +224,7 @@
       navigator.geolocation.getCurrentPosition(
         resolve,
         (err) => reject(new Error('หาสัญญาณ GPS ไม่พบ หรือผู้ใช้ไม่ได้กดอนุญาต')),
-        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+        { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
       );
     });
   }
@@ -267,9 +288,9 @@
     }
   }
 
-  // 3. ถ่ายภาพและส่งไปสแกน (พร้อม Timeout 18 วินาที ดักหมุนค้าง)
+  // 3. ถ่ายภาพและส่งไปสแกน (ปรับ Timeout เพิ่มเป็น 45 วินาที)
   async function takePictureAndSend() {
-    // กำหนดขนาดภาพอย่างปลอดภัยเพื่อป้องกัน NaN
+    // กำหนดขนาดภาพอย่างปลอดภัย
     const vWidth = video.videoWidth || 640;
     const vHeight = video.videoHeight || 480;
     const targetWidth = Math.min(vWidth, 480);
@@ -283,7 +304,7 @@
     ctx.scale(-1, 1);
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
     
-    // บีบอัดไฟล์ JPEG ให้มีขนาดเล็ก (~60-80KB) ส่งได้เร็วขึ้น
+    // บีบอัดไฟล์ JPEG ให้มีขนาดเล็ก (~60KB) เพื่อให้ส่งได้เร็วขึ้น
     const imageBase64 = canvas.toDataURL('image/jpeg', 0.6);
 
     Swal.fire({
@@ -293,9 +314,9 @@
       didOpen: () => { Swal.showLoading(); }
     });
 
-    // ⏳ ดักการส่ง API หากรอนานเกิน 18 วินาทีให้ตัดการทำงานทันที
+    // ⚡ ขยายเวลา Timeout การสแกนเป็น 45 วินาที รองรับช่วง Cold Start ของ GAS
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 18000);
+    const timeoutId = setTimeout(() => controller.abort(), 45000);
 
     try {
       const response = await fetch(API_URL, {
