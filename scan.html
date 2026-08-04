@@ -79,7 +79,7 @@
   </div>
 
   <div class="status-area">
-    <div id="main-status">⏳ กำลังเตรียมระบบ (กรุณากดอนุญาตตำแหน่ง GPS)...</div>
+    <div id="main-status">⏳ กำลังเริ่มระบบและเปิดกล้อง...</div>
     <div id="gps-status"></div>
   </div>
 
@@ -93,12 +93,12 @@
       <div class="corner corner-bl"></div><div class="corner corner-br"></div>
       <div class="scan-line" id="scanLine"></div>
     </div>
-    <div id="overlay-status">รอเปิดกล้อง...</div>
+    <div id="overlay-status">กำลังเปิดกล้อง...</div>
     <video id="video" autoplay muted playsinline></video>
   </div>
 
-  <!-- ย้ายปุ่มสแกนลงมาอยู่ด้านล่างกรอบวิดีโอ -->
-  <button id="btnAction" onclick="handleAction()">📷 แตะเพื่อเปิดกล้อง</button>
+  <!-- ปุ่มกดสแกนใบหน้า -->
+  <button id="btnAction" onclick="handleAction()">📸 กดสแกนใบหน้า</button>
 
 </div>
 
@@ -106,7 +106,7 @@
 <canvas id="canvas" style="display: none;"></canvas>
 
 <script>
-  // 🚨 สำคัญมาก: เปลี่ยนเป็น Web App URL ของคุณที่ได้จากการ Deploy ล่าสุด (ต้องลงท้ายด้วย /exec)
+  // 🚨 Web App URL จากการ Deploy
   const API_URL = "https://script.google.com/macros/s/AKfycbwcP4hjqvJqyLtbXhd4ifwusSVSB_Y7TP9uYUW6_LSKCzd920_Wv8BRWzH7FmqmHZRmBQ/exec"; 
 
   const video          = document.getElementById('video');
@@ -117,35 +117,61 @@
   const gpsAlertBox    = document.getElementById('gps-alert-box');
   const btnAction      = document.getElementById('btnAction');
 
-  let currentLat   = null;
-  let currentLng   = null;
-  let currentLocName = "";
-  let isCameraActive = false;
+  let currentLat       = null;
+  let currentLng       = null;
+  let currentLocName   = "";
+  let isCameraActive   = false;
+  let isLocationVerified = false;
 
   window.addEventListener('load', init);
 
-  async function init() {
+  function init() {
     if (API_URL === "YOUR_WEB_APP_URL_HERE" || API_URL.includes("AKfycby_YOUR_URL_HERE")) {
       Swal.fire({
         icon: 'error',
         title: 'ตั้งค่า API_URL ไม่ถูกต้อง',
-        text: 'กรุณาใส่ Web App URL ของคุณในไฟล์ scan.html บรรทัดที่ 103'
+        text: 'กรุณาใส่ Web App URL ของคุณในไฟล์ scan.html'
       });
       showError('กรุณาตั้งค่า API_URL ให้ถูกต้อง');
       return;
     }
 
+    // 🚀 รันการเปิดกล้อง และ การตรวจสอบ GPS/Config ไปพร้อมกันแบบขนาน (Parallel) ทันทีที่โหลดหน้า
+    startCamera();
+    loadLocationAndConfig();
+  }
+
+  // 1. เปิดกล้องทันทีโดยไม่ต้องรอ GPS
+  async function startCamera() {
     try {
-      mainStatus.innerText = '⏳ กำลังเตรียมระบบ (กรุณากดอนุญาตตำแหน่ง GPS)...';
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } } 
+      });
+      video.srcObject = stream; 
+      video.classList.add('active'); 
       
-      // ดึงค่า Config พื้นที่จาก Apps Script
+      isCameraActive = true;
+      document.getElementById('scanLine').classList.add('active');
+      overlayStatus.innerText = 'มองกล้องแล้วกดปุ่ม'; 
+      overlayStatus.style.background = 'rgba(16,185,129,0.65)';
+
+      checkReadyState();
+    } catch (err) {
+      console.error("Camera Error:", err);
+      showError('เปิดกล้องไม่ได้: ' + err.message);
+      overlayStatus.innerText = 'กล้องขัดข้อง';
+      overlayStatus.style.background = 'rgba(239,68,68,0.65)';
+    }
+  }
+
+  // 2. ดึง Config และ GPS ขนานกัน
+  async function loadLocationAndConfig() {
+    try {
       const pConfig = fetch(API_URL + '?action=getConfig').then(r => {
-        if (!r.ok) {
-           throw new Error(`HTTP error! status: ${r.status}`);
-        }
+        if (!r.ok) throw new Error(`HTTP error! status: ${r.status}`);
         return r.json();
       });
-      const pGPS    = getGPSLocation();
+      const pGPS = getGPSLocation();
 
       const [config, pos] = await Promise.all([pConfig, pGPS]);
 
@@ -153,7 +179,6 @@
       currentLng = pos.coords.longitude;
 
       verifyLocation(config);
-
     } catch (e) {
       console.error("Initialization Error:", e);
       if (e.message.includes('404')) {
@@ -213,7 +238,8 @@
     if (isInsideArea) { 
         mainStatus.innerText = '✅ ระบบพร้อมใช้งาน'; 
         mainStatus.style.color = '#34d399'; 
-        btnAction.style.display = 'inline-block'; 
+        isLocationVerified = true;
+        checkReadyState();
     } else { 
         gpsAlertBox.style.display = 'block'; 
         mainStatus.innerText = '⛔ ไม่อนุญาตให้สแกน'; 
@@ -221,40 +247,23 @@
     }
   }
 
+  // เช็กความพร้อม หากทั้งกล้องเปิดแล้ว + อยู่ในพิกัดแล้ว ให้แสดงปุ่มกดสแกน
+  function checkReadyState() {
+    if (isCameraActive && isLocationVerified) {
+      btnAction.style.display = 'inline-block';
+      btnAction.innerHTML = '📸 กดสแกนใบหน้า';
+      btnAction.classList.add('scanning');
+    }
+  }
+
   function handleAction() {
-    if (!isCameraActive) {
-      startCamera();
-    } else {
+    if (isCameraActive && isLocationVerified) {
       takePictureAndSend();
     }
   }
 
-  function startCamera() {
-    mainStatus.innerText   = 'กำลังเปิดกล้อง...'; 
-    mainStatus.style.color = '#94a3b8';
-    
-    navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } } })
-      .then(stream => { 
-        video.srcObject = stream; 
-        video.classList.add('active'); 
-        
-        // อัปเดต UI ให้พร้อมสแกน
-        isCameraActive = true;
-        btnAction.innerHTML = '📸 กดสแกนใบหน้า';
-        btnAction.classList.add('scanning');
-        document.getElementById('scanLine').classList.add('active');
-        mainStatus.innerText = '✅ กล้องพร้อมใช้งาน'; 
-        mainStatus.style.color = '#34d399'; 
-        overlayStatus.innerText = 'มองกล้องแล้วกดปุ่ม'; 
-        overlayStatus.style.background = 'rgba(16,185,129,0.65)';
-      })
-      .catch(err => { 
-        showError('เปิดกล้องไม่ได้: ' + err.message); 
-      });
-  }
-
   async function takePictureAndSend() {
-    // 1. ถ่ายรูปจาก Video ลง Canvas และบีบอัดภาพเพื่อความรวดเร็วในการส่งข้อมูล
+    // 1. ถ่ายรูปจาก Video ลง Canvas
     const targetWidth = Math.min(video.videoWidth || 480, 480);
     const scale = targetWidth / video.videoWidth;
     const targetHeight = video.videoHeight * scale;
@@ -263,27 +272,24 @@
     canvas.height = targetHeight;
     const ctx = canvas.getContext('2d');
     ctx.translate(canvas.width, 0); 
-    ctx.scale(-1, 1); // พลิกซ้ายขวาให้เหมือนกระจก
+    ctx.scale(-1, 1); // พลิกภาพกระจก
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
     
-    // บีบอัดขนาดรูปภาพเหลือคุณภาพ 0.6 เพื่อสปีดการส่งข้อมูลผ่าน API เร็วขึ้นหลายเท่า
     const imageBase64 = canvas.toDataURL('image/jpeg', 0.6);
 
-    // 2. แสดงหน้าต่างโหลด
+    // 2. แสดง Popup โหลด
     Swal.fire({
       title: 'กำลังสแกน...',
-      html: 'กรุณารอสักครู่ ระบบกำลังประมวลผล',
+      html: 'กรุณารอสักครู่ ระบบกำลังวิเคราะห์ใบหน้า',
       allowOutsideClick: false,
       didOpen: () => { Swal.showLoading(); }
     });
 
-    // 3. ส่งข้อมูลไป Apps Script (Face++ Backend)
+    // 3. ส่งข้อมูลภาพไปตรวจสอบใบหน้าแบบระบุตัวตนอัตโนมัติ
     try {
       const response = await fetch(API_URL, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'text/plain;charset=utf-8', 
-        },
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: JSON.stringify({
           action: 'scanFacePP',
           type: 'attendance', 
