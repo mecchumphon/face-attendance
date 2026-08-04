@@ -12,7 +12,7 @@
     body {
       font-family: 'Sarabun', sans-serif;
       min-height: 100vh;
-      background: linear-gradient(160deg, #0f0f23 0%, #0d1b2a 60%, #0a0f1e 100%);
+      background: linear-gradient(160deg, #0f172a 0%, #1e1b4b 60%, #0f172a 100%); 
       color: #e2e8f0;
       display: flex;
       flex-direction: column;
@@ -22,20 +22,20 @@
       overflow-x: hidden;
     }
 
-    body::before { content: ''; position: fixed; width: 500px; height: 500px; background: #10b981; border-radius: 50%; filter: blur(120px); opacity: 0.08; bottom: -150px; right: -150px; pointer-events: none; z-index: 0; }
+    body::before { content: ''; position: fixed; width: 500px; height: 500px; background: #6366f1; border-radius: 50%; filter: blur(120px); opacity: 0.12; bottom: -150px; right: -150px; pointer-events: none; z-index: 0; }
     .page-wrap { width: 100%; max-width: 560px; position: relative; z-index: 1; animation: fadeIn 0.5s ease; display: flex; flex-direction: column; align-items: center; }
 
     /* Header */
     .top-bar { display: flex; align-items: center; justify-content: space-between; width: 100%; margin-bottom: 16px; }
-    .back-btn { display: inline-flex; align-items: center; gap: 6px; color: #64748b; text-decoration: none; font-size: 0.85em; padding: 6px 12px; border-radius: 20px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); transition: all 0.25s ease; }
+    .back-btn { display: inline-flex; align-items: center; gap: 6px; color: #94a3b8; text-decoration: none; font-size: 0.85em; padding: 6px 12px; border-radius: 20px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); transition: all 0.25s ease; }
     .back-btn:hover { color: #e2e8f0; background: rgba(255,255,255,0.1); }
-    h2 { font-size: 1.1em; font-weight: 600; color: #c7d2fe; }
+    h2 { font-size: 1.1em; font-weight: 600; color: #38bdf8; }
     .spacer { width: 80px; }
 
     /* Status Area */
     .status-area { width: 100%; text-align: center; margin-bottom: 14px; }
     #main-status { font-size: 0.9em; color: #94a3b8; min-height: 22px; display: flex; align-items: center; justify-content: center; gap: 8px; }
-    #gps-status { font-size: 0.8em; color: #475569; margin-top: 6px; min-height: 18px; }
+    #gps-status { font-size: 0.8em; color: #64748b; margin-top: 6px; min-height: 18px; }
     
     /* GPS Alert */
     .gps-alert { display: none; background: rgba(239,68,68,0.12); border: 1px solid rgba(239,68,68,0.35); color: #fca5a5; border-radius: 12px; padding: 12px 16px; width: 100%; margin-bottom: 12px; font-size: 0.88em; font-weight: 600; text-align: center; }
@@ -47,25 +47,24 @@
 
     /* Scanner frame corners */
     .scanner-frame { position: absolute; inset: 0; z-index: 5; pointer-events: none; }
-    .corner { position: absolute; width: 28px; height: 28px; border-color: #10b981; border-style: solid; opacity: 0.8; }
+    .corner { position: absolute; width: 28px; height: 28px; border-color: #38bdf8; border-style: solid; opacity: 0.8; }
     .corner-tl { top: 14px; left: 14px; border-width: 3px 0 0 3px; border-radius: 4px 0 0 0; }
     .corner-tr { top: 14px; right: 14px; border-width: 3px 3px 0 0; border-radius: 0 4px 0 0; }
     .corner-bl { bottom: 14px; left: 14px; border-width: 0 0 3px 3px; border-radius: 0 0 0 4px; }
     .corner-br { bottom: 14px; right: 14px; border-width: 0 3px 3px 0; border-radius: 0 0 4px 0; }
 
     /* Scan line */
-    .scan-line { display: none; position: absolute; left: 8%; right: 8%; height: 2px; background: linear-gradient(90deg, transparent, #10b981, transparent); box-shadow: 0 0 8px rgba(16,185,129,0.8); z-index: 6; animation: scanMove 2s ease-in-out infinite; }
+    .scan-line { display: none; position: absolute; left: 8%; right: 8%; height: 2px; background: linear-gradient(90deg, transparent, #38bdf8, transparent); box-shadow: 0 0 8px rgba(56,189,248,0.8); z-index: 6; animation: scanMove 2s ease-in-out infinite; }
     .scan-line.active { display: block; }
     
     #overlay-status { position: absolute; top: 16px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.65); backdrop-filter: blur(8px); color: #e2e8f0; padding: 6px 18px; border-radius: 30px; z-index: 10; white-space: nowrap; font-size: 0.84em; border: 1px solid rgba(255,255,255,0.1); }
 
-    /* Start Button */
-    #btnAction { display: none; background: linear-gradient(135deg, #10b981, #059669); color: white; border: none; border-radius: 50px; padding: 16px 44px; font-size: 18px; font-weight: 600; cursor: pointer; font-family: 'Sarabun', sans-serif; box-shadow: 0 4px 25px rgba(16,185,129,0.45); margin: 20px auto 0; transition: all 0.3s ease; animation: btnPulse 2s ease-in-out infinite; }
-    #btnAction:hover { transform: translateY(-3px); box-shadow: 0 8px 35px rgba(16,185,129,0.6); animation: none; }
-    #btnAction.scanning { background: linear-gradient(135deg, #6366f1, #4f46e5); box-shadow: 0 4px 25px rgba(99,102,241,0.45); }
+    /* Action Button */
+    #btnAction { display: none; background: linear-gradient(135deg, #0284c7, #2563eb); color: white; border: none; border-radius: 50px; padding: 16px 44px; font-size: 18px; font-weight: 600; cursor: pointer; font-family: 'Sarabun', sans-serif; box-shadow: 0 4px 25px rgba(37,99,235,0.45); margin: 24px auto 0; transition: all 0.3s ease; animation: btnPulse 2s ease-in-out infinite; }
+    #btnAction:hover { transform: translateY(-3px); box-shadow: 0 8px 35px rgba(37,99,235,0.6); animation: none; }
 
     @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-    @keyframes btnPulse { 0%,100% { box-shadow: 0 4px 25px rgba(16,185,129,0.45); } 50% { box-shadow: 0 4px 40px rgba(16,185,129,0.7); } }
+    @keyframes btnPulse { 0%,100% { box-shadow: 0 4px 25px rgba(37,99,235,0.45); } 50% { box-shadow: 0 4px 40px rgba(37,99,235,0.75); } }
     @keyframes scanMove { 0% { top: 12%; } 50% { top: 82%; } 100% { top: 12%; } }
   </style>
 </head>
@@ -74,7 +73,7 @@
 
   <div class="top-bar">
     <a href="index.html" class="back-btn">← กลับ</a>
-    <h2>📷 สแกนเข้างาน</h2>
+    <h2>☀️ สแกนเข้างาน</h2>
     <div class="spacer"></div>
   </div>
 
@@ -97,30 +96,30 @@
     <video id="video" autoplay muted playsinline></video>
   </div>
 
-  <!-- ปุ่มกดสแกนใบหน้า -->
-  <button id="btnAction" onclick="handleAction()">📸 กดสแกนใบหน้า</button>
+  <!-- ปุ่มสแกนเข้างาน (จะแสดงอัตโนมัติเมื่อกล้องและ GPS พร้อม) -->
+  <button id="btnAction" onclick="handleAction()">📸 กดสแกนเข้างาน</button>
 
 </div>
 
-<!-- Canvas สำหรับประมวลผลรูป (ซ่อนไว้) -->
+<!-- Canvas สำหรับประมวลผลรูปภาพ (ซ่อนไว้) -->
 <canvas id="canvas" style="display: none;"></canvas>
 
 <script>
-  // 🚨 Web App URL จากการ Deploy
+  // 🚨 Web App URL จากการ Deploy ของคุณ
   const API_URL = "https://script.google.com/macros/s/AKfycbwcP4hjqvJqyLtbXhd4ifwusSVSB_Y7TP9uYUW6_LSKCzd920_Wv8BRWzH7FmqmHZRmBQ/exec"; 
 
-  const video          = document.getElementById('video');
-  const canvas         = document.getElementById('canvas');
-  const mainStatus     = document.getElementById('main-status');
-  const overlayStatus  = document.getElementById('overlay-status');
-  const gpsStatus      = document.getElementById('gps-status');
-  const gpsAlertBox    = document.getElementById('gps-alert-box');
-  const btnAction      = document.getElementById('btnAction');
+  const video         = document.getElementById('video');
+  const canvas        = document.getElementById('canvas');
+  const mainStatus    = document.getElementById('main-status');
+  const overlayStatus = document.getElementById('overlay-status');
+  const gpsStatus     = document.getElementById('gps-status');
+  const gpsAlertBox   = document.getElementById('gps-alert-box');
+  const btnAction     = document.getElementById('btnAction');
 
-  let currentLat       = null;
-  let currentLng       = null;
-  let currentLocName   = "";
-  let isCameraActive   = false;
+  let currentLat          = null;
+  let currentLng          = null;
+  let currentLocName      = "";
+  let isCameraActive      = false;
   let isLocationVerified = false;
 
   window.addEventListener('load', init);
@@ -130,18 +129,18 @@
       Swal.fire({
         icon: 'error',
         title: 'ตั้งค่า API_URL ไม่ถูกต้อง',
-        text: 'กรุณาใส่ Web App URL ของคุณในไฟล์ scan.html'
+        text: 'กรุณาใส่ Web App URL ของคุณในโค้ดส่วน API_URL'
       });
       showError('กรุณาตั้งค่า API_URL ให้ถูกต้อง');
       return;
     }
 
-    // 🚀 รันการเปิดกล้อง และ การตรวจสอบ GPS/Config ไปพร้อมกันแบบขนาน (Parallel) ทันทีที่โหลดหน้า
+    // 🚀 เปิดกล้อง และ เช็ค GPS/Config ขนานกันทันทีที่เปิดหน้าเว็บ
     startCamera();
     loadLocationAndConfig();
   }
 
-  // 1. เปิดกล้องทันทีโดยไม่ต้องรอ GPS
+  // 1. เปิดกล้องทันทีโดยไม่ต้องรอปุ่มกด
   async function startCamera() {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ 
@@ -152,8 +151,8 @@
       
       isCameraActive = true;
       document.getElementById('scanLine').classList.add('active');
-      overlayStatus.innerText = 'มองกล้องแล้วกดปุ่ม'; 
-      overlayStatus.style.background = 'rgba(16,185,129,0.65)';
+      overlayStatus.innerText = 'มองกล้องแล้วกดปุ่มสแกน'; 
+      overlayStatus.style.background = 'rgba(56,189,248,0.65)';
 
       checkReadyState();
     } catch (err) {
@@ -164,7 +163,7 @@
     }
   }
 
-  // 2. ดึง Config และ GPS ขนานกัน
+  // 2. ดึง GPS และ Config ควบคู่กันในเบื้องหลัง
   async function loadLocationAndConfig() {
     try {
       const pConfig = fetch(API_URL + '?action=getConfig').then(r => {
@@ -182,7 +181,7 @@
     } catch (e) {
       console.error("Initialization Error:", e);
       if (e.message.includes('404')) {
-        showError('ไม่สามารถเชื่อมต่อระบบ (Error 404). โปรดตรวจสอบ API_URL และการ Deploy.');
+        showError('ไม่สามารถเชื่อมต่อระบบ (Error 404). โปรดตรวจสอบ API_URL');
       } else {
         showError('ข้อผิดพลาดการเตรียมระบบ: ' + e.message);
       }
@@ -208,7 +207,7 @@
 
     if (!config.locations || config.locations.length === 0) {
       isInsideArea = true;
-      gpsStatus.innerHTML = '<span style="color:#34d399">📍 GPS: ไม่จำกัดพื้นที่</span>';
+      gpsStatus.innerHTML = '<span style="color:#38bdf8">📍 GPS: ไม่จำกัดพื้นที่</span>';
     } else {
       for (let loc of config.locations) {
         const distMeters = getDistanceInMeters(currentLat, currentLng, loc.lat, loc.lng);
@@ -228,7 +227,7 @@
 
       if (isInsideArea) {
         currentLocName = closestName;
-        gpsStatus.innerHTML = `<span style="color:#34d399">📍 พื้นที่: ${closestName} (ห่าง ${Math.round(minDistance)}m)</span>`;
+        gpsStatus.innerHTML = `<span style="color:#38bdf8">📍 พื้นที่: ${closestName} (ห่าง ${Math.round(minDistance)}m)</span>`;
       } else {
         currentLocName = "";
         gpsStatus.innerHTML = `<span style="color:#f87171">📍 นอกพื้นที่: ใกล้สุด ${closestName} (${Math.round(minDistance)}m / ${closestRadius}m)</span>`;
@@ -237,7 +236,7 @@
 
     if (isInsideArea) { 
         mainStatus.innerText = '✅ ระบบพร้อมใช้งาน'; 
-        mainStatus.style.color = '#34d399'; 
+        mainStatus.style.color = '#38bdf8'; 
         isLocationVerified = true;
         checkReadyState();
     } else { 
@@ -247,12 +246,10 @@
     }
   }
 
-  // เช็กความพร้อม หากทั้งกล้องเปิดแล้ว + อยู่ในพิกัดแล้ว ให้แสดงปุ่มกดสแกน
+  // ปลดล็อกให้แสดงปุ่มกดสแกน เมื่อทั้งกล้อง และ GPS พร้อมใช้งานทั้งคู่
   function checkReadyState() {
     if (isCameraActive && isLocationVerified) {
       btnAction.style.display = 'inline-block';
-      btnAction.innerHTML = '📸 กดสแกนใบหน้า';
-      btnAction.classList.add('scanning');
     }
   }
 
@@ -263,7 +260,7 @@
   }
 
   async function takePictureAndSend() {
-    // 1. ถ่ายรูปจาก Video ลง Canvas
+    // ย่อขนาดภาพให้เล็กเพื่อการส่ง API ที่รวดเร็ว
     const targetWidth = Math.min(video.videoWidth || 480, 480);
     const scale = targetWidth / video.videoWidth;
     const targetHeight = video.videoHeight * scale;
@@ -272,27 +269,25 @@
     canvas.height = targetHeight;
     const ctx = canvas.getContext('2d');
     ctx.translate(canvas.width, 0); 
-    ctx.scale(-1, 1); // พลิกภาพกระจก
+    ctx.scale(-1, 1);
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
     
     const imageBase64 = canvas.toDataURL('image/jpeg', 0.6);
 
-    // 2. แสดง Popup โหลด
     Swal.fire({
-      title: 'กำลังสแกน...',
+      title: 'กำลังสแกนเข้างาน...',
       html: 'กรุณารอสักครู่ ระบบกำลังวิเคราะห์ใบหน้า',
       allowOutsideClick: false,
       didOpen: () => { Swal.showLoading(); }
     });
 
-    // 3. ส่งข้อมูลภาพไปตรวจสอบใบหน้าแบบระบุตัวตนอัตโนมัติ
     try {
       const response = await fetch(API_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: JSON.stringify({
           action: 'scanFacePP',
-          type: 'attendance', 
+          type: 'checkin', // ระบุประเภทเป็นการเข้างาน
           imageBase64: imageBase64,
           lat: currentLat,
           lng: currentLng,
@@ -309,9 +304,9 @@
       if (result.success) {
         Swal.fire({
           icon: 'success',
-          title: 'เข้างานสำเร็จ!',
+          title: 'ลงเวลาเข้างานสำเร็จ!',
           html: `<b>คุณ ${result.name}</b><br>รหัส: ${result.studentId}<br>${result.message}`,
-          confirmButtonColor: '#10b981'
+          confirmButtonColor: '#0284c7'
         }).then(() => {
           window.location.href = 'index.html';
         });
