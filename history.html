@@ -20,13 +20,14 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 24px 16px 50px;
+      padding: 24px 16px 20px;
     }
 
     .container {
       width: 100%;
-      max-width: 800px;
+      max-width: 850px;
       animation: fadeIn 0.4s ease;
+      flex: 1;
     }
 
     /* Top Navigation */
@@ -95,27 +96,49 @@
       gap: 12px;
     }
 
-    .search-input {
+    .filter-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    @media (max-width: 600px) {
+      .filter-grid { grid-template-columns: 1fr; }
+    }
+
+    .search-input, .filter-select, .date-input {
       width: 100%;
-      padding: 12px 16px;
+      padding: 10px 14px;
       background: rgba(0,0,0,0.3);
       border: 1px solid rgba(255,255,255,0.12);
       border-radius: 10px;
       color: #f8fafc;
       font-family: 'Sarabun', sans-serif;
-      font-size: 0.95em;
+      font-size: 0.9em;
       outline: none;
     }
-    .search-input:focus { border-color: #6366f1; }
+    .search-input:focus, .filter-select:focus, .date-input:focus { border-color: #6366f1; }
+
+    .date-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .date-group label {
+      font-size: 0.82em;
+      color: #94a3b8;
+      white-space: nowrap;
+    }
 
     .btn-group {
       display: flex;
       gap: 10px;
+      margin-top: 4px;
     }
 
     .btn {
       flex: 1;
-      padding: 12px;
+      padding: 11px;
       border: none;
       border-radius: 10px;
       font-family: 'Sarabun', sans-serif;
@@ -134,6 +157,15 @@
 
     .btn-excel { background: rgba(16,185,129,0.2); color: #a7f3d0; border: 1px solid rgba(16,185,129,0.4); }
     .btn-excel:hover { background: rgba(16,185,129,0.35); }
+
+    .result-info {
+      font-size: 0.82em;
+      color: #94a3b8;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 4px;
+    }
 
     /* Alert Message Box */
     .status-alert {
@@ -174,6 +206,7 @@
       background: rgba(255,255,255,0.05);
       color: #94a3b8;
       font-weight: 600;
+      white-space: nowrap;
     }
 
     tr:hover { background: rgba(255,255,255,0.02); }
@@ -187,6 +220,43 @@
     }
     .badge-normal { background: rgba(16,185,129,0.2); color: #34d399; }
     .badge-shift { background: rgba(234,179,8,0.2); color: #facc15; }
+
+    /* Footer Styling */
+    .app-footer {
+      width: 100%;
+      max-width: 850px;
+      padding: 20px 0 10px;
+      margin-top: 30px;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      text-align: center;
+      color: #94a3b8;
+      font-size: 0.82rem;
+    }
+
+    .footer-container {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .developer-credit span {
+      color: #38bdf8;
+      font-weight: 600;
+    }
+
+    .system-version {
+      font-size: 0.78rem;
+      color: #64748b;
+    }
+
+    .version-badge {
+      background: rgba(56, 189, 248, 0.15);
+      color: #38bdf8;
+      padding: 2px 7px;
+      border-radius: 10px;
+      font-weight: 600;
+      font-size: 0.75rem;
+    }
 
     @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
   </style>
@@ -217,7 +287,27 @@
   </div>
 
   <div class="controls-card">
-    <input type="text" id="searchInput" class="search-input" placeholder="🔍 ค้นหา รหัสพนักงาน, ชื่อ หรือ วันที่..." oninput="filterLogs()">
+    <input type="text" id="searchInput" class="search-input" placeholder="🔍 ค้นหา รหัสพนักงาน, ชื่อ หรือ สถานที่..." oninput="filterLogs()">
+    
+    <div class="filter-grid">
+      <div class="date-group">
+        <label>เริ่ม:</label>
+        <input type="date" id="startDate" class="date-input" onchange="filterLogs()">
+        <label>ถึง:</label>
+        <input type="date" id="endDate" class="date-input" onchange="filterLogs()">
+      </div>
+      <select id="typeFilter" class="filter-select" onchange="filterLogs()">
+        <option value="">-- ประเภททั้งหมด --</option>
+        <option value="เข้างานปกติ">เข้างานปกติ</option>
+        <option value="เข้าเวร">เข้าเวร</option>
+      </select>
+    </div>
+
+    <div class="result-info">
+      <span id="recordCount">แสดง 0 รายการ</span>
+      <a href="javascript:void(0)" onclick="resetFilters()" style="color:#818cf8; text-decoration:none;">ล้างตัวกรอง</a>
+    </div>
+
     <div class="btn-group">
       <button class="btn btn-detail" onclick="loadLogs()">🔄 โหลดข้อมูลใหม่</button>
       <button class="btn btn-excel" onclick="exportExcel()">📊 ดาวน์โหลด Excel</button>
@@ -247,8 +337,16 @@
 
 </div>
 
+<!-- Footer -->
+<footer class="app-footer">
+  <div class="footer-container">
+    <p class="developer-credit">Developed with ❤️ by <span>MEC Chumphon Team</span></p>
+    <p class="system-version">System Version <span class="version-badge">v2.1.0</span> | © 2026 All Rights Reserved</p>
+  </div>
+</footer>
+
 <script>
-  // 🚨 สำคัญมาก: ใส่ Web App URL ของคุณที่ได้จากการ Deploy ล่าสุด (ต้องลงท้ายด้วย /exec)
+  // 🚨 Web App URL
   const API_URL = "https://script.google.com/macros/s/AKfycbwcP4hjqvJqyLtbXhd4ifwusSVSB_Y7TP9uYUW6_LSKCzd920_Wv8BRWzH7FmqmHZRmBQ/exec"; 
 
   let allLogsData = [];
@@ -272,9 +370,8 @@
       const response = await fetch(API_URL + '?action=getLogs');
       const responseText = await response.text();
 
-      // ตรวจสอบว่าผลลัพธ์เป็น HTML แทนที่จะเป็น JSON หรือไม่
       if (responseText.trim().startsWith('<')) {
-        throw new Error('ได้รับข้อมูลเป็น HTML แทนที่จะเป็น JSON. โปรดตรวจสอบการ Deploy ใน Google Apps Script ว่าตั้งค่า "Who has access" เป็น "Anyone" หรือไม่');
+        throw new Error('ได้รับข้อมูลเป็น HTML แทนที่จะเป็น JSON โปรดตรวจสอบการ Deploy ว่าตั้งค่า Who has access เป็น Anyone หรือยัง');
       }
 
       const result = JSON.parse(responseText);
@@ -282,7 +379,7 @@
       if (result.success) {
         allLogsData = result.logs || [];
         updateStats(allLogsData);
-        renderTable(allLogsData);
+        filterLogs(); // เรียกฟิลเตอร์เพื่อแสดงผลเริ่มต้น
       } else {
         showError('ไม่สามารถดึงข้อมูลได้: ' + (result.error || 'เกิดข้อผิดพลาดไม่ทราบสาเหตุ'));
       }
@@ -319,8 +416,10 @@
 
   function renderTable(logs) {
     const tableBody = document.getElementById('logsTableBody');
+    document.getElementById('recordCount').innerText = `แสดง ${logs.length} จากทั้งหมด ${allLogsData.length} รายการ`;
+
     if (logs.length === 0) {
-      tableBody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #64748b; padding: 24px;">📭 ไม่พบประวัติการเข้างาน</td></tr>';
+      tableBody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #64748b; padding: 24px;">📭 ไม่พบประวัติการเข้างานที่ตรงกับเงื่อนไข</td></tr>';
       return;
     }
 
@@ -343,17 +442,58 @@
 
   function filterLogs() {
     const query = document.getElementById('searchInput').value.toLowerCase().trim();
-    if (!query) {
-      renderTable(allLogsData);
-      return;
-    }
-    const filtered = allLogsData.filter(item => 
-      String(item.studentId).toLowerCase().includes(query) ||
-      String(item.name).toLowerCase().includes(query) ||
-      String(item.timestamp).toLowerCase().includes(query) ||
-      String(item.location).toLowerCase().includes(query)
-    );
+    const startDate = document.getElementById('startDate').value;
+    const endDate = document.getElementById('endDate').value;
+    const selectedType = document.getElementById('typeFilter').value;
+
+    const filtered = allLogsData.filter(item => {
+      // 1. กรองข้อความค้นหา
+      const matchText = !query || 
+        String(item.studentId).toLowerCase().includes(query) ||
+        String(item.name).toLowerCase().includes(query) ||
+        String(item.timestamp).toLowerCase().includes(query) ||
+        String(item.location).toLowerCase().includes(query);
+
+      // 2. กรองประเภท
+      const matchType = !selectedType || item.type === selectedType;
+
+      // 3. กรองวันที่
+      let matchDate = true;
+      if (item.timestamp) {
+        // ดึง YYYY-MM-DD จาก Timestamp (รองรับทั้งรูปแบบ YYYY-MM-DD และ DD/MM/YYYY)
+        const logDateStr = parseLogDate(item.timestamp);
+        if (logDateStr) {
+          if (startDate && logDateStr < startDate) matchDate = false;
+          if (endDate && logDateStr > endDate) matchDate = false;
+        }
+      }
+
+      return matchText && matchType && matchDate;
+    });
+
     renderTable(filtered);
+  }
+
+  // แปลง String วันที่ใน Log ให้อยู่ในรูปแบบ YYYY-MM-DD เพื่อเปรียบเทียบ
+  function parseLogDate(ts) {
+    if (!ts) return null;
+    const parts = ts.split(' ');
+    const datePart = parts[0]; // ดึงเฉพาะวันที่
+    if (datePart.includes('-')) {
+      return datePart; // YYYY-MM-DD
+    } else if (datePart.includes('/')) {
+      const [d, m, y] = datePart.split('/');
+      return `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
+    }
+    return null;
+  }
+
+  function resetFilters() {
+    document.getElementById('searchInput').value = '';
+    document.getElementById('startDate').value = '';
+    document.getElementById('endDate').value = '';
+    document.getElementById('typeFilter').value = '';
+    renderTable(allLogsData);
   }
 
   function exportExcel() {
@@ -375,7 +515,6 @@
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "ประวัติการเข้างาน");
 
-    // กำหนดชื่อไฟล์ตามวันที่ปัจจุบัน
     const today = new Date().toISOString().slice(0, 10);
     XLSX.writeFile(workbook, `Attendance_Logs_${today}.xlsx`);
   }
