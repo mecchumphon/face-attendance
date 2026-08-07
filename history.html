@@ -182,12 +182,15 @@
       color: #fca5a5;
     }
 
-    /* Logs Table */
+    /* Logs Table Container - ล็อคความสูงและเปิด Scrollbar */
     .table-container {
       background: rgba(255,255,255,0.03);
       border: 1px solid rgba(255,255,255,0.08);
       border-radius: 16px;
+      max-height: 480px;
+      overflow-y: auto;
       overflow-x: auto;
+      position: relative;
     }
 
     table {
@@ -202,11 +205,16 @@
       border-bottom: 1px solid rgba(255,255,255,0.06);
     }
 
+    /* ตรึงหัวตาราง Sticky Header */
     th {
-      background: rgba(255,255,255,0.05);
+      position: sticky;
+      top: 0;
+      background: #111827;
       color: #94a3b8;
       font-weight: 600;
       white-space: nowrap;
+      z-index: 10;
+      box-shadow: 0 1px 0 rgba(255,255,255,0.1);
     }
 
     tr:hover { background: rgba(255,255,255,0.02); }
@@ -220,6 +228,73 @@
     }
     .badge-normal { background: rgba(16,185,129,0.2); color: #34d399; }
     .badge-shift { background: rgba(234,179,8,0.2); color: #facc15; }
+
+    /* Pagination Styling */
+    .pagination-wrapper {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 16px;
+      padding: 12px 16px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 16px;
+      font-size: 0.85em;
+      color: #94a3b8;
+    }
+
+    .pagination-info {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .page-size-select {
+      background: rgba(0,0,0,0.4);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 8px;
+      color: #f8fafc;
+      padding: 4px 8px;
+      outline: none;
+      font-family: 'Sarabun', sans-serif;
+      cursor: pointer;
+    }
+
+    .pagination-controls {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .page-btn {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.12);
+      color: #f8fafc;
+      padding: 5px 12px;
+      border-radius: 8px;
+      font-family: 'Sarabun', sans-serif;
+      font-size: 0.85em;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .page-btn:hover:not(:disabled) {
+      background: rgba(99,102,241,0.3);
+      border-color: #6366f1;
+    }
+
+    .page-btn:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+
+    #pageIndicator {
+      color: #c7d2fe;
+      font-weight: 600;
+      padding: 0 6px;
+    }
 
     /* Footer Styling */
     .app-footer {
@@ -316,6 +391,7 @@
 
   <div id="alertBox" class="status-alert"></div>
 
+  <!-- ตารางข้อมูล -->
   <div class="table-container">
     <table>
       <thead>
@@ -335,6 +411,28 @@
     </table>
   </div>
 
+  <!-- แถบควบคุม Pagination -->
+  <div class="pagination-wrapper">
+    <div class="pagination-info">
+      <span>แสดง</span>
+      <select id="itemsPerPage" class="page-size-select" onchange="changePageSize()">
+        <option value="10">10</option>
+        <option value="20" selected>20</option>
+        <option value="50">50</option>
+        <option value="100">100</option>
+      </select>
+      <span>รายการ / หน้า</span>
+    </div>
+
+    <div class="pagination-controls">
+      <button id="btnFirst" class="page-btn" onclick="goToPage(1)" title="หน้าแรก">««</button>
+      <button id="btnPrev" class="page-btn" onclick="prevPage()">‹ ก่อนหน้า</button>
+      <span id="pageIndicator">หน้า 1 จาก 1</span>
+      <button id="btnNext" class="page-btn" onclick="nextPage()">ถัดไป ›</button>
+      <button id="btnLast" class="page-btn" onclick="goToPage('last')" title="หน้าสุดท้าย">»»</button>
+    </div>
+  </div>
+
 </div>
 
 <!-- Footer -->
@@ -349,7 +447,11 @@
   // 🚨 Web App URL
   const API_URL = "https://script.google.com/macros/s/AKfycbwcP4hjqvJqyLtbXhd4ifwusSVSB_Y7TP9uYUW6_LSKCzd920_Wv8BRWzH7FmqmHZRmBQ/exec"; 
 
+  // ตัวแปรเก็บข้อมูลและสถานะ Pagination
   let allLogsData = [];
+  let currentFilteredLogs = [];
+  let currentPage = 1;
+  let itemsPerPage = 20;
 
   window.addEventListener('load', loadLogs);
 
@@ -379,7 +481,7 @@
       if (result.success) {
         allLogsData = result.logs || [];
         updateStats(allLogsData);
-        filterLogs(); // เรียกฟิลเตอร์เพื่อแสดงผลเริ่มต้น
+        filterLogs(); // กรองและแสดงผลข้อมูล
       } else {
         showError('ไม่สามารถดึงข้อมูลได้: ' + (result.error || 'เกิดข้อผิดพลาดไม่ทราบสาเหตุ'));
       }
@@ -414,39 +516,13 @@
     document.getElementById('cnt-total').innerText = logs.length;
   }
 
-  function renderTable(logs) {
-    const tableBody = document.getElementById('logsTableBody');
-    document.getElementById('recordCount').innerText = `แสดง ${logs.length} จากทั้งหมด ${allLogsData.length} รายการ`;
-
-    if (logs.length === 0) {
-      tableBody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #64748b; padding: 24px;">📭 ไม่พบประวัติการเข้างานที่ตรงกับเงื่อนไข</td></tr>';
-      return;
-    }
-
-    let html = '';
-    logs.forEach(item => {
-      const isShift = item.type === 'เข้าเวร';
-      const badgeClass = isShift ? 'badge-shift' : 'badge-normal';
-      html += `
-        <tr>
-          <td>${item.timestamp || '-'}</td>
-          <td style="font-weight:600; color:#c7d2fe;">${item.studentId || '-'}</td>
-          <td>${item.name || '-'}</td>
-          <td><span class="badge ${badgeClass}">${item.type || 'เข้างาน'}</span></td>
-          <td style="color:#94a3b8;">${item.location || '-'}</td>
-        </tr>
-      `;
-    });
-    tableBody.innerHTML = html;
-  }
-
   function filterLogs() {
     const query = document.getElementById('searchInput').value.toLowerCase().trim();
     const startDate = document.getElementById('startDate').value;
     const endDate = document.getElementById('endDate').value;
     const selectedType = document.getElementById('typeFilter').value;
 
-    const filtered = allLogsData.filter(item => {
+    currentFilteredLogs = allLogsData.filter(item => {
       // 1. กรองข้อความค้นหา
       const matchText = !query || 
         String(item.studentId).toLowerCase().includes(query) ||
@@ -460,7 +536,6 @@
       // 3. กรองวันที่
       let matchDate = true;
       if (item.timestamp) {
-        // ดึง YYYY-MM-DD จาก Timestamp (รองรับทั้งรูปแบบ YYYY-MM-DD และ DD/MM/YYYY)
         const logDateStr = parseLogDate(item.timestamp);
         if (logDateStr) {
           if (startDate && logDateStr < startDate) matchDate = false;
@@ -471,16 +546,94 @@
       return matchText && matchType && matchDate;
     });
 
-    renderTable(filtered);
+    currentPage = 1; // เมื่อค้นหา/กรอง ให้รีเซ็ตกลับหน้า 1
+    renderTable();
+  }
+
+  function renderTable() {
+    const tableBody = document.getElementById('logsTableBody');
+    document.getElementById('recordCount').innerText = `แสดง ${currentFilteredLogs.length} จากทั้งหมด ${allLogsData.length} รายการ`;
+
+    if (currentFilteredLogs.length === 0) {
+      tableBody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #64748b; padding: 24px;">📭 ไม่พบประวัติการเข้างานที่ตรงกับเงื่อนไข</td></tr>';
+      updatePaginationUI(0);
+      return;
+    }
+
+    // คำนวณขอบเขตข้อมูลที่จะตัดมาแสดงเฉพาะหน้านั้นๆ
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + parseInt(itemsPerPage);
+    const pageData = currentFilteredLogs.slice(startIndex, endIndex);
+
+    let html = '';
+    pageData.forEach(item => {
+      const isShift = item.type === 'เข้าเวร';
+      const badgeClass = isShift ? 'badge-shift' : 'badge-normal';
+      html += `
+        <tr>
+          <td>${item.timestamp || '-'}</td>
+          <td style="font-weight:600; color:#c7d2fe;">${item.studentId || '-'}</td>
+          <td>${item.name || '-'}</td>
+          <td><span class="badge ${badgeClass}">${item.type || 'เข้างาน'}</span></td>
+          <td style="color:#94a3b8;">${item.location || '-'}</td>
+        </tr>
+      `;
+    });
+    tableBody.innerHTML = html;
+
+    updatePaginationUI(currentFilteredLogs.length);
+  }
+
+  // อัปเดตสถานะปุ่มกด และข้อความบอกหน้า
+  function updatePaginationUI(totalItems) {
+    const totalPages = Math.ceil(totalItems / itemsPerPage) || 1;
+
+    document.getElementById('pageIndicator').innerText = `หน้า ${currentPage} จาก ${totalPages}`;
+
+    document.getElementById('btnFirst').disabled = (currentPage === 1);
+    document.getElementById('btnPrev').disabled = (currentPage === 1);
+    document.getElementById('btnNext').disabled = (currentPage === totalPages || totalItems === 0);
+    document.getElementById('btnLast').disabled = (currentPage === totalPages || totalItems === 0);
+  }
+
+  function prevPage() {
+    if (currentPage > 1) {
+      currentPage--;
+      renderTable();
+    }
+  }
+
+  function nextPage() {
+    const totalPages = Math.ceil(currentFilteredLogs.length / itemsPerPage);
+    if (currentPage < totalPages) {
+      currentPage++;
+      renderTable();
+    }
+  }
+
+  function goToPage(page) {
+    const totalPages = Math.ceil(currentFilteredLogs.length / itemsPerPage);
+    if (page === 'last') {
+      currentPage = totalPages || 1;
+    } else {
+      currentPage = page;
+    }
+    renderTable();
+  }
+
+  function changePageSize() {
+    itemsPerPage = parseInt(document.getElementById('itemsPerPage').value);
+    currentPage = 1;
+    renderTable();
   }
 
   // แปลง String วันที่ใน Log ให้อยู่ในรูปแบบ YYYY-MM-DD เพื่อเปรียบเทียบ
   function parseLogDate(ts) {
     if (!ts) return null;
     const parts = ts.split(' ');
-    const datePart = parts[0]; // ดึงเฉพาะวันที่
+    const datePart = parts[0]; 
     if (datePart.includes('-')) {
-      return datePart; // YYYY-MM-DD
+      return datePart; 
     } else if (datePart.includes('/')) {
       const [d, m, y] = datePart.split('/');
       return `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
@@ -493,7 +646,7 @@
     document.getElementById('startDate').value = '';
     document.getElementById('endDate').value = '';
     document.getElementById('typeFilter').value = '';
-    renderTable(allLogsData);
+    filterLogs();
   }
 
   function exportExcel() {
