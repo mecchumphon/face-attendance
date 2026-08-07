@@ -6,6 +6,10 @@
   <title>สแกนเข้าเวร</title>
   <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  
+  <!-- 🚀 โหลด face-api.js สำหรับประมวลผล AI บน Browser -->
+  <script src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api/dist/face-api.js"></script>
+  
   <!-- โหลดไฟล์ Config กลางและป้องกันแคช -->
   <script src="js/api-config.js?v=2.1.0"></script>
   <style>
@@ -70,7 +74,6 @@
     /* Start Button */
     #btnAction { display: none; background: linear-gradient(135deg, #eab308, #ca8a04); color: white; border: none; border-radius: 50px; padding: 16px 44px; font-size: 18px; font-weight: 600; cursor: pointer; font-family: 'Sarabun', sans-serif; box-shadow: 0 4px 25px rgba(234,179,8,0.45); margin: 20px auto 0; transition: all 0.3s ease; animation: btnPulse 2s ease-in-out infinite; }
     #btnAction:hover { transform: translateY(-3px); box-shadow: 0 8px 35px rgba(234,179,8,0.6); animation: none; }
-    #btnAction.scanning { background: linear-gradient(135deg, #6366f1, #4f46e5); box-shadow: 0 4px 25px rgba(99,102,241,0.45); }
 
     @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     @keyframes btnPulse { 0%,100% { box-shadow: 0 4px 25px rgba(234,179,8,0.45); } 50% { box-shadow: 0 4px 40px rgba(234,179,8,0.7); } }
@@ -87,7 +90,7 @@
   </div>
 
   <div class="status-area">
-    <div id="main-status">⏳ กำลังเริ่มระบบและเปิดกล้อง...</div>
+    <div id="main-status">⏳ กำลังโหลด AI Model และเตรียมกล้อง...</div>
     <div id="gps-status"></div>
   </div>
 
@@ -101,7 +104,7 @@
       <div class="corner corner-bl"></div><div class="corner corner-br"></div>
       <div class="scan-line" id="scanLine"></div>
     </div>
-    <div id="overlay-status">กำลังเปิดกล้อง...</div>
+    <div id="overlay-status">กำลังโหลด AI...</div>
     <video id="video" autoplay muted playsinline></video>
   </div>
 
@@ -114,16 +117,12 @@
 
 </div>
 
-<!-- Canvas สำหรับประมวลผลรูปภาพ -->
-<canvas id="canvas" style="display: none;"></canvas>
-
 <script>
   // 🔹 ดึง API_URL จาก localStorage ก่อน หากไม่มีจะใช้ค่า Default
   const DEFAULT_URL = "https://script.google.com/macros/s/AKfycbwcP4hjqvJqyLtbXhd4ifwusSVSB_Y7TP9uYUW6_LSKCzd920_Wv8BRWzH7FmqmHZRmBQ/exec";
   const API_URL = localStorage.getItem('gasApiUrl') || (typeof GAS_API_URL !== 'undefined' ? GAS_API_URL : DEFAULT_URL); 
 
   const video          = document.getElementById('video');
-  const canvas         = document.getElementById('canvas');
   const mainStatus     = document.getElementById('main-status');
   const overlayStatus  = document.getElementById('overlay-status');
   const gpsStatus      = document.getElementById('gps-status');
@@ -137,10 +136,11 @@
   let currentLocName      = "";
   let isCameraActive      = false;
   let isLocationVerified = false;
+  let isModelLoaded      = false;
 
   window.addEventListener('load', init);
 
-  function init() {
+  async function init() {
     if (!API_URL || API_URL.includes("YOUR_WEB_APP_URL_HERE")) {
       Swal.fire({
         icon: 'error',
@@ -151,11 +151,36 @@
       return;
     }
 
-    startCamera();
-    loadLocationAndConfig();
+    try {
+      // 1. โหลด AI Models
+      await loadAiModels();
+      // 2. เปิดกล้อง
+      await startCamera();
+      // 3. ดึง GPS และ Config
+      loadLocationAndConfig();
+    } catch (err) {
+      showError('เกิดข้อผิดพลาดในการเริ่มต้นระบบ: ' + err.message);
+    }
   }
 
-  // 1. เปิดกล้อง
+  // 🤖 โหลด AI Models ของ face-api.js
+  async function loadAiModels() {
+    try {
+      const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/';
+      await faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL);
+      await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
+      await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
+      
+      isModelLoaded = true;
+      overlayStatus.innerText = 'มองกล้องแล้วกดปุ่ม';
+    } catch (err) {
+      console.error("Model Load Error:", err);
+      showError('ไม่สามารถโหลด AI Model ได้');
+      throw err;
+    }
+  }
+
+  // 📷 1. เปิดกล้อง
   async function startCamera() {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ 
@@ -179,10 +204,10 @@
     }
   }
 
-  // 2. ดึง Config และ GPS (ขยายเวลา Timeout เป็น 35 วินาที พร้อมระบบดึง Cache สำรอง)
+  // 📍 2. ดึง Config และ GPS
   async function loadLocationAndConfig() {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 35000); // ⚡ ปรับขยายเวลาเพิ่มเป็น 35 วินาที
+    const timeoutId = setTimeout(() => controller.abort(), 35000);
 
     try {
       const pConfig = fetch(API_URL + '?action=getConfig', { signal: controller.signal })
@@ -191,7 +216,6 @@
           return r.json();
         })
         .then(config => {
-          // สำรอง Config ไว้ใน LocalStorage คราวหน้าใช้ได้ทันที
           localStorage.setItem('cachedConfig', JSON.stringify(config));
           return config;
         });
@@ -209,7 +233,6 @@
       clearTimeout(timeoutId);
       console.error("Initialization Error:", e);
 
-      // ⚡ กรณีดึง Config ไม่สำเร็จ ลองนำข้อมูลล่าสุดจาก Cache มาใช้งาน
       const cachedConfig = localStorage.getItem('cachedConfig');
       if (cachedConfig) {
         try {
@@ -291,36 +314,20 @@
   }
 
   function checkReadyState() {
-    if (isCameraActive && isLocationVerified) {
+    if (isCameraActive && isLocationVerified && isModelLoaded) {
       btnAction.style.display = 'inline-block';
       btnAction.innerHTML = '🌙 กดสแกนเข้าเวร';
-      btnAction.classList.add('scanning');
     }
   }
 
   function handleAction() {
-    if (isCameraActive && isLocationVerified) {
-      takePictureAndSend();
+    if (isCameraActive && isLocationVerified && isModelLoaded) {
+      detectAndSendFace();
     }
   }
 
-  // 3. ถ่ายภาพและส่งข้อมูลเข้าเวร (ขยายเวลา Timeout เป็น 45 วินาที)
-  async function takePictureAndSend() {
-    const vWidth = video.videoWidth || 640;
-    const vHeight = video.videoHeight || 480;
-    const targetWidth = Math.min(vWidth, 480);
-    const scale = targetWidth / vWidth;
-    const targetHeight = vHeight * scale;
-
-    canvas.width = targetWidth;
-    canvas.height = targetHeight;
-    const ctx = canvas.getContext('2d');
-    ctx.translate(canvas.width, 0); 
-    ctx.scale(-1, 1);
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-    
-    // บีบอัดภาพ JPEG ลดขนาดให้ส่งได้รวดเร็วขึ้น
-    const imageBase64 = canvas.toDataURL('image/jpeg', 0.6);
+  // 🔍 3. ตรวจจับใบหน้าและส่งข้อมูลแบบ Vector (รวมข้อมูลแพทย์เวร/หมายเหตุ)
+  async function detectAndSendFace() {
     const physicianStr = physicianInput.value.trim();
 
     Swal.fire({
@@ -330,18 +337,35 @@
       didOpen: () => { Swal.showLoading(); }
     });
 
-    // ⚡ ขยายเวลา Timeout เป็น 45 วินาที รองรับช่วง Cold Start ของ GAS และ Face++
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 45000);
-
     try {
+      // 1. สกัด Vector ใบหน้าจากวิดีโอสด
+      const detection = await faceapi.detectSingleFace(video)
+        .withFaceLandmarks()
+        .withFaceDescriptor();
+
+      if (!detection) {
+        Swal.fire({
+          icon: 'warning',
+          title: 'ไม่พบใบหน้า',
+          text: 'กรุณามองกล้องให้ชัดเจน และอยู่ในจุดที่มีแสงสว่างพอดี',
+          confirmButtonColor: '#ef4444'
+        });
+        return;
+      }
+
+      const descriptorArray = Array.from(detection.descriptor);
+
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 35000);
+
+      // 2. ส่ง Vector พร้อมข้อมูลประเภท 'shift' ไปที่ GAS
       const response = await fetch(API_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: JSON.stringify({
-          action: 'scanFacePP',
+          action: 'scanFace',
           type: 'shift', // ระบุประเภทเป็นการเข้าเวร
-          imageBase64: imageBase64,
+          descriptor: descriptorArray,
           lat: currentLat,
           lng: currentLng,
           locationName: currentLocName,
@@ -377,7 +401,6 @@
       }
 
     } catch (error) {
-      clearTimeout(timeoutId);
       console.error("Scanning Error:", error);
       if (error.name === 'AbortError') {
         Swal.fire({
