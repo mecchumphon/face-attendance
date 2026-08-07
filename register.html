@@ -6,6 +6,12 @@
   <title>ลงทะเบียนใบหน้า</title>
   <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  
+  <!-- 🚀 โหลด face-api.js สำหรับประมวลผล AI บน Browser -->
+  <script src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api/dist/face-api.js"></script>
+  
+  <!-- โหลดไฟล์ Config กลางและป้องกันแคช -->
+  <script src="js/api-config.js?v=2.1.0"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -58,7 +64,7 @@
     video.active { opacity: 1; }
     
     .face-guide { position: absolute; top: 15%; bottom: 15%; left: 20%; right: 20%; border: 2px dashed rgba(99,102,241,0.5); border-radius: 50%; z-index: 5; pointer-events: none; }
-    #overlay-text { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #64748b; font-size: 0.9em; z-index: 2; pointer-events: none; }
+    #overlay-text { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #64748b; font-size: 0.9em; z-index: 2; pointer-events: none; text-align: center; }
 
     /* Buttons */
     .btn { width: 100%; border: none; border-radius: 14px; padding: 16px; font-size: 16px; font-weight: 600; cursor: pointer; font-family: 'Sarabun', sans-serif; transition: all 0.3s ease; }
@@ -108,7 +114,7 @@
     </div>
 
     <div class="video-wrapper">
-      <div id="overlay-text">รอเปิดกล้อง...</div>
+      <div id="overlay-text">กำลังโหลด AI Model...</div>
       <div class="face-guide"></div>
       <video id="video" autoplay muted playsinline></video>
     </div>
@@ -117,26 +123,47 @@
   </div>
 </div>
 
-<!-- Canvas สำหรับดึงภาพ -->
-<canvas id="canvas" style="display: none;"></canvas>
-
 <script>
-  // 🚨 สำคัญมาก: เปลี่ยนเป็น Web App URL ของคุณที่ได้จากการ Deploy ล่าสุด (ต้องลงท้ายด้วย /exec)
-  const API_URL = "https://script.google.com/macros/s/AKfycbwcP4hjqvJqyLtbXhd4ifwusSVSB_Y7TP9uYUW6_LSKCzd920_Wv8BRWzH7FmqmHZRmBQ/exec"; 
+  const DEFAULT_URL = "https://script.google.com/macros/s/AKfycbwcP4hjqvJqyLtbXhd4ifwusSVSB_Y7TP9uYUW6_LSKCzd920_Wv8BRWzH7FmqmHZRmBQ/exec";
+  const API_URL = localStorage.getItem('gasApiUrl') || (typeof GAS_API_URL !== 'undefined' ? GAS_API_URL : DEFAULT_URL); 
 
-  const video = document.getElementById('video');
-  const canvas = document.getElementById('canvas');
-  const btnAction = document.getElementById('btnAction');
+  const video       = document.getElementById('video');
+  const btnAction   = document.getElementById('btnAction');
   const overlayText = document.getElementById('overlay-text');
   
-  const inputId = document.getElementById('studentId');
+  const inputId   = document.getElementById('studentId');
   const inputName = document.getElementById('name');
 
-  let isCameraActive = false;
-  let currentStep = 1; // 1: หน้าตรง, 2: ข้างขวา, 3: ข้างซ้าย
-  let capturedImages = [];
+  let isCameraActive     = false;
+  let isModelLoaded     = false;
+  let currentStep        = 1; // 1: หน้าตรง, 2: ข้างขวา, 3: ข้างซ้าย
+  let capturedDescriptors = []; // เก็บ Vector ใบหน้า 3 มุม
+
+  window.addEventListener('load', init);
+
+  async function init() {
+    try {
+      // โหลด AI Models ตั้งแต่เปิดหน้าเว็บ
+      const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/';
+      await faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL);
+      await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
+      await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
+
+      isModelLoaded = true;
+      overlayText.innerText = 'รอเปิดกล้อง...';
+    } catch (err) {
+      console.error("Model Load Error:", err);
+      overlayText.innerText = 'ไม่สามารถโหลด AI Model ได้';
+      Swal.fire('ข้อผิดพลาด', 'ไม่สามารถโหลดระบบ AI ได้ โปรดรีเฟรชหน้าจอ', 'error');
+    }
+  }
 
   function handleAction() {
+    if (!isModelLoaded) {
+      Swal.fire('แจ้งเตือน', 'กำลังโหลด AI Model กรุณารอสักครู่...', 'info');
+      return;
+    }
+
     if (!isCameraActive) {
       // เปิดกล้อง
       navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } } })
@@ -149,10 +176,11 @@
           updateStepUI();
         })
         .catch(err => { 
+          console.error("Camera Error:", err);
           Swal.fire('ข้อผิดพลาด', 'ไม่สามารถเข้าถึงกล้องได้ กรุณาอนุญาตให้สิทธิ์', 'error');
         });
     } else {
-      // ตรวจสอบข้อมูลก่อนถ่าย
+      // ตรวจสอบข้อมูลก่อนสแกนถ่าย
       const studentId = inputId.value.trim();
       const name = inputName.value.trim();
 
@@ -161,16 +189,16 @@
         return;
       }
 
-      if (API_URL === "YOUR_WEB_APP_URL_HERE" || API_URL.includes("AKfycby_YOUR_URL_HERE")) {
+      if (!API_URL || API_URL.includes("YOUR_WEB_APP_URL_HERE")) {
         Swal.fire({
           icon: 'error',
           title: 'ตั้งค่า API_URL ไม่ถูกต้อง',
-          text: 'กรุณาใส่ Web App URL ของคุณในไฟล์ register.html'
+          text: 'กรุณาตั้งค่า Web App URL ในระบบก่อนใช้งาน'
         });
         return;
       }
 
-      captureStepImage(studentId, name);
+      captureStepDescriptor(studentId, name);
     }
   }
 
@@ -197,43 +225,61 @@
     }
   }
 
-  function captureStepImage(studentId, name) {
-    // ปรับขนาดรูปเป็นความกว้างไม่เกิน 480px เพื่อประมวลผลเร็วขึ้นมาก
-    const targetWidth = Math.min(video.videoWidth || 480, 480);
-    const scale = targetWidth / video.videoWidth;
-    const targetHeight = video.videoHeight * scale;
+  // 🔍 สกัด Vector ใบหน้าในแต่ละมุม
+  async function captureStepDescriptor(studentId, name) {
+    Swal.fire({
+      title: `กำลังวิเคราะห์ใบหน้า (มุมที่ ${currentStep})...`,
+      html: 'กรุณานิ่งไว้สักครู่...',
+      allowOutsideClick: false,
+      didOpen: () => { Swal.showLoading(); }
+    });
 
-    canvas.width = targetWidth;
-    canvas.height = targetHeight;
-    const ctx = canvas.getContext('2d');
-    ctx.translate(canvas.width, 0); 
-    ctx.scale(-1, 1);
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-    
-    // แปลงภาพเป็น base64 ที่มีขนาดเล็กลง (คุณภาพ 0.65)
-    const imageBase64 = canvas.toDataURL('image/jpeg', 0.65);
-    capturedImages.push(imageBase64);
+    try {
+      // สกัดเวกเตอร์โครงสร้างใบหน้าจากเฟรมสด
+      const detection = await faceapi.detectSingleFace(video)
+        .withFaceLandmarks()
+        .withFaceDescriptor();
 
-    if (currentStep < 3) {
-      currentStep++;
-      updateStepUI();
-      Swal.fire({
-        icon: 'info',
-        title: `มุมที่ ${currentStep - 1} สำเร็จ!`,
-        text: currentStep === 2 ? 'กรุณาค่อยๆ หันหน้าไปทางขวาเล็กน้อย แล้วกดถ่าย' : 'กรุณาค่อยๆ หันหน้าไปทางซ้ายเล็กน้อย แล้วกดถ่าย',
-        timer: 1800,
-        showConfirmButton: false
-      });
-    } else {
-      // ถ่ายครบ 3 มุม ส่งขึ้นเซิร์ฟเวอร์
-      registerAllFaces(studentId, name);
+      if (!detection) {
+        Swal.fire({
+          icon: 'warning',
+          title: 'ไม่พบใบหน้า',
+          text: 'กรุณามองกล้องให้ชัดเจน และอยู่ในจุดที่มีแสงสว่างเพียงพอ',
+          confirmButtonColor: '#6366f1'
+        });
+        return;
+      }
+
+      // แปลง Float32Array เป็น Array ปกติ
+      const descriptorArray = Array.from(detection.descriptor);
+      capturedDescriptors.push(descriptorArray);
+
+      if (currentStep < 3) {
+        currentStep++;
+        updateStepUI();
+        Swal.fire({
+          icon: 'info',
+          title: `มุมที่ ${currentStep - 1} สำเร็จ!`,
+          text: currentStep === 2 ? 'กรุณาค่อยๆ หันหน้าไปทางขวาเล็กน้อย แล้วกดถ่าย' : 'กรุณาค่อยๆ หันหน้าไปทางซ้ายเล็กน้อย แล้วกดถ่าย',
+          timer: 1800,
+          showConfirmButton: false
+        });
+      } else {
+        // ถ่ายครบ 3 มุมแล้ว ส่งข้อมูลเวกเตอร์ขึ้นเซิร์ฟเวอร์
+        registerAllFaces(studentId, name);
+      }
+
+    } catch (err) {
+      console.error("Face Detection Error:", err);
+      Swal.fire('ข้อผิดพลาด', 'เกิดข้อผิดพลาดในการประมวลผลใบหน้า: ' + err.message, 'error');
     }
   }
 
+  // 🚀 ส่ง Array ของ Vector ใบหน้าทั้ง 3 มุมไปยัง Google Apps Script
   async function registerAllFaces(studentId, name) {
     Swal.fire({
-      title: 'กำลังลงทะเบียน 3 มุม...',
-      html: 'กำลังส่งข้อมูลประมวลผลโครงสร้างใบหน้า',
+      title: 'กำลังลงทะเบียนข้อมูลใบหน้า...',
+      html: 'ระบบกำลังบันทึกเวกเตอร์ใบหน้าเข้าสู่ฐานข้อมูล',
       allowOutsideClick: false,
       didOpen: () => { Swal.showLoading(); }
     });
@@ -241,14 +287,12 @@
     try {
       const response = await fetch(API_URL, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'text/plain;charset=utf-8', 
-        },
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: JSON.stringify({
-          action: 'registerFacePP',
+          action: 'registerFace',
           studentId: studentId,
           name: name,
-          imagesBase64: capturedImages // ส่งเป็น Array 3 ภาพ
+          descriptors: capturedDescriptors // ส่งเป็น Array เวกเตอร์ 3 มุม
         })
       });
 
@@ -262,26 +306,26 @@
         Swal.fire({
           icon: 'success',
           title: 'ลงทะเบียนสำเร็จ!',
-          text: result.message,
+          text: result.message || 'บันทึกข้อมูลใบหน้าเรียบร้อยแล้ว',
           confirmButtonColor: '#4f46e5'
         }).then(() => {
           // เคลียร์ฟอร์มและสถานะ
           inputId.value = '';
           inputName.value = '';
-          capturedImages = [];
+          capturedDescriptors = [];
           currentStep = 1;
           updateStepUI();
         });
       } else {
-        capturedImages = [];
+        capturedDescriptors = [];
         currentStep = 1;
         updateStepUI();
-        Swal.fire('ผิดพลาด', result.error, 'error');
+        Swal.fire('ผิดพลาด', result.error || 'ไม่สามารถลงทะเบียนได้', 'error');
       }
 
     } catch (error) {
       console.error("Registration Error:", error);
-      capturedImages = [];
+      capturedDescriptors = [];
       currentStep = 1;
       updateStepUI();
       Swal.fire('ผิดพลาด', 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้: ' + error.message, 'error');
