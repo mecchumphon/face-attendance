@@ -1,430 +1,282 @@
 <!DOCTYPE html>
-<html lang="th">
+<html lang="th" class="h-full">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>สแกนเข้าเวร</title>
-  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&display=swap" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  
-  <!-- 🚀 โหลด face-api.js สำหรับประมวลผล AI บน Browser -->
-  <script src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api/dist/face-api.js"></script>
-  
-  <!-- โหลดไฟล์ Config กลางและป้องกันแคช -->
-  <script src="js/api-config.js?v=2.1.0"></script>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-
-    body {
-      font-family: 'Sarabun', sans-serif;
-      min-height: 100vh;
-      background: linear-gradient(160deg, #1e0f23 0%, #2a0d1b 60%, #1a0a1e 100%); 
-      color: #e2e8f0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 24px 16px 50px;
-      position: relative;
-      overflow-x: hidden;
-    }
-
-    body::before { content: ''; position: fixed; width: 500px; height: 500px; background: #eab308; border-radius: 50%; filter: blur(120px); opacity: 0.08; bottom: -150px; right: -150px; pointer-events: none; z-index: 0; }
-    .page-wrap { width: 100%; max-width: 560px; position: relative; z-index: 1; animation: fadeIn 0.5s ease; display: flex; flex-direction: column; align-items: center; }
-
-    /* Header */
-    .top-bar { display: flex; align-items: center; justify-content: space-between; width: 100%; margin-bottom: 16px; }
-    .back-btn { display: inline-flex; align-items: center; gap: 6px; color: #64748b; text-decoration: none; font-size: 0.85em; padding: 6px 12px; border-radius: 20px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); transition: all 0.25s ease; }
-    .back-btn:hover { color: #e2e8f0; background: rgba(255,255,255,0.1); }
-    h2 { font-size: 1.1em; font-weight: 600; color: #fde047; }
-    .spacer { width: 80px; }
-
-    /* Status Area */
-    .status-area { width: 100%; text-align: center; margin-bottom: 14px; }
-    #main-status { font-size: 0.9em; color: #94a3b8; min-height: 22px; display: flex; align-items: center; justify-content: center; gap: 8px; }
-    #gps-status { font-size: 0.8em; color: #475569; margin-top: 6px; min-height: 18px; }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>สแกนเข้าเวร - ระบบบันทึกเวลาปฏิบัติงานนักศึกษาแพทย์</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts Sarabun -->
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- Face API JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api/dist/face-api.js"></script>
     
-    /* GPS Alert */
-    .gps-alert { display: none; background: rgba(239,68,68,0.12); border: 1px solid rgba(239,68,68,0.35); color: #fca5a5; border-radius: 12px; padding: 12px 16px; width: 100%; margin-bottom: 12px; font-size: 0.88em; font-weight: 600; text-align: center; }
-
-    /* Scanner Container */
-    .video-container { position: relative; width: 100%; border-radius: 20px; overflow: hidden; background: #060612; min-height: 280px; }
-    video { width: 100%; height: auto; display: block; transform: scaleX(-1); opacity: 0; transition: opacity 0.5s ease; border-radius: 20px; }
-    video.active { opacity: 1; }
-
-    /* Scanner frame corners */
-    .scanner-frame { position: absolute; inset: 0; z-index: 5; pointer-events: none; }
-    .corner { position: absolute; width: 28px; height: 28px; border-color: #eab308; border-style: solid; opacity: 0.8; }
-    .corner-tl { top: 14px; left: 14px; border-width: 3px 0 0 3px; border-radius: 4px 0 0 0; }
-    .corner-tr { top: 14px; right: 14px; border-width: 3px 3px 0 0; border-radius: 0 4px 0 0; }
-    .corner-bl { bottom: 14px; left: 14px; border-width: 0 0 3px 3px; border-radius: 0 0 0 4px; }
-    .corner-br { bottom: 14px; right: 14px; border-width: 0 3px 3px 0; border-radius: 0 0 4px 0; }
-
-    /* Scan line */
-    .scan-line { display: none; position: absolute; left: 8%; right: 8%; height: 2px; background: linear-gradient(90deg, transparent, #eab308, transparent); box-shadow: 0 0 8px rgba(234,179,8,0.8); z-index: 6; animation: scanMove 2s ease-in-out infinite; }
-    .scan-line.active { display: block; }
+    <script src="js/api-config.js?v=2.1.0"></script>
     
-    #overlay-status { position: absolute; top: 16px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.65); backdrop-filter: blur(8px); color: #e2e8f0; padding: 6px 18px; border-radius: 30px; z-index: 10; white-space: nowrap; font-size: 0.84em; border: 1px solid rgba(255,255,255,0.1); }
-
-    /* Input สำหรับแพทย์เวร */
-    .input-group { width: 100%; margin-top: 16px; display: none; }
-    .input-group.active { display: block; }
-    .physician-input { width: 100%; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.15); border-radius: 12px; padding: 12px 16px; color: white; font-family: 'Sarabun', sans-serif; outline: none; }
-    .physician-input:focus { border-color: #eab308; background: rgba(234,179,8,0.05); }
-
-    /* Start Button */
-    #btnAction { display: none; background: linear-gradient(135deg, #eab308, #ca8a04); color: white; border: none; border-radius: 50px; padding: 16px 44px; font-size: 18px; font-weight: 600; cursor: pointer; font-family: 'Sarabun', sans-serif; box-shadow: 0 4px 25px rgba(234,179,8,0.45); margin: 20px auto 0; transition: all 0.3s ease; animation: btnPulse 2s ease-in-out infinite; }
-    #btnAction:hover { transform: translateY(-3px); box-shadow: 0 8px 35px rgba(234,179,8,0.6); animation: none; }
-
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-    @keyframes btnPulse { 0%,100% { box-shadow: 0 4px 25px rgba(234,179,8,0.45); } 50% { box-shadow: 0 4px 40px rgba(234,179,8,0.7); } }
-    @keyframes scanMove { 0% { top: 12%; } 50% { top: 82%; } 100% { top: 12%; } }
-  </style>
-</head>
-<body>
-<div class="page-wrap">
-
-  <div class="top-bar">
-    <a href="index.html" class="back-btn">← กลับ</a>
-    <h2>🌙 สแกนเข้าเวร</h2>
-    <div class="spacer"></div>
-  </div>
-
-  <div class="status-area">
-    <div id="main-status">⏳ กำลังโหลด AI Model และเตรียมกล้อง...</div>
-    <div id="gps-status"></div>
-  </div>
-
-  <div id="gps-alert-box" class="gps-alert">
-    ⚠️ คุณอยู่นอกพื้นที่ที่กำหนด!<br>กรุณาเข้าใกล้จุดเช็คอินแล้วรีเฟรชหน้าจอ
-  </div>
-
-  <div class="video-container">
-    <div class="scanner-frame">
-      <div class="corner corner-tl"></div><div class="corner corner-tr"></div>
-      <div class="corner corner-bl"></div><div class="corner corner-br"></div>
-      <div class="scan-line" id="scanLine"></div>
-    </div>
-    <div id="overlay-status">กำลังโหลด AI...</div>
-    <video id="video" autoplay muted playsinline></video>
-  </div>
-
-  <div class="input-group" id="inputGroup">
-      <input type="text" id="physicianName" class="physician-input" placeholder="ระบุชื่อแพทย์เวร / หมายเหตุ (ถ้ามี)">
-  </div>
-
-  <!-- ปุ่มกดสแกนเข้าเวร -->
-  <button id="btnAction" onclick="handleAction()">🌙 กดสแกนเข้าเวร</button>
-
-</div>
-
-<script>
-  // 🔹 ดึง API_URL จาก localStorage ก่อน หากไม่มีจะใช้ค่า Default
-  const DEFAULT_URL = "https://script.google.com/macros/s/AKfycbwcP4hjqvJqyLtbXhd4ifwusSVSB_Y7TP9uYUW6_LSKCzd920_Wv8BRWzH7FmqmHZRmBQ/exec";
-  const API_URL = localStorage.getItem('gasApiUrl') || (typeof GAS_API_URL !== 'undefined' ? GAS_API_URL : DEFAULT_URL); 
-
-  const video          = document.getElementById('video');
-  const mainStatus     = document.getElementById('main-status');
-  const overlayStatus  = document.getElementById('overlay-status');
-  const gpsStatus      = document.getElementById('gps-status');
-  const gpsAlertBox    = document.getElementById('gps-alert-box');
-  const btnAction      = document.getElementById('btnAction');
-  const inputGroup     = document.getElementById('inputGroup');
-  const physicianInput = document.getElementById('physicianName');
-
-  let currentLat          = null;
-  let currentLng          = null;
-  let currentLocName      = "";
-  let isCameraActive      = false;
-  let isLocationVerified = false;
-  let isModelLoaded      = false;
-
-  window.addEventListener('load', init);
-
-  async function init() {
-    if (!API_URL || API_URL.includes("YOUR_WEB_APP_URL_HERE")) {
-      Swal.fire({
-        icon: 'error',
-        title: 'ตั้งค่า API_URL ไม่ถูกต้อง',
-        text: 'กรุณาตั้งค่า Web App URL ในหน้าตั้งค่าระบบก่อนใช้งาน'
-      });
-      showError('กรุณาตั้งค่า API_URL ให้ถูกต้อง');
-      return;
-    }
-
-    try {
-      // 1. โหลด AI Models
-      await loadAiModels();
-      // 2. เปิดกล้อง
-      await startCamera();
-      // 3. ดึง GPS และ Config
-      loadLocationAndConfig();
-    } catch (err) {
-      showError('เกิดข้อผิดพลาดในการเริ่มต้นระบบ: ' + err.message);
-    }
-  }
-
-  // 🤖 โหลด AI Models ของ face-api.js
-  async function loadAiModels() {
-    try {
-      const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/';
-      await faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL);
-      await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
-      await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
-      
-      isModelLoaded = true;
-      overlayStatus.innerText = 'มองกล้องแล้วกดปุ่ม';
-    } catch (err) {
-      console.error("Model Load Error:", err);
-      showError('ไม่สามารถโหลด AI Model ได้');
-      throw err;
-    }
-  }
-
-  // 📷 1. เปิดกล้อง
-  async function startCamera() {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } } 
-      });
-      video.srcObject = stream; 
-      video.classList.add('active'); 
-      
-      isCameraActive = true;
-      inputGroup.classList.add('active'); // แสดงช่องกรอกชื่อแพทย์เวร/หมายเหตุ
-      document.getElementById('scanLine').classList.add('active');
-      overlayStatus.innerText = 'มองกล้องแล้วกดปุ่ม'; 
-      overlayStatus.style.background = 'rgba(234,179,8,0.65)';
-
-      checkReadyState();
-    } catch (err) {
-      console.error("Camera Error:", err);
-      showError('เปิดกล้องไม่ได้: ' + err.message);
-      overlayStatus.innerText = 'กล้องขัดข้อง';
-      overlayStatus.style.background = 'rgba(239,68,68,0.65)';
-    }
-  }
-
-  // 📍 2. ดึง Config และ GPS
-  async function loadLocationAndConfig() {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 35000);
-
-    try {
-      const pConfig = fetch(API_URL + '?action=getConfig', { signal: controller.signal })
-        .then(r => {
-          if (!r.ok) throw new Error(`HTTP error! status: ${r.status}`);
-          return r.json();
-        })
-        .then(config => {
-          localStorage.setItem('cachedConfig', JSON.stringify(config));
-          return config;
-        });
-
-      const pGPS = getGPSLocation();
-
-      const [config, pos] = await Promise.all([pConfig, pGPS]);
-      clearTimeout(timeoutId);
-
-      currentLat = pos.coords.latitude;
-      currentLng = pos.coords.longitude;
-
-      verifyLocation(config);
-    } catch (e) {
-      clearTimeout(timeoutId);
-      console.error("Initialization Error:", e);
-
-      const cachedConfig = localStorage.getItem('cachedConfig');
-      if (cachedConfig) {
-        try {
-          const config = JSON.parse(cachedConfig);
-          const pos = await getGPSLocation();
-          currentLat = pos.coords.latitude;
-          currentLng = pos.coords.longitude;
-          verifyLocation(config);
-          return;
-        } catch (err) { console.error(err); }
-      }
-
-      if (e.name === 'AbortError') {
-        showError('เชื่อมต่อเซิร์ฟเวอร์ล่าช้า โปรดรีเฟรชหน้าจอ');
-      } else if (e.message.includes('404')) {
-        showError('ไม่สามารถเชื่อมต่อระบบ (Error 404). โปรดตรวจสอบ API_URL');
-      } else {
-        showError('ข้อผิดพลาดการเตรียมระบบ: ' + e.message);
-      }
-    }
-  }
-
-  function getGPSLocation() {
-    return new Promise((resolve, reject) => {
-      if (!navigator.geolocation) return reject(new Error('Browser ไม่รองรับ GPS'));
-      navigator.geolocation.getCurrentPosition(
-        resolve,
-        (err) => reject(new Error('หาสัญญาณ GPS ไม่พบ หรือผู้ใช้ไม่ได้กดอนุญาต')),
-        { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
-      );
-    });
-  }
-
-  function verifyLocation(config) {
-    let isInsideArea = false;
-    let minDistance = Infinity;
-    let closestName = "จุดเช็คอิน";
-    let closestRadius = 0;
-
-    if (!config || !config.locations || config.locations.length === 0) {
-      isInsideArea = true;
-      gpsStatus.innerHTML = '<span style="color:#eab308">📍 GPS: ไม่จำกัดพื้นที่</span>';
-    } else {
-      for (let loc of config.locations) {
-        const distMeters = getDistanceInMeters(currentLat, currentLng, loc.lat, loc.lng);
-        let radiusMeters = loc.radius !== undefined ? loc.radius : 50;
-        if (radiusMeters < 10) radiusMeters = radiusMeters * 1000;
-
-        if (distMeters < minDistance) { 
-          minDistance = distMeters; 
-          closestName = loc.name || 'แผนกไม่ระบุชื่อ'; 
-          closestRadius = radiusMeters; 
+    <style>
+        body { 
+            font-family: 'Sarabun', sans-serif; 
+            background: linear-gradient(135deg, #f0fdf4 0%, #f8fafc 50%, #eff6ff 100%);
+            color: #1e293b; 
         }
-      }
+        .bg-glow {
+            position: fixed; 
+            width: 60vw; 
+            height: 60vw;
+            background: radial-gradient(circle, rgba(14,165,233,0.08) 0%, rgba(248,250,252,0) 70%);
+            top: -10%; 
+            left: 50%; 
+            transform: translateX(-50%); 
+            z-index: 0;
+            pointer-events: none;
+        }
+        .glass-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px -2px rgba(0, 0, 0, 0.02);
+            transition: all 0.25s ease;
+        }
+    </style>
+</head>
+<body class="relative min-h-full flex flex-col items-center justify-center p-4">
+    <div class="bg-glow"></div>
+    <div class="w-full max-w-xl mx-auto flex flex-col items-center z-10 relative">
+        <div class="glass-card w-full p-6 rounded-2xl shadow-xl bg-white relative overflow-hidden">
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <h2 id="scan-title" class="text-base font-semibold text-amber-600">🌙 สแกนใบหน้าเข้าเวรปฏิบัติงาน</h2>
+                    <p class="text-xs text-slate-500" id="scan-subtitle">บันทึกเข้าเวรนอกเวลา / เวรดึก</p>
+                </div>
+                <a href="index.html" class="text-xs bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-lg text-slate-600 transition-colors">ย้อนกลับ</a>
+            </div>
 
-      if (closestRadius === 0 || minDistance <= closestRadius) {
-        isInsideArea = true;
-      }
+            <!-- Camera viewport -->
+            <div class="relative w-full aspect-[4/3] bg-slate-900 rounded-xl overflow-hidden border border-slate-200 flex items-center justify-center shadow-inner">
+                <video id="webcam-video" autoplay playsinline muted class="absolute inset-0 w-full h-full object-cover opacity-90"></video>
+                <div id="cam-placeholder" class="absolute inset-0 flex flex-col items-center justify-center bg-slate-900/80 text-slate-300">
+                    <span class="text-3xl mb-2 animate-pulse">📷</span>
+                    <span id="cam-loading-text" class="text-xs">กำลังโหลด AI Model และเปิดกล้อง...</span>
+                </div>
 
-      if (isInsideArea) {
-        currentLocName = closestName;
-        gpsStatus.innerHTML = `<span style="color:#eab308">📍 พื้นที่: ${closestName} (ห่าง ${Math.round(minDistance)}m)</span>`;
-      } else {
-        currentLocName = "";
-        gpsStatus.innerHTML = `<span style="color:#f87171">📍 นอกพื้นที่: ใกล้สุด ${closestName} (${Math.round(minDistance)}m / ${closestRadius}m)</span>`;
-      }
-    }
+                <!-- Face scan frame overlay -->
+                <div class="absolute w-44 h-56 border-2 border-dashed border-amber-400/80 rounded-[3rem] pointer-events-none flex items-center justify-center">
+                    <div id="ai-status-badge" class="absolute top-2 text-amber-300 text-[10px] font-mono tracking-widest uppercase bg-slate-900/80 px-2.5 py-0.5 rounded-full hidden">Ready</div>
+                </div>
 
-    if (isInsideArea) { 
-      mainStatus.innerText = '✅ ระบบพร้อมใช้งาน'; 
-      mainStatus.style.color = '#eab308'; 
-      isLocationVerified = true;
-      checkReadyState();
-    } else { 
-      gpsAlertBox.style.display = 'block'; 
-      mainStatus.innerText = '⛔ ไม่อนุญาตให้สแกน'; 
-      overlayStatus.innerText = 'Out of Range'; 
-    }
-  }
+                <!-- Scan laser line -->
+                <div id="scanner-laser" class="absolute left-0 right-0 h-0.5 bg-amber-400 shadow-[0_0_12px_#fbbf24] transition-all duration-300 hidden" style="top: 20%;"></div>
 
-  function checkReadyState() {
-    if (isCameraActive && isLocationVerified && isModelLoaded) {
-      btnAction.style.display = 'inline-block';
-      btnAction.innerHTML = '🌙 กดสแกนเข้าเวร';
-    }
-  }
+                <!-- GPS badge overlay -->
+                <div class="absolute bottom-3 left-3 bg-white/95 backdrop-blur-md px-3 py-1.5 rounded-xl border border-slate-200 text-xs flex items-center gap-2 shadow-sm">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                    <span id="scan-gps-text" class="text-slate-700 font-mono">GPS: กำลังตรวจสอบพิกัด...</span>
+                </div>
+            </div>
+            
+            <!-- Physician note input -->
+            <div id="shift-input-wrap" class="mt-3.5">
+                <label class="block text-xs font-medium text-slate-700 mb-1">ชื่อแพทย์เวร / หมายเหตุเพิ่มเติม</label>
+                <input type="text" id="scan-physician-note" placeholder="เช่น เวรดึก / Ward ER" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-slate-800 focus:outline-none focus:border-amber-500">
+            </div>
 
-  function handleAction() {
-    if (isCameraActive && isLocationVerified && isModelLoaded) {
-      detectAndSendFace();
-    }
-  }
-
-  // 🔍 3. ตรวจจับใบหน้าและส่งข้อมูลแบบ Vector (รวมข้อมูลแพทย์เวร/หมายเหตุ)
-  async function detectAndSendFace() {
-    const physicianStr = physicianInput.value.trim();
-
-    Swal.fire({
-      title: 'กำลังสแกนเข้าเวร...',
-      html: 'กรุณารอสักครู่ ระบบกำลังวิเคราะห์ใบหน้า',
-      allowOutsideClick: false,
-      didOpen: () => { Swal.showLoading(); }
-    });
-
-    try {
-      // 1. สกัด Vector ใบหน้าจากวิดีโอสด
-      const detection = await faceapi.detectSingleFace(video)
-        .withFaceLandmarks()
-        .withFaceDescriptor();
-
-      if (!detection) {
-        Swal.fire({
-          icon: 'warning',
-          title: 'ไม่พบใบหน้า',
-          text: 'กรุณามองกล้องให้ชัดเจน และอยู่ในจุดที่มีแสงสว่างพอดี',
-          confirmButtonColor: '#ef4444'
+            <!-- Action Controls -->
+            <div class="mt-4">
+                <button id="btn-trigger-scan" onclick="executeFaceScan()" class="hidden w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-white font-medium py-3 px-4 rounded-xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer text-sm">
+                    <span>✨</span> ยืนยันการสแกนตัวตน
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const DEFAULT_URL = "https://script.google.com/macros/s/AKfycbwcP4hjqvJqyLtbXhd4ifwusSVSB_Y7TP9uYUW6_LSKCzd920_Wv8BRWzH7FmqmHZRmBQ/exec";
+        const API_URL = localStorage.getItem('gasApiUrl') || (typeof GAS_API_URL !== 'undefined' ? GAS_API_URL : DEFAULT_URL); 
+        
+        let isModelLoaded = false;
+        let activeStream = null;
+        let currentLat = null;
+        let currentLng = null;
+        let systemConfig = { locations: [] };
+        let isLocationVerified = false;
+        let currentLocName = "";
+        
+        window.addEventListener('load', async () => {
+            try {
+                const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/';
+                await Promise.all([
+                    faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL),
+                    faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
+                    faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL)
+                ]);
+                isModelLoaded = true;
+                document.getElementById('ai-status-badge').classList.remove('hidden');
+                initScanCamera();
+                fetchSystemConfigAndGPS();
+            } catch (e) {
+                console.warn("AI Model load warning:", e);
+            }
         });
-        return;
-      }
+        
+        async function initScanCamera() {
+            const video = document.getElementById('webcam-video');
+            const ph = document.getElementById('cam-placeholder');
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false });
+                activeStream = stream;
+                video.srcObject = stream;
+                ph.classList.add('hidden');
+                checkReadyState();
+            } catch (err) {
+                ph.innerHTML = `<span class="text-2xl mb-1">⚠️</span><span class="text-xs text-amber-400">ไม่พบกล้อง กรุณาอนุญาตสิทธิ์กล้อง</span>`;
+            }
+        }
+        
+        async function fetchSystemConfigAndGPS() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    pos => {
+                        currentLat = pos.coords.latitude;
+                        currentLng = pos.coords.longitude;
+                        evaluateGpsStatus();
+                    },
+                    err => {
+                        console.warn("GPS Position error:", err);
+                        document.getElementById('scan-gps-text').innerText = 'ไม่สามารถดึง GPS ได้';
+                    },
+                    { enableHighAccuracy: true, timeout: 10000 }
+                );
+            }
 
-      const descriptorArray = Array.from(detection.descriptor);
+            try {
+                const res = await fetch(API_URL + '?action=getConfig');
+                const data = await res.json();
+                if (data && data.locations) {
+                    systemConfig = data;
+                    evaluateGpsStatus(); // Re-evaluate if config loads after GPS
+                }
+            } catch (e) {
+                console.warn("Config fetch offline fallback:", e);
+            }
+        }
 
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 35000);
+        function evaluateGpsStatus() {
+            if (currentLat === null || currentLng === null) return;
+            
+            let inside = false;
+            let closestName = "จุดเช็คอิน";
+            let minDistance = Infinity;
+            let closestRadius = 0;
 
-      // 2. ส่ง Vector พร้อมข้อมูลประเภท 'shift' ไปที่ GAS
-      const response = await fetch(API_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify({
-          action: 'scanFace',
-          type: 'shift', // ระบุประเภทเป็นการเข้าเวร
-          descriptor: descriptorArray,
-          lat: currentLat,
-          lng: currentLng,
-          locationName: currentLocName,
-          physician: physicianStr // ส่งชื่อแพทย์เวร/หมายเหตุ
-        }),
-        signal: controller.signal
-      });
+            if (!systemConfig.locations || systemConfig.locations.length === 0) {
+                inside = true;
+                document.getElementById('scan-gps-text').innerText = `GPS: ไม่จำกัดพื้นที่`;
+            } else {
+                systemConfig.locations.forEach(loc => {
+                    const dist = calculateDistance(currentLat, currentLng, loc.lat, loc.lng);
+                    let rad = loc.radius || 500;
+                    if (dist < minDistance) {
+                        minDistance = dist;
+                        closestName = loc.name;
+                        closestRadius = rad;
+                    }
+                    if (dist <= rad) inside = true;
+                });
+                
+                if (inside) {
+                    currentLocName = closestName;
+                    document.getElementById('scan-gps-text').innerText = `GPS: ในพื้นที่ ${closestName}`;
+                } else {
+                    currentLocName = "";
+                    document.getElementById('scan-gps-text').innerText = `GPS: นอกพื้นที่ (${Math.round(minDistance)}ม.)`;
+                    Swal.fire('อยู่นอกพื้นที่', 'คุณอยู่นอกพื้นที่ที่กำหนด กรุณาเข้าใกล้จุดเช็คอินแล้วรีเฟรชหน้าจอ', 'warning');
+                }
+            }
+            
+            isLocationVerified = inside;
+            checkReadyState();
+        }
 
-      clearTimeout(timeoutId);
+        function calculateDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371e3;
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) * Math.sin(dLon/2)**2;
+            return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        }
+        
+        function checkReadyState() {
+            if (activeStream && isLocationVerified && isModelLoaded) {
+                document.getElementById('btn-trigger-scan').classList.remove('hidden');
+            } else {
+                document.getElementById('btn-trigger-scan').classList.add('hidden');
+            }
+        }
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
+        async function executeFaceScan() {
+            const video = document.getElementById('webcam-video');
+            const laser = document.getElementById('scanner-laser');
+            laser.classList.remove('hidden');
 
-      const result = await response.json();
+            Swal.fire({
+                title: 'กำลังสแกนใบหน้า...',
+                html: 'กรุณานิ่งสักครู่ ระบบกำลังจับคู่โครงสร้างใบหน้า',
+                allowOutsideClick: false,
+                didOpen: () => Swal.showLoading()
+            });
 
-      if (result.success) {
-        Swal.fire({
-          icon: 'success',
-          title: 'เข้าเวรสำเร็จ!',
-          html: `<b>คุณ ${result.name}</b><br>รหัส: ${result.studentId}<br>${result.message}`,
-          confirmButtonColor: '#eab308'
-        }).then(() => {
-          window.location.href = 'index.html';
-        });
-      } else {
-        Swal.fire({
-          icon: 'error',
-          title: 'สแกนไม่ผ่าน',
-          text: result.error || 'ไม่พบข้อมูลใบหน้าหรือข้อมูลไม่ถูกต้อง',
-          confirmButtonColor: '#ef4444'
-        });
-      }
+            try {
+                if (!isModelLoaded) {
+                    throw new Error('AI Model ยังโหลดไม่เสร็จ กรุณารอสักครู่');
+                }
 
-    } catch (error) {
-      console.error("Scanning Error:", error);
-      if (error.name === 'AbortError') {
-        Swal.fire({
-          icon: 'warning',
-          title: 'การเชื่อมต่อล่าช้า',
-          text: 'ระบบตอบสนองช้าเกินไป (Timeout) กรุณากดสแกนใหม่อีกครั้ง',
-          confirmButtonColor: '#eab308'
-        });
-      } else {
-        Swal.fire('ผิดพลาด', 'การเชื่อมต่อหรือประมวลผลล้มเหลว: ' + error.message, 'error');
-      }
-    }
-  }
+                const detection = await faceapi.detectSingleFace(video).withFaceLandmarks().withFaceDescriptor();
+                laser.classList.add('hidden');
 
-  function showError(msg) { mainStatus.innerHTML = '<span style="color:#f87171">❌ ' + msg + '</span>'; }
-  
-  function getDistanceInMeters(lat1, lon1, lat2, lon2) { 
-    const R = 6371e3; 
-    const dLat = deg2rad(lat2 - lat1); 
-    const dLon = deg2rad(lon2 - lon1); 
-    const a = Math.sin(dLat/2) ** 2 + Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) * Math.sin(dLon/2) ** 2; 
-    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)); 
-  }
-  function deg2rad(deg) { return deg * Math.PI / 180; }
-</script>
+                if (!detection) {
+                    Swal.fire('ไม่พบใบหน้า', 'กรุณามองตรงมาที่กล้องและจัดตำแหน่งใบหน้าให้อยู่ในกรอบ', 'warning');
+                    return;
+                }
+
+                const descriptorArray = Array.from(detection.descriptor);
+                const note = document.getElementById('scan-physician-note').value;
+
+                const payload = {
+                    action: 'scanFace',
+                    type: 'shift',
+                    descriptor: descriptorArray,
+                    lat: currentLat,
+                    lng: currentLng,
+                    physician: note,
+                    locationName: currentLocName
+                };
+
+                const res = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await res.json();
+                if (result.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'ลงเวลาสำเร็จ!',
+                        html: `<b>ยินดีต้อนรับ ${result.name}</b><br>รหัส: ${result.studentId}<br>${result.message || ''}`,
+                        confirmButtonColor: '#f59e0b'
+                    }).then(() => {
+                        window.location.href = 'index.html';
+                    });
+                } else {
+                    Swal.fire('สแกนไม่ผ่าน', result.error || 'ใบหน้าไม่ตรงกับข้อมูลในฐานข้อมูล', 'error');
+                }
+
+            } catch (err) {
+                laser.classList.add('hidden');
+                Swal.fire('ข้อผิดพลาด', 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ AI ได้: ' + err.message, 'error');
+            }
+        }
+    </script>
 </body>
 </html>
