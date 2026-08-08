@@ -178,15 +178,16 @@
             document.getElementById('live-time').innerText = `${now.toLocaleTimeString('th-TH')} น.`;
         }, 1000);
 
-        let currentLat = 10.4932;
-        let currentLng = 99.1801;
-        let systemConfig = { locations: [{ name: 'โรงพยาบาลชุมพรเขตรอุดมศักดิ์', lat: 10.4932, lng: 99.1801, radius: 500 }] };
+        let currentLat = null;
+        let currentLng = null;
+        let systemConfig = { locations: [] };
         
         window.addEventListener('load', async () => {
             fetchSystemConfigAndGPS();
         });
 
         async function fetchSystemConfigAndGPS() {
+            // 1. ดึงพิกัด GPS จากมือถือผู้ใช้ก่อน
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(
                     pos => {
@@ -196,17 +197,19 @@
                     },
                     err => {
                         console.warn("GPS Position error:", err);
-                        document.getElementById('gps-text-summary').innerText = 'ไม่สามารถดึง GPS ได้ (ใช้พิกัดสำรอง)';
+                        document.getElementById('gps-text-summary').innerText = 'ไม่สามารถดึง GPS ได้';
                     },
                     { enableHighAccuracy: true, timeout: 10000 }
                 );
             }
 
+            // 2. ดึงค่าจุดเช็คอินจริงจาก Google Apps Script (เหมือนหน้าสแกน)
             try {
                 const res = await fetch(window.GAS_API_URL + '?action=getConfig');
                 const data = await res.json();
                 if (data && data.locations) {
                     systemConfig = data;
+                    evaluateGpsStatus(); // คำนวณใหม่ทันทีเมื่อโหลดข้อมูลเสร็จ
                 }
             } catch (e) {
                 console.warn("Config fetch offline fallback:", e);
@@ -214,23 +217,22 @@
         }
 
         function evaluateGpsStatus() {
+            if (currentLat === null || currentLng === null) return;
+            if (!systemConfig.locations || systemConfig.locations.length === 0) return;
+
             let inside = false;
-            let closestName = "รพ.ชุมพร";
+            let closestName = "จุดเช็คอิน";
             let minDistance = Infinity;
 
-            if (!systemConfig.locations || systemConfig.locations.length === 0) {
-                inside = true;
-            } else {
-                systemConfig.locations.forEach(loc => {
-                    const dist = calculateDistance(currentLat, currentLng, loc.lat, loc.lng);
-                    let rad = loc.radius || 500;
-                    if (dist < minDistance) {
-                        minDistance = dist;
-                        closestName = loc.name;
-                    }
-                    if (dist <= rad) inside = true;
-                });
-            }
+            systemConfig.locations.forEach(loc => {
+                const dist = calculateDistance(currentLat, currentLng, loc.lat, loc.lng);
+                let rad = loc.radius || 500;
+                if (dist < minDistance) {
+                    minDistance = dist;
+                    closestName = loc.name;
+                }
+                if (dist <= rad) inside = true;
+            });
 
             const badge = document.getElementById('gps-status-badge');
             const txt = document.getElementById('gps-text-summary');
@@ -250,15 +252,6 @@
             const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) * Math.sin(dLon/2)**2;
             return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
         }
-    </script>
-    <script>
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('sw.js')
-            .then(reg => console.log('Service Worker registered!', reg))
-            .catch(err => console.log('Service Worker registration failed:', err));
-        });
-      }
     </script>
 </body>
 </html>
