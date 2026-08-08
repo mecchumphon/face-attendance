@@ -1,683 +1,282 @@
 <!DOCTYPE html>
-<html lang="th">
+<html lang="th" class="h-full">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ประวัติการเข้างาน / เข้าเวร</title>
-  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&display=swap" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  <!-- SheetJS สำหรับ Export เป็นไฟล์ Excel (.xlsx) -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-
-    body {
-      font-family: 'Sarabun', sans-serif;
-      min-height: 100vh;
-      background: linear-gradient(160deg, #0f0f23 0%, #111827 60%, #0a0f1e 100%);
-      color: #e2e8f0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 24px 16px 20px;
-    }
-
-    .container {
-      width: 100%;
-      max-width: 850px;
-      animation: fadeIn 0.4s ease;
-      flex: 1;
-    }
-
-    /* Top Navigation */
-    .top-bar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      width: 100%;
-      margin-bottom: 20px;
-    }
-
-    .back-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      color: #94a3b8;
-      text-decoration: none;
-      font-size: 0.88em;
-      padding: 6px 14px;
-      border-radius: 20px;
-      background: rgba(255,255,255,0.05);
-      border: 1px solid rgba(255,255,255,0.1);
-      transition: all 0.25s ease;
-    }
-    .back-btn:hover { color: #f8fafc; background: rgba(255,255,255,0.12); }
-
-    h2 { font-size: 1.25em; font-weight: 700; color: #cbd5e1; }
-
-    /* Summary Stats Grid */
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 12px;
-      margin-bottom: 20px;
-    }
-
-    .stat-card {
-      background: rgba(255,255,255,0.04);
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 16px;
-      padding: 16px;
-      text-align: center;
-      backdrop-filter: blur(10px);
-    }
-
-    .stat-number {
-      font-size: 1.8em;
-      font-weight: 700;
-      margin-top: 4px;
-    }
-
-    .stat-label { font-size: 0.8em; color: #94a3b8; }
-    .stat-normal { color: #34d399; }
-    .stat-shift { color: #facc15; }
-    .stat-total { color: #818cf8; }
-
-    /* Search & Tools Control */
-    .controls-card {
-      background: rgba(255,255,255,0.04);
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 16px;
-      padding: 16px;
-      margin-bottom: 20px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-
-    .filter-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-    }
-
-    @media (max-width: 600px) {
-      .filter-grid { grid-template-columns: 1fr; }
-    }
-
-    .search-input, .filter-select, .date-input {
-      width: 100%;
-      padding: 10px 14px;
-      background: rgba(0,0,0,0.3);
-      border: 1px solid rgba(255,255,255,0.12);
-      border-radius: 10px;
-      color: #f8fafc;
-      font-family: 'Sarabun', sans-serif;
-      font-size: 0.9em;
-      outline: none;
-    }
-    .search-input:focus, .filter-select:focus, .date-input:focus { border-color: #6366f1; }
-
-    .date-group {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .date-group label {
-      font-size: 0.82em;
-      color: #94a3b8;
-      white-space: nowrap;
-    }
-
-    .btn-group {
-      display: flex;
-      gap: 10px;
-      margin-top: 4px;
-    }
-
-    .btn {
-      flex: 1;
-      padding: 11px;
-      border: none;
-      border-radius: 10px;
-      font-family: 'Sarabun', sans-serif;
-      font-size: 0.9em;
-      font-weight: 600;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      transition: all 0.25s ease;
-    }
-
-    .btn-detail { background: rgba(99,102,241,0.2); color: #c7d2fe; border: 1px solid rgba(99,102,241,0.4); }
-    .btn-detail:hover { background: rgba(99,102,241,0.35); }
-
-    .btn-excel { background: rgba(16,185,129,0.2); color: #a7f3d0; border: 1px solid rgba(16,185,129,0.4); }
-    .btn-excel:hover { background: rgba(16,185,129,0.35); }
-
-    .result-info {
-      font-size: 0.82em;
-      color: #94a3b8;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 0 4px;
-    }
-
-    /* Alert Message Box */
-    .status-alert {
-      padding: 16px;
-      border-radius: 12px;
-      text-align: center;
-      font-size: 0.9em;
-      margin-bottom: 20px;
-      display: none;
-    }
-    .status-alert.error {
-      background: rgba(239,68,68,0.15);
-      border: 1px solid rgba(239,68,68,0.3);
-      color: #fca5a5;
-    }
-
-    /* Logs Table Container - ล็อคความสูงและเปิด Scrollbar */
-    .table-container {
-      background: rgba(255,255,255,0.03);
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 16px;
-      max-height: 480px;
-      overflow-y: auto;
-      overflow-x: auto;
-      position: relative;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      text-align: left;
-      font-size: 0.88em;
-    }
-
-    th, td {
-      padding: 12px 16px;
-      border-bottom: 1px solid rgba(255,255,255,0.06);
-    }
-
-    /* ตรึงหัวตาราง Sticky Header */
-    th {
-      position: sticky;
-      top: 0;
-      background: #111827;
-      color: #94a3b8;
-      font-weight: 600;
-      white-space: nowrap;
-      z-index: 10;
-      box-shadow: 0 1px 0 rgba(255,255,255,0.1);
-    }
-
-    tr:hover { background: rgba(255,255,255,0.02); }
-
-    .badge {
-      display: inline-block;
-      padding: 3px 10px;
-      border-radius: 12px;
-      font-size: 0.82em;
-      font-weight: 600;
-    }
-    .badge-normal { background: rgba(16,185,129,0.2); color: #34d399; }
-    .badge-shift { background: rgba(234,179,8,0.2); color: #facc15; }
-
-    /* Pagination Styling */
-    .pagination-wrapper {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 12px;
-      margin-top: 16px;
-      padding: 12px 16px;
-      background: rgba(255,255,255,0.04);
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 16px;
-      font-size: 0.85em;
-      color: #94a3b8;
-    }
-
-    .pagination-info {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .page-size-select {
-      background: rgba(0,0,0,0.4);
-      border: 1px solid rgba(255,255,255,0.12);
-      border-radius: 8px;
-      color: #f8fafc;
-      padding: 4px 8px;
-      outline: none;
-      font-family: 'Sarabun', sans-serif;
-      cursor: pointer;
-    }
-
-    .pagination-controls {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .page-btn {
-      background: rgba(255,255,255,0.06);
-      border: 1px solid rgba(255,255,255,0.12);
-      color: #f8fafc;
-      padding: 5px 12px;
-      border-radius: 8px;
-      font-family: 'Sarabun', sans-serif;
-      font-size: 0.85em;
-      cursor: pointer;
-      transition: all 0.2s ease;
-    }
-
-    .page-btn:hover:not(:disabled) {
-      background: rgba(99,102,241,0.3);
-      border-color: #6366f1;
-    }
-
-    .page-btn:disabled {
-      opacity: 0.3;
-      cursor: not-allowed;
-    }
-
-    #pageIndicator {
-      color: #c7d2fe;
-      font-weight: 600;
-      padding: 0 6px;
-    }
-
-    /* Footer Styling */
-    .app-footer {
-      width: 100%;
-      max-width: 850px;
-      padding: 20px 0 10px;
-      margin-top: 30px;
-      border-top: 1px solid rgba(255, 255, 255, 0.08);
-      text-align: center;
-      color: #94a3b8;
-      font-size: 0.82rem;
-    }
-
-    .footer-container {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    .developer-credit span {
-      color: #38bdf8;
-      font-weight: 600;
-    }
-
-    .system-version {
-      font-size: 0.78rem;
-      color: #64748b;
-    }
-
-    .version-badge {
-      background: rgba(56, 189, 248, 0.15);
-      color: #38bdf8;
-      padding: 2px 7px;
-      border-radius: 10px;
-      font-weight: 600;
-      font-size: 0.75rem;
-    }
-
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-  </style>
-</head>
-<body>
-
-<div class="container">
-  
-  <div class="top-bar">
-    <a href="index.html" class="back-btn">← กลับ</a>
-    <h2>📋 ประวัติการเข้างาน</h2>
-    <div style="width: 70px;"></div>
-  </div>
-
-  <div class="stats-grid">
-    <div class="stat-card">
-      <div id="cnt-normal" class="stat-number stat-normal">0</div>
-      <div class="stat-label">เข้างานปกติ</div>
-    </div>
-    <div class="stat-card">
-      <div id="cnt-shift" class="stat-number stat-shift">0</div>
-      <div class="stat-label">เข้าเวร</div>
-    </div>
-    <div class="stat-card">
-      <div id="cnt-total" class="stat-number stat-total">0</div>
-      <div class="stat-label">รวมทั้งหมด</div>
-    </div>
-  </div>
-
-  <div class="controls-card">
-    <input type="text" id="searchInput" class="search-input" placeholder="🔍 ค้นหา รหัสพนักงาน, ชื่อ หรือ สถานที่..." oninput="filterLogs()">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ประวัติการเข้างาน - ระบบบันทึกเวลาปฏิบัติงานนักศึกษาแพทย์</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts Sarabun -->
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- SheetJS for Excel export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     
-    <div class="filter-grid">
-      <div class="date-group">
-        <label>เริ่ม:</label>
-        <input type="date" id="startDate" class="date-input" onchange="filterLogs()">
-        <label>ถึง:</label>
-        <input type="date" id="endDate" class="date-input" onchange="filterLogs()">
-      </div>
-      <select id="typeFilter" class="filter-select" onchange="filterLogs()">
-        <option value="">-- ประเภททั้งหมด --</option>
-        <option value="เข้างานปกติ">เข้างานปกติ</option>
-        <option value="เข้าเวร">เข้าเวร</option>
-      </select>
-    </div>
-
-    <div class="result-info">
-      <span id="recordCount">แสดง 0 รายการ</span>
-      <a href="javascript:void(0)" onclick="resetFilters()" style="color:#818cf8; text-decoration:none;">ล้างตัวกรอง</a>
-    </div>
-
-    <div class="btn-group">
-      <button class="btn btn-detail" onclick="loadLogs()">🔄 โหลดข้อมูลใหม่</button>
-      <button class="btn btn-excel" onclick="exportExcel()">📊 ดาวน์โหลด Excel</button>
-    </div>
-  </div>
-
-  <div id="alertBox" class="status-alert"></div>
-
-  <!-- ตารางข้อมูล -->
-  <div class="table-container">
-    <table>
-      <thead>
-        <tr>
-          <th>วัน-เวลา</th>
-          <th>รหัส</th>
-          <th>ชื่อ-นามสกุล</th>
-          <th>ประเภท</th>
-          <th>สถานที่ / จุดสแกน</th>
-        </tr>
-      </thead>
-      <tbody id="logsTableBody">
-        <tr>
-          <td colspan="5" style="text-align: center; color: #64748b; padding: 24px;">⏳ กำลังโหลดข้อมูล...</td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-
-  <!-- แถบควบคุม Pagination -->
-  <div class="pagination-wrapper">
-    <div class="pagination-info">
-      <span>แสดง</span>
-      <select id="itemsPerPage" class="page-size-select" onchange="changePageSize()">
-        <option value="10">10</option>
-        <option value="20" selected>20</option>
-        <option value="50">50</option>
-        <option value="100">100</option>
-      </select>
-      <span>รายการ / หน้า</span>
-    </div>
-
-    <div class="pagination-controls">
-      <button id="btnFirst" class="page-btn" onclick="goToPage(1)" title="หน้าแรก">««</button>
-      <button id="btnPrev" class="page-btn" onclick="prevPage()">‹ ก่อนหน้า</button>
-      <span id="pageIndicator">หน้า 1 จาก 1</span>
-      <button id="btnNext" class="page-btn" onclick="nextPage()">ถัดไป ›</button>
-      <button id="btnLast" class="page-btn" onclick="goToPage('last')" title="หน้าสุดท้าย">»»</button>
-    </div>
-  </div>
-
-</div>
-
-<!-- Footer -->
-<footer class="app-footer">
-  <div class="footer-container">
-    <p class="developer-credit">Developed with ❤️ by <span>MEC Chumphon Admin</span></p>
-    <p class="system-version">System Version <span class="version-badge">v2.2.1</span> | © 2026 All Rights Reserved</p>
-  </div>
-</footer>
-
-<script>
-  // 🚨 Web App URL
-  const API_URL = "https://script.google.com/macros/s/AKfycbwcP4hjqvJqyLtbXhd4ifwusSVSB_Y7TP9uYUW6_LSKCzd920_Wv8BRWzH7FmqmHZRmBQ/exec"; 
-
-  // ตัวแปรเก็บข้อมูลและสถานะ Pagination
-  let allLogsData = [];
-  let currentFilteredLogs = [];
-  let currentPage = 1;
-  let itemsPerPage = 20;
-
-  window.addEventListener('load', loadLogs);
-
-  async function loadLogs() {
-    const alertBox = document.getElementById('alertBox');
-    const tableBody = document.getElementById('logsTableBody');
-    alertBox.style.display = 'none';
-
-    if (API_URL === "YOUR_WEB_APP_URL_HERE" || API_URL.includes("YOUR_URL_HERE")) {
-      showError('กรุณาตั้งค่า API_URL ในไฟล์ history.html เป็น Web App URL ของคุณก่อนใช้งาน');
-      tableBody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#f87171; padding:20px;">⚠️ ไม่ได้ตั้งค่า API_URL</td></tr>';
-      return;
-    }
-
-    tableBody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #94a3b8; padding: 24px;">⏳ กำลังดึงข้อมูลประวัติ...</td></tr>';
-
-    try {
-      const response = await fetch(API_URL + '?action=getLogs');
-      const responseText = await response.text();
-
-      if (responseText.trim().startsWith('<')) {
-        throw new Error('ได้รับข้อมูลเป็น HTML แทนที่จะเป็น JSON โปรดตรวจสอบการ Deploy ว่าตั้งค่า Who has access เป็น Anyone หรือยัง');
-      }
-
-      const result = JSON.parse(responseText);
-
-      if (result.success) {
-        allLogsData = result.logs || [];
-        updateStats(allLogsData);
-        filterLogs(); // กรองและแสดงผลข้อมูล
-      } else {
-        showError('ไม่สามารถดึงข้อมูลได้: ' + (result.error || 'เกิดข้อผิดพลาดไม่ทราบสาเหตุ'));
-      }
-
-    } catch (e) {
-      console.error("Fetch Error:", e);
-      showError('ไม่สามารถดึงข้อมูลได้: ' + e.message);
-      tableBody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#f87171; padding:20px;">❌ เกิดข้อผิดพลาดในการโหลดข้อมูล</td></tr>`;
-      
-      Swal.fire({
-        icon: 'error',
-        title: 'ดึงข้อมูลไม่สำเร็จ',
-        html: `<div style="text-align:left; font-size:0.88em; color:#cbd5e1;">
-          <b>วิธีแก้ไขปัญหา:</b><br>
-          1. ตรวจสอบว่าใน Apps Script เลือก <b>Who has access</b> เป็น <b>Anyone (ทุกคน)</b> แล้วหรือยัง<br>
-          2. ตรวจสอบว่าใช้ลิงก์ที่ลงท้ายด้วย <b>/exec</b> (ไม่ใช่ /dev)<br>
-          3. หากเพิ่งแก้โค้ดใน Apps Script ต้องกด <b>Deploy > New deployment</b> เสมอ
-        </div>`,
-        confirmButtonColor: '#ef4444'
-      });
-    }
-  }
-
-  function updateStats(logs) {
-    let normal = 0, shift = 0;
-    logs.forEach(l => {
-      if (l.type === "เข้างานปกติ") normal++;
-      else if (l.type === "เข้าเวร") shift++;
-    });
-    document.getElementById('cnt-normal').innerText = normal;
-    document.getElementById('cnt-shift').innerText = shift;
-    document.getElementById('cnt-total').innerText = logs.length;
-  }
-
-  function filterLogs() {
-    const query = document.getElementById('searchInput').value.toLowerCase().trim();
-    const startDate = document.getElementById('startDate').value;
-    const endDate = document.getElementById('endDate').value;
-    const selectedType = document.getElementById('typeFilter').value;
-
-    currentFilteredLogs = allLogsData.filter(item => {
-      // 1. กรองข้อความค้นหา
-      const matchText = !query || 
-        String(item.studentId).toLowerCase().includes(query) ||
-        String(item.name).toLowerCase().includes(query) ||
-        String(item.timestamp).toLowerCase().includes(query) ||
-        String(item.location).toLowerCase().includes(query);
-
-      // 2. กรองประเภท
-      const matchType = !selectedType || item.type === selectedType;
-
-      // 3. กรองวันที่
-      let matchDate = true;
-      if (item.timestamp) {
-        const logDateStr = parseLogDate(item.timestamp);
-        if (logDateStr) {
-          if (startDate && logDateStr < startDate) matchDate = false;
-          if (endDate && logDateStr > endDate) matchDate = false;
+    <script src="js/api-config.js?v=2.1.0"></script>
+    
+    <style>
+        body { 
+            font-family: 'Sarabun', sans-serif; 
+            background: linear-gradient(135deg, #f0fdf4 0%, #f8fafc 50%, #eff6ff 100%);
+            color: #1e293b; 
         }
-      }
+        .bg-glow {
+            position: fixed; 
+            width: 60vw; 
+            height: 60vw;
+            background: radial-gradient(circle, rgba(14,165,233,0.08) 0%, rgba(248,250,252,0) 70%);
+            top: -10%; 
+            left: 50%; 
+            transform: translateX(-50%); 
+            z-index: 0;
+            pointer-events: none;
+        }
+        .glass-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px -2px rgba(0, 0, 0, 0.02);
+            transition: all 0.25s ease;
+        }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+    </style>
+</head>
+<body class="relative min-h-full flex flex-col items-center justify-center p-4">
+    <div class="bg-glow"></div>
+    <div class="w-full max-w-4xl mx-auto flex flex-col items-center z-10 relative">
+        <div class="glass-card w-full p-4 sm:p-6 rounded-2xl shadow-xl bg-white flex flex-col h-[85vh]">
+            
+            <div class="flex items-center justify-between mb-5 shrink-0">
+                <a href="index.html" class="text-xs bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-lg text-slate-600 transition-colors flex items-center gap-1.5">
+                    <span class="text-lg leading-none">←</span> กลับ
+                </a>
+                <h2 class="text-base sm:text-lg font-semibold text-slate-800 flex items-center gap-2">📋 ประวัติการเข้างาน</h2>
+                <div class="w-[70px]"></div> <!-- Spacer -->
+            </div>
 
-      return matchText && matchType && matchDate;
-    });
+            <!-- Stats summary -->
+            <div class="grid grid-cols-3 gap-3 sm:gap-4 mb-5 text-center shrink-0">
+                <div class="p-3 sm:p-4 bg-emerald-50/50 rounded-xl border border-emerald-100 shadow-sm">
+                    <div id="stat-normal" class="text-2xl sm:text-3xl font-bold text-emerald-600">0</div>
+                    <div class="text-[10px] sm:text-xs text-emerald-700 mt-1 font-medium">เข้างานปกติ</div>
+                </div>
+                <div class="p-3 sm:p-4 bg-amber-50/50 rounded-xl border border-amber-100 shadow-sm">
+                    <div id="stat-shift" class="text-2xl sm:text-3xl font-bold text-amber-500">0</div>
+                    <div class="text-[10px] sm:text-xs text-amber-700 mt-1 font-medium">เข้าเวร</div>
+                </div>
+                <div class="p-3 sm:p-4 bg-indigo-50/50 rounded-xl border border-indigo-100 shadow-sm">
+                    <div id="stat-total" class="text-2xl sm:text-3xl font-bold text-indigo-600">0</div>
+                    <div class="text-[10px] sm:text-xs text-indigo-700 mt-1 font-medium">รวมทั้งหมด</div>
+                </div>
+            </div>
 
-    currentPage = 1; // เมื่อค้นหา/กรอง ให้รีเซ็ตกลับหน้า 1
-    renderTable();
-  }
+            <!-- Filters & Controls -->
+            <div class="bg-slate-50 p-3.5 sm:p-4 rounded-xl border border-slate-200 mb-5 shrink-0 flex flex-col gap-3.5 shadow-sm">
+                <!-- Row 1: Search -->
+                <div class="relative w-full">
+                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">🔍</span>
+                    <input type="text" id="hist-search" oninput="filterHistoryLogs()" placeholder="ค้นหา รหัสพนักงาน, ชื่อ หรือ สถานที่..." class="w-full bg-white border border-slate-200 rounded-lg pl-9 pr-3 py-2 sm:py-2.5 text-xs sm:text-sm focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all">
+                </div>
+                
+                <!-- Row 2: Filters -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                    <div class="flex items-center gap-2 bg-white border border-slate-200 rounded-lg px-3 py-1.5">
+                        <label class="text-[11px] text-slate-500 whitespace-nowrap font-medium">เริ่ม:</label>
+                        <input type="date" id="hist-start-date" onchange="filterHistoryLogs()" class="w-full text-[11px] sm:text-xs outline-none bg-transparent text-slate-700">
+                    </div>
+                    <div class="flex items-center gap-2 bg-white border border-slate-200 rounded-lg px-3 py-1.5">
+                        <label class="text-[11px] text-slate-500 whitespace-nowrap font-medium">ถึง:</label>
+                        <input type="date" id="hist-end-date" onchange="filterHistoryLogs()" class="w-full text-[11px] sm:text-xs outline-none bg-transparent text-slate-700">
+                    </div>
+                    <select id="hist-type" onchange="filterHistoryLogs()" class="bg-white border border-slate-200 rounded-lg px-2 py-2 text-[11px] sm:text-xs text-slate-700 focus:outline-none focus:border-indigo-500 font-medium">
+                        <option value="">-- ประเภททั้งหมด --</option>
+                        <option value="เข้างานปกติ">เข้างานปกติ</option>
+                        <option value="เข้าเวร">เข้าเวร</option>
+                    </select>
+                </div>
 
-  function renderTable() {
-    const tableBody = document.getElementById('logsTableBody');
-    document.getElementById('recordCount').innerText = `แสดง ${currentFilteredLogs.length} จากทั้งหมด ${allLogsData.length} รายการ`;
+                <!-- Row 3: Result info -->
+                <div class="flex justify-between items-center px-1 pt-1">
+                    <span id="hist-record-count" class="text-[11px] text-slate-500 font-medium">แสดง 0 จากทั้งหมด 0 รายการ</span>
+                    <button onclick="resetHistoryFilters()" class="text-[11px] text-indigo-500 hover:text-indigo-700 underline">ล้างตัวกรอง</button>
+                </div>
 
-    if (currentFilteredLogs.length === 0) {
-      tableBody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #64748b; padding: 24px;">📭 ไม่พบประวัติการเข้างานที่ตรงกับเงื่อนไข</td></tr>';
-      updatePaginationUI(0);
-      return;
-    }
+                <!-- Row 4: Buttons -->
+                <div class="grid grid-cols-2 gap-3 mt-1">
+                    <button onclick="fetchHistoryLogs()" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 py-2.5 rounded-lg border border-indigo-200 flex items-center justify-center gap-2 cursor-pointer transition-colors text-xs font-semibold shadow-sm">
+                        <span class="text-base leading-none">🔄</span> โหลดข้อมูลใหม่
+                    </button>
+                    <button onclick="exportExcelLogs()" class="bg-emerald-600 hover:bg-emerald-500 text-white py-2.5 rounded-lg border border-emerald-600 flex items-center justify-center gap-2 cursor-pointer transition-colors text-xs font-semibold shadow-sm">
+                        <span class="text-base leading-none">📊</span> ดาวน์โหลด Excel
+                    </button>
+                </div>
+            </div>
 
-    // คำนวณขอบเขตข้อมูลที่จะตัดมาแสดงเฉพาะหน้านั้นๆ
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    const endIndex = startIndex + parseInt(itemsPerPage);
-    const pageData = currentFilteredLogs.slice(startIndex, endIndex);
+            <!-- Table Container (Scrollable) -->
+            <div class="flex-1 overflow-hidden border border-slate-200 rounded-xl bg-white shadow-inner flex flex-col relative">
+                <div class="overflow-y-auto overflow-x-auto flex-1 custom-scrollbar">
+                    <table class="w-full text-left border-collapse min-w-[650px]">
+                        <thead class="sticky top-0 bg-slate-100 z-10 shadow-sm border-b border-slate-200">
+                            <tr class="text-[11px] text-slate-600 font-bold uppercase tracking-wider">
+                                <th class="p-3.5 whitespace-nowrap">วัน-เวลา</th>
+                                <th class="p-3.5">รหัส</th>
+                                <th class="p-3.5">ชื่อ-นามสกุล</th>
+                                <th class="p-3.5 text-center">ประเภท</th>
+                                <th class="p-3.5">สถานที่ / จุดสแกน</th>
+                            </tr>
+                        </thead>
+                        <tbody id="history-table-body" class="text-[12px] sm:text-xs divide-y divide-slate-100 text-slate-700">
+                            <tr><td colspan="5" class="text-center py-10 text-slate-400">⏳ กำลังโหลดข้อมูลประวัติ...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
 
-    let html = '';
-    pageData.forEach(item => {
-      const isShift = item.type === 'เข้าเวร';
-      const badgeClass = isShift ? 'badge-shift' : 'badge-normal';
-      html += `
-        <tr>
-          <td>${item.timestamp || '-'}</td>
-          <td style="font-weight:600; color:#c7d2fe;">${item.studentId || '-'}</td>
-          <td>${item.name || '-'}</td>
-          <td><span class="badge ${badgeClass}">${item.type || 'เข้างาน'}</span></td>
-          <td style="color:#94a3b8;">${item.location || '-'}</td>
-        </tr>
-      `;
-    });
-    tableBody.innerHTML = html;
+        </div>
+    </div>
+    
+    <script>
+        const DEFAULT_URL = "https://script.google.com/macros/s/AKfycbwcP4hjqvJqyLtbXhd4ifwusSVSB_Y7TP9uYUW6_LSKCzd920_Wv8BRWzH7FmqmHZRmBQ/exec";
+        const API_URL = localStorage.getItem('gasApiUrl') || (typeof GAS_API_URL !== 'undefined' ? GAS_API_URL : DEFAULT_URL); 
+        
+        let globalHistoryLogs = [];
+        
+        window.addEventListener('load', fetchHistoryLogs);
 
-    updatePaginationUI(currentFilteredLogs.length);
-  }
+        async function fetchHistoryLogs() {
+            const tbody = document.getElementById('history-table-body');
+            tbody.innerHTML = `<tr><td colspan="5" class="text-center py-10 text-slate-400">⏳ กำลังโหลดข้อมูลประวัติ...</td></tr>`;
 
-  // อัปเดตสถานะปุ่มกด และข้อความบอกหน้า
-  function updatePaginationUI(totalItems) {
-    const totalPages = Math.ceil(totalItems / itemsPerPage) || 1;
+            try {
+                const res = await fetch(API_URL + '?action=getLogs');
+                const data = await res.json();
 
-    document.getElementById('pageIndicator').innerText = `หน้า ${currentPage} จาก ${totalPages}`;
+                if (data.success && data.logs) {
+                    globalHistoryLogs = data.logs;
+                    updateHistoryStats(globalHistoryLogs);
+                    renderHistoryTable();
+                } else {
+                    tbody.innerHTML = `<tr><td colspan="5" class="text-center py-10 text-rose-400">ไม่พบข้อมูลประวัติในระบบ</td></tr>`;
+                }
+            } catch (e) {
+                tbody.innerHTML = `<tr><td colspan="5" class="text-center py-10 text-rose-400">ไม่สามารถเชื่อมต่อดึงประวัติได้</td></tr>`;
+            }
+        }
 
-    document.getElementById('btnFirst').disabled = (currentPage === 1);
-    document.getElementById('btnPrev').disabled = (currentPage === 1);
-    document.getElementById('btnNext').disabled = (currentPage === totalPages || totalItems === 0);
-    document.getElementById('btnLast').disabled = (currentPage === totalPages || totalItems === 0);
-  }
+        function updateHistoryStats(logs) {
+            let normal = 0, shift = 0;
+            logs.forEach(l => {
+                if (l.type === 'เข้าเวร') shift++;
+                else normal++;
+            });
+            document.getElementById('stat-normal').innerText = normal;
+            document.getElementById('stat-shift').innerText = shift;
+            document.getElementById('stat-total').innerText = logs.length;
+        }
 
-  function prevPage() {
-    if (currentPage > 1) {
-      currentPage--;
-      renderTable();
-    }
-  }
+        function parseLogDate(ts) {
+            if (!ts) return null;
+            const parts = ts.split(' ');
+            const datePart = parts[0]; 
+            if (datePart.includes('-')) {
+                return datePart; 
+            } else if (datePart.includes('/')) {
+                const [d, m, y] = datePart.split('/');
+                return `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
+            }
+            return null;
+        }
 
-  function nextPage() {
-    const totalPages = Math.ceil(currentFilteredLogs.length / itemsPerPage);
-    if (currentPage < totalPages) {
-      currentPage++;
-      renderTable();
-    }
-  }
+        function filterHistoryLogs() {
+            renderHistoryTable();
+        }
 
-  function goToPage(page) {
-    const totalPages = Math.ceil(currentFilteredLogs.length / itemsPerPage);
-    if (page === 'last') {
-      currentPage = totalPages || 1;
-    } else {
-      currentPage = page;
-    }
-    renderTable();
-  }
+        function resetHistoryFilters() {
+            document.getElementById('hist-search').value = '';
+            document.getElementById('hist-start-date').value = '';
+            document.getElementById('hist-end-date').value = '';
+            document.getElementById('hist-type').value = '';
+            filterHistoryLogs();
+        }
 
-  function changePageSize() {
-    itemsPerPage = parseInt(document.getElementById('itemsPerPage').value);
-    currentPage = 1;
-    renderTable();
-  }
+        function renderHistoryTable() {
+            const tbody = document.getElementById('history-table-body');
+            const query = document.getElementById('hist-search').value.toLowerCase().trim();
+            const startDate = document.getElementById('hist-start-date').value;
+            const endDate = document.getElementById('hist-end-date').value;
+            const typeFilter = document.getElementById('hist-type').value;
 
-  // แปลง String วันที่ใน Log ให้อยู่ในรูปแบบ YYYY-MM-DD เพื่อเปรียบเทียบ
-  function parseLogDate(ts) {
-    if (!ts) return null;
-    const parts = ts.split(' ');
-    const datePart = parts[0]; 
-    if (datePart.includes('-')) {
-      return datePart; 
-    } else if (datePart.includes('/')) {
-      const [d, m, y] = datePart.split('/');
-      return `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
-    }
-    return null;
-  }
+            const filtered = globalHistoryLogs.filter(item => {
+                const matchText = !query || 
+                    String(item.studentId).toLowerCase().includes(query) ||
+                    String(item.name).toLowerCase().includes(query) ||
+                    String(item.location).toLowerCase().includes(query) ||
+                    String(item.timestamp).toLowerCase().includes(query);
 
-  function resetFilters() {
-    document.getElementById('searchInput').value = '';
-    document.getElementById('startDate').value = '';
-    document.getElementById('endDate').value = '';
-    document.getElementById('typeFilter').value = '';
-    filterLogs();
-  }
+                const matchType = !typeFilter || item.type === typeFilter || (typeFilter === 'เข้างานปกติ' && item.type !== 'เข้าเวร');
 
-  function exportExcel() {
-    if (allLogsData.length === 0) {
-      Swal.fire('แจ้งเตือน', 'ไม่มีข้อมูลประวัติสำหรับดาวน์โหลด', 'warning');
-      return;
-    }
+                let matchDate = true;
+                if (item.timestamp) {
+                    const logDateStr = parseLogDate(item.timestamp);
+                    if (logDateStr) {
+                        if (startDate && logDateStr < startDate) matchDate = false;
+                        if (endDate && logDateStr > endDate) matchDate = false;
+                    }
+                }
 
-    const excelData = allLogsData.map((item, index) => ({
-      'ลำดับ': index + 1,
-      'วัน-เวลา': item.timestamp,
-      'รหัสพนักงาน/นักศึกษา': item.studentId,
-      'ชื่อ-นามสกุล': item.name,
-      'ประเภทการเช็คอิน': item.type,
-      'สถานที่/จุดสแกน': item.location
-    }));
+                return matchText && matchType && matchDate;
+            });
 
-    const worksheet = XLSX.utils.json_to_sheet(excelData);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "ประวัติการเข้างาน");
+            document.getElementById('hist-record-count').innerText = `แสดง ${filtered.length} จากทั้งหมด ${globalHistoryLogs.length} รายการ`;
 
-    const today = new Date().toISOString().slice(0, 10);
-    XLSX.writeFile(workbook, `Attendance_Logs_${today}.xlsx`);
-  }
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="text-center py-10 text-slate-400">📭 ไม่พบประวัติที่ตรงกับเงื่อนไขการค้นหา</td></tr>`;
+                return;
+            }
 
-  function showError(msg) {
-    const alertBox = document.getElementById('alertBox');
-    alertBox.className = 'status-alert error';
-    alertBox.innerHTML = '❌ ' + msg;
-    alertBox.style.display = 'block';
-  }
-</script>
+            tbody.innerHTML = '';
+            filtered.forEach(item => {
+                const isShift = item.type === 'เข้าเวร';
+                const badgeClass = isShift ? 'bg-amber-100 text-amber-700 border-amber-200' : 'bg-emerald-100 text-emerald-700 border-emerald-200';
+                const typeText = isShift ? 'เข้าเวร' : 'เข้างานปกติ';
+                
+                const row = document.createElement('tr');
+                row.className = "hover:bg-slate-50/80 transition-colors";
+                row.innerHTML = `
+                    <td class="p-3.5 whitespace-nowrap text-slate-500 font-mono text-[11px]">${item.timestamp}</td>
+                    <td class="p-3.5 font-semibold text-slate-700">${item.studentId}</td>
+                    <td class="p-3.5 font-medium text-slate-800">${item.name}</td>
+                    <td class="p-3.5 text-center">
+                        <span class="inline-block px-3 py-1 rounded-full text-[10px] font-bold border ${badgeClass}">${typeText}</span>
+                    </td>
+                    <td class="p-3.5 text-slate-500 truncate max-w-[180px]" title="${item.location || 'สำนักงาน'}">${item.location || 'สำนักงาน'}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function exportExcelLogs() {
+            if (!globalHistoryLogs || globalHistoryLogs.length === 0) {
+                Swal.fire('แจ้งเตือน', 'ไม่มีข้อมูลสำหรับ Export', 'warning');
+                return;
+            }
+
+            const excelData = globalHistoryLogs.map((i, idx) => ({
+                'ลำดับ': idx + 1,
+                'วัน-เวลา': i.timestamp,
+                'รหัสนักศึกษา': i.studentId,
+                'ชื่อ-นามสกุล': i.name,
+                'ประเภท': i.type,
+                'สถานที่': i.location
+            }));
+
+            const ws = XLSX.utils.json_to_sheet(excelData);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "AttendanceLogs");
+            XLSX.writeFile(wb, `Attendance_MEC_${new Date().toISOString().slice(0,10)}.xlsx`);
+        }
+    </script>
 </body>
 </html>
