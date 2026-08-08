@@ -1,453 +1,213 @@
 <!DOCTYPE html>
-<html lang="th">
+<html lang="th" class="h-full">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>ตั้งค่าระบบ</title>
-  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&display=swap" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  <!-- โหลดไฟล์ Config กลางและป้องกันแคช -->
- <script>
-  const GAS_API_URL = "https://script.google.com/macros/s/AKfycbwcP4hjqvJqyLtbXhd4ifwusSVSB_Y7TP9uYUW6_LSKCzd920_Wv8BRWzH7FmqmHZRmBQ/exec";
-</script>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-
-    body {
-      font-family: 'Sarabun', sans-serif;
-      min-height: 100vh;
-      background: linear-gradient(135deg, #0f0f23 0%, #1a1a3e 50%, #0d1b2a 100%);
-      color: #e2e8f0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 28px 16px 60px;
-      position: relative;
-    }
-
-    body::before {
-      content: '';
-      position: fixed;
-      width: 400px; height: 400px;
-      background: #06b6d4;
-      border-radius: 50%;
-      filter: blur(100px);
-      opacity: 0.08;
-      top: -100px; right: -100px;
-      pointer-events: none; z-index: 0;
-    }
-
-    .container {
-      width: 100%;
-      max-width: 500px;
-      position: relative; z-index: 1;
-      animation: fadeIn 0.5s ease;
-    }
-
-    /* Header */
-    .page-header { margin-bottom: 24px; position: relative; }
-    .back-btn {
-      display: inline-flex; align-items: center; gap: 6px;
-      color: #64748b; text-decoration: none; font-size: 0.88em;
-      padding: 6px 12px; border-radius: 20px;
-      background: rgba(255,255,255,0.06);
-      border: 1px solid rgba(255,255,255,0.1);
-      transition: all 0.25s ease;
-      margin-bottom: 14px;
-      cursor: pointer;
-    }
-    .back-btn:hover { color: #e2e8f0; background: rgba(255,255,255,0.1); }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ตั้งค่าระบบ - ระบบบันทึกเวลาปฏิบัติงานนักศึกษาแพทย์</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts Sarabun -->
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
-    .logout-btn {
-      position: absolute;
-      right: 0; top: 0;
-      color: #f87171;
-    }
-
-    h2 {
-      font-size: 1.6em; font-weight: 700;
-      background: linear-gradient(135deg, #a5b4fc, #e2e8f0);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      margin-bottom: 4px;
-    }
-    .page-subtitle { font-size: 0.83em; color: #64748b; }
-
-    /* Card */
-    .card {
-      background: rgba(255,255,255,0.05);
-      border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 20px;
-      padding: 24px 22px;
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      margin-bottom: 16px;
-      position: relative;
-    }
-
-    .section-header {
-      display: flex; align-items: center; gap: 10px;
-      margin-bottom: 18px;
-      padding-bottom: 14px;
-      border-bottom: 1px solid rgba(255,255,255,0.07);
-    }
-    .section-icon {
-      width: 36px; height: 36px; border-radius: 10px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 17px;
-    }
-    .section-icon.cyan   { background: rgba(6,182,212,0.2);  }
-    .section-icon.purple { background: rgba(147,51,234,0.2); }
-    .section-title-text { font-weight: 600; font-size: 0.95em; color: #c7d2fe; }
-
-    /* Inputs */
-    label {
-      display: block; font-size: 0.82em; font-weight: 600;
-      color: #94a3b8; margin-bottom: 6px; letter-spacing: 0.03em;
-    }
-    input {
-      width: 100%;
-      padding: 12px 14px;
-      background: rgba(255,255,255,0.06);
-      border: 1px solid rgba(255,255,255,0.12);
-      border-radius: 12px;
-      color: #e2e8f0;
-      font-size: 14px;
-      font-family: 'Sarabun', sans-serif;
-      outline: none;
-      transition: all 0.3s ease;
-      margin-bottom: 14px;
-    }
-    input:focus {
-      border-color: rgba(99,102,241,0.5);
-      background: rgba(99,102,241,0.07);
-    }
-
-    /* Buttons */
-    .btn {
-      border: none; border-radius: 12px; cursor: pointer;
-      font-family: 'Sarabun', sans-serif; font-size: 15px; font-weight: 600;
-      padding: 13px; width: 100%;
-      transition: all 0.3s ease;
-      display: flex; align-items: center; justify-content: center; gap: 8px;
-    }
-    .btn-get-loc {
-      background: linear-gradient(135deg, #0891b2, #06b6d4);
-      color: white; margin-bottom: 14px; font-size: 13px; padding: 10px;
-    }
-    .btn-save {
-      background: linear-gradient(135deg, #10b981, #059669);
-      color: white; box-shadow: 0 4px 20px rgba(16,185,129,0.3);
-      font-size: 16px; padding: 15px; margin-top: 10px;
-    }
-    .btn-add {
-      background: rgba(59, 130, 246, 0.2);
-      border: 1px dashed #3b82f6; color: #93c5fd;
-      margin-bottom: 20px;
-    }
-    .btn-add:hover { background: rgba(59, 130, 246, 0.3); }
-    .btn-login { background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; margin-top: 10px; }
+    <script src="js/api-config.js?v=2.1.0"></script>
     
-    .btn-delete {
-      position: absolute; top: 20px; right: 20px;
-      color: #f87171; background: none; border: none; 
-      font-family: 'Sarabun'; cursor: pointer; font-size: 13px; font-weight: bold;
-    }
-
-    .btn-back {
-      display: flex; align-items: center; justify-content: center; gap: 8px;
-      padding: 13px; width: 100%; border-radius: 12px;
-      background: transparent;
-      border: 1px solid rgba(255,255,255,0.12);
-      color: #64748b; font-size: 15px; font-weight: 600;
-      font-family: 'Sarabun', sans-serif; text-decoration: none; margin-top: 10px;
-    }
-
-    .input-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-
-    #msg, #loginMsg {
-      margin-top: 14px; min-height: 22px; font-size: 0.9em; font-weight: 600; text-align: center;
-    }
-    .msg-success { color: #34d399; }
-    .msg-error   { color: #f87171; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-  </style>
+    <style>
+        body { 
+            font-family: 'Sarabun', sans-serif; 
+            background: linear-gradient(135deg, #f0fdf4 0%, #f8fafc 50%, #eff6ff 100%);
+            color: #1e293b; 
+        }
+        .bg-glow {
+            position: fixed; 
+            width: 60vw; 
+            height: 60vw;
+            background: radial-gradient(circle, rgba(14,165,233,0.08) 0%, rgba(248,250,252,0) 70%);
+            top: -10%; 
+            left: 50%; 
+            transform: translateX(-50%); 
+            z-index: 0;
+            pointer-events: none;
+        }
+        .glass-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px -2px rgba(0, 0, 0, 0.02);
+            transition: all 0.25s ease;
+        }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+    </style>
 </head>
-<body>
+<body class="relative min-h-full flex flex-col items-center justify-center p-4">
+    <div class="bg-glow"></div>
+    <div class="w-full max-w-xl mx-auto flex flex-col items-center z-10 relative">
+        <div class="glass-card w-full p-6 rounded-2xl shadow-xl bg-white">
+            <div class="flex items-center justify-between mb-5">
+                <div>
+                    <h2 class="text-base font-semibold text-slate-800">⚙️ ตั้งค่าระบบโรงพยาบาล</h2>
+                    <p class="text-xs text-slate-500">จัดการ API URL, พิกัด GPS และจุดเช็คอิน</p>
+                </div>
+                <a href="index.html" class="text-xs bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-lg text-slate-600 transition-colors">ย้อนกลับ</a>
+            </div>
 
-<!-- หน้าจอ Login -->
-<div class="container" id="loginContainer">
-  <div class="page-header" style="text-align: center; margin-bottom: 30px; margin-top: 20px;">
-    <h2>🔒 Admin Login</h2>
-    <p class="page-subtitle">กรุณาใส่รหัสผ่านเพื่อเข้าสู่ระบบตั้งค่า</p>
-  </div>
-  
-  <div class="card">
-    <label>รหัสผ่านแอดมิน (Password)</label>
-    <input type="password" id="adminPwd" placeholder="ใส่รหัสผ่านที่นี่..." onkeypress="if(event.key === 'Enter') checkLogin()">
-    <button class="btn btn-login" onclick="checkLogin()">เข้าสู่ระบบ</button>
-    <div id="loginMsg"></div>
-  </div>
-  <a href="index.html" class="btn-back">← กลับเมนูหลัก</a>
-</div>
+            <div class="space-y-4 text-xs">
+                <div>
+                    <label class="block font-medium text-slate-700 mb-1">Google Apps Script Web App URL (/exec)</label>
+                    <input type="text" id="set-api-url" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-slate-800 font-mono text-[11px] focus:outline-none focus:border-sky-500">
+                </div>
 
-<!-- หน้าจอตั้งค่า -->
-<div class="container" id="mainContainer" style="display: none;">
-  <div class="page-header">
-    <a href="index.html" class="back-btn">← กลับ</a>
-    <button onclick="logoutAdmin()" class="back-btn logout-btn">ออกจากระบบ</button>
-    <h2>⚙️ ตั้งค่าระบบ</h2>
-    <p class="page-subtitle">จัดการ API URL และจุดเช็คอิน (หลายสาขา/จุด)</p>
-  </div>
+                <div class="border-t border-slate-200 pt-3">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="font-semibold text-slate-700 text-xs">📍 จุดเช็คอิน GPS (รองรับหลายจุด)</span>
+                        <button onclick="addConfigLocation()" class="bg-sky-50 hover:bg-sky-100 text-sky-700 px-2.5 py-1 rounded-lg border border-sky-200 font-medium text-[11px]">➕ เพิ่มจุด</button>
+                    </div>
+                    <div id="config-locations-list" class="space-y-2.5 max-h-[300px] overflow-y-auto pr-1"></div>
+                </div>
 
-  <!-- ส่วนที่ 1: ตั้งค่า API URL -->
-  <div class="card">
-    <div class="section-header">
-      <div class="section-icon purple">🔗</div>
-      <span class="section-title-text">ตั้งค่า Web App URL (Google Apps Script)</span>
+                <div class="pt-2">
+                    <button type="button" onclick="saveAdminSettings()" class="w-full bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-500 hover:to-emerald-600 text-white font-medium py-3 rounded-xl shadow-md transition-all cursor-pointer text-sm flex items-center justify-center gap-2">
+                        <span>💾</span> บันทึกการตั้งค่าทั้งหมด
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
-    <label>WEB APP URL (/exec)</label>
-    <input type="text" id="apiUrlInput" placeholder="https://script.google.com/macros/s/.../exec">
-  </div>
-
-  <!-- ส่วนที่ 2: พิกัดจุดเช็คอิน -->
-  <div class="section-header" style="margin-top: 24px;">
-    <div class="section-icon cyan">📍</div>
-    <span class="section-title-text">พิกัดจุดเช็คอินที่อนุญาต</span>
-  </div>
-
-  <!-- จุดที่จะแสดงพิกัดแบบไดนามิก -->
-  <div id="locationsContainer"></div>
-
-  <button class="btn btn-add" onclick="addLocation()">
-    ➕ เพิ่มจุดเช็คอินใหม่
-  </button>
-
-  <button class="btn btn-save" onclick="saveAll()">
-    💾 บันทึกการตั้งค่าทั้งหมด
-  </button>
-  <div id="msg"></div>
-</div>
-
-<script>
-  // ==========================================
-  const ADMIN_PASSWORD = "MECCP1234";
-  const DEFAULT_URL = "https://script.google.com/macros/s/AKfycbwcP4hjqvJqyLtbXhd4ifwusSVSB_Y7TP9uYUW6_LSKCzd920_Wv8BRWzH7FmqmHZRmBQ/exec";
-
-  function getApiUrl() {
-    return localStorage.getItem('gasApiUrl') || (typeof GAS_API_URL !== 'undefined' ? GAS_API_URL : DEFAULT_URL);
-  }
-  // ==========================================
-
-  let locations = [];
-
-  const msgDiv = document.getElementById('msg');
-  const loginMsgDiv = document.getElementById('loginMsg');
-  const loginContainer = document.getElementById('loginContainer');
-  const mainContainer = document.getElementById('mainContainer');
-  const apiUrlInput = document.getElementById('apiUrlInput');
-
-  window.onload = function() {
-    if (sessionStorage.getItem('isAdminLogged') === 'true') {
-      showConfigScreen();
-    }
-  };
-
-  function checkLogin() {
-    const pwd = document.getElementById('adminPwd').value;
-    if (pwd === ADMIN_PASSWORD) {
-      sessionStorage.setItem('isAdminLogged', 'true');
-      showConfigScreen();
-    } else {
-      loginMsgDiv.innerText = '❌ รหัสผ่านไม่ถูกต้อง';
-      loginMsgDiv.className = 'msg-error';
-    }
-  }
-
-  function logoutAdmin() {
-    sessionStorage.removeItem('isAdminLogged');
-    location.reload();
-  }
-
-  function showConfigScreen() {
-    loginContainer.style.display = 'none';
-    mainContainer.style.display = 'block';
     
-    const activeUrl = getApiUrl();
-    apiUrlInput.value = activeUrl;
-    
-    if (activeUrl) loadGpsConfig(activeUrl);
-  }
-
-  function loadGpsConfig(apiUrl) {
-    showMsg('⏳ กำลังโหลดพิกัดเดิม...', '');
-    fetch(apiUrl + '?action=getConfig')
-      .then(r => {
-        if (!r.ok) throw new Error(`HTTP ${r.status}`);
-        return r.json();
-      })
-      .then(config => {
-        showMsg('', '');
-        if (config.locations && Array.isArray(config.locations)) {
-          locations = config.locations.map(loc => {
-            let r = loc.radius !== undefined ? loc.radius : 50;
-            if (r < 10) { r = r * 1000; } // แปลงจาก KM เป็น เมตร
-            return { ...loc, radius: r };
-          });
-        } else if (config.lat && config.lng) {
-          let r = config.radius || 0.1;
-          if (r < 10) r = r * 1000;
-          locations = [{ name: 'สาขาหลัก', lat: config.lat, lng: config.lng, radius: r }];
-        } else {
-          locations = [];
+    <script>
+        const DEFAULT_URL = "https://script.google.com/macros/s/AKfycbwcP4hjqvJqyLtbXhd4ifwusSVSB_Y7TP9uYUW6_LSKCzd920_Wv8BRWzH7FmqmHZRmBQ/exec";
+        const API_URL = localStorage.getItem('gasApiUrl') || (typeof GAS_API_URL !== 'undefined' ? GAS_API_URL : DEFAULT_URL); 
+        
+        let systemConfig = { locations: [] };
+        let currentLat = 10.4932;
+        let currentLng = 99.1801;
+        
+        window.addEventListener('load', async () => {
+            checkAdminAuth();
+            
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    pos => {
+                        currentLat = pos.coords.latitude;
+                        currentLng = pos.coords.longitude;
+                    },
+                    err => console.warn("GPS Position error:", err),
+                    { enableHighAccuracy: true, timeout: 10000 }
+                );
+            }
+        });
+        
+        function checkAdminAuth() {
+            Swal.fire({
+                title: '🔒 Admin Authentication',
+                input: 'password',
+                inputPlaceholder: 'กรอกรหัสผ่านแอดมิน...',
+                inputAttributes: { autocapitalize: 'off' },
+                showCancelButton: true,
+                confirmButtonText: 'เข้าสู่ระบบ',
+                cancelButtonText: 'ยกเลิก',
+                confirmButtonColor: '#0f172a',
+                allowOutsideClick: false
+            }).then(result => {
+                if (result.isConfirmed) {
+                    if (result.value === 'MECCP1234') {
+                        loadConfigData();
+                    } else {
+                        Swal.fire('รหัสผ่านไม่ถูกต้อง', 'กรุณาลองใหม่อีกครั้ง', 'error').then(() => {
+                            window.location.href = 'index.html';
+                        });
+                    }
+                } else {
+                    window.location.href = 'index.html';
+                }
+            });
         }
         
-        if(locations.length === 0) addLocation();
-        else renderLocations();
-      })
-      .catch((err) => { 
-        showMsg('❌ โหลดข้อมูลพิกัดไม่สำเร็จ: ' + err.message, 'error');
-        addLocation(); 
-      });
-  }
+        async function loadConfigData() {
+            document.getElementById('set-api-url').value = API_URL;
+            try {
+                const res = await fetch(API_URL + '?action=getConfig');
+                const data = await res.json();
+                if (data && data.locations) {
+                    systemConfig = data;
+                }
+            } catch (e) {
+                console.warn("Config fetch offline fallback:", e);
+            }
+            renderConfigLocationsUI();
+        }
 
-  // ----- จัดการหน้าตาของพิกัด -----
-  function renderLocations() {
-    const container = document.getElementById('locationsContainer');
-    container.innerHTML = '';
-    
-    locations.forEach((loc, idx) => {
-      container.innerHTML += `
-        <div class="card">
-          <button class="btn-delete" onclick="removeLocation(${idx})">❌ ลบทิ้ง</button>
-          
-          <label>ชื่อสถานที่ / สาขา / วอร์ด</label>
-          <input type="text" value="${loc.name || ''}" onchange="updateLoc(${idx}, 'name', this.value)" placeholder="เช่น วอร์ดอายุรกรรม 1">
-          
-          <button class="btn btn-get-loc" onclick="getCurrentLocationFor(${idx})">
-            📍 ดึงตำแหน่งมือถือใส่จุดนี้
-          </button>
+        function renderConfigLocationsUI() {
+            const listContainer = document.getElementById('config-locations-list');
+            listContainer.innerHTML = '';
 
-          <div class="input-row">
-            <div>
-              <label>LATITUDE</label>
-              <input type="number" step="any" value="${loc.lat || ''}" onchange="updateLoc(${idx}, 'lat', this.value)">
-            </div>
-            <div>
-              <label>LONGITUDE</label>
-              <input type="number" step="any" value="${loc.lng || ''}" onchange="updateLoc(${idx}, 'lng', this.value)">
-            </div>
-          </div>
+            systemConfig.locations.forEach((loc, idx) => {
+                const item = document.createElement('div');
+                item.className = "p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-2";
+                item.innerHTML = `
+                    <div class="flex items-center justify-between">
+                        <span class="font-semibold text-slate-700 text-xs">จุดที่ #${idx + 1}</span>
+                        <button onclick="removeConfigLocation(${idx})" class="text-rose-500 hover:text-rose-700 text-xs">❌ ลบจุดนี้</button>
+                    </div>
+                    <input type="text" value="${loc.name || ''}" onchange="systemConfig.locations[${idx}].name=this.value" placeholder="ชื่อสถานที่ / วอร์ด" class="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs">
+                    <div class="grid grid-cols-3 gap-1.5">
+                        <input type="number" step="any" value="${loc.lat || ''}" onchange="systemConfig.locations[${idx}].lat=parseFloat(this.value)" placeholder="Latitude" class="bg-white border border-slate-200 rounded-lg px-2 py-1 text-[11px]">
+                        <input type="number" step="any" value="${loc.lng || ''}" onchange="systemConfig.locations[${idx}].lng=parseFloat(this.value)" placeholder="Longitude" class="bg-white border border-slate-200 rounded-lg px-2 py-1 text-[11px]">
+                        <input type="number" value="${loc.radius || 500}" onchange="systemConfig.locations[${idx}].radius=parseInt(this.value)" placeholder="รัศมี (ม.)" class="bg-white border border-slate-200 rounded-lg px-2 py-1 text-[11px]">
+                    </div>
+                `;
+                listContainer.appendChild(item);
+            });
+        }
 
-          <label>รัศมีที่ยอมรับ (เมตร) - แนะนำ 30 ถึง 50 เมตร</label>
-          <input type="number" step="1" value="${loc.radius !== undefined ? loc.radius : 50}" onchange="updateLoc(${idx}, 'radius', this.value)">
-        </div>
-      `;
-    });
-  }
+        function addConfigLocation() {
+            if (!systemConfig.locations) systemConfig.locations = [];
+            systemConfig.locations.push({ name: 'จุดเช็คอินใหม่', lat: currentLat, lng: currentLng, radius: 500 });
+            renderConfigLocationsUI();
+        }
 
-  function updateLoc(idx, field, val) {
-    locations[idx][field] = field === 'name' ? val : parseFloat(val);
-  }
+        function removeConfigLocation(idx) {
+            systemConfig.locations.splice(idx, 1);
+            renderConfigLocationsUI();
+        }
 
-  function addLocation() {
-    locations.push({ name: '', lat: '', lng: '', radius: 50 });
-    renderLocations();
-  }
+        async function saveAdminSettings() {
+            const newUrl = document.getElementById('set-api-url').value.trim();
+            if (!newUrl) {
+                Swal.fire('แจ้งเตือน', 'กรุณากรอก Web App URL', 'warning');
+                return;
+            }
 
-  function removeLocation(idx) {
-    Swal.fire({
-      title: 'ยืนยันการลบ?',
-      text: 'คุณต้องการลบจุดเช็คอินนี้หรือไม่',
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#ef4444',
-      cancelButtonColor: '#64748b',
-      confirmButtonText: 'ลบ',
-      cancelButtonText: 'ยกเลิก'
-    }).then((result) => {
-      if (result.isConfirmed) {
-        locations.splice(idx, 1);
-        renderLocations();
-      }
-    });
-  }
+            localStorage.setItem('gasApiUrl', newUrl);
 
-  function getCurrentLocationFor(idx) {
-    if (!navigator.geolocation) return Swal.fire('ข้อผิดพลาด', 'Browser นี้ไม่รองรับ Geolocation', 'error');
-    
-    const options = { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 };
-    
-    navigator.geolocation.getCurrentPosition(
-      pos => {
-        locations[idx].lat = pos.coords.latitude;
-        locations[idx].lng = pos.coords.longitude;
-        renderLocations();
-        Swal.fire({
-          icon: 'success',
-          title: 'ดึงพิกัดสำเร็จ',
-          text: `ความคลาดเคลื่อน: ${Math.round(pos.coords.accuracy)} เมตร`,
-          timer: 2000,
-          showConfirmButton: false
-        });
-      },
-      err => Swal.fire('ผิดพลาด', 'ไม่สามารถดึงตำแหน่งได้: ' + err.message, 'error'),
-      options
-    );
-  }
+            Swal.fire({ title: 'กำลังบันทึกการตั้งค่า...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
 
-  // ----- บันทึก -----
-  async function saveAll() {
-    const newUrl = apiUrlInput.value.trim();
-    if (!newUrl) return showMsg('❌ กรุณากรอก Web App URL', 'error');
+            try {
+                const res = await fetch(newUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({ action: 'saveConfig', locations: systemConfig.locations })
+                });
+                const data = await res.json();
 
-    if (locations.length === 0) return showMsg('❌ ต้องมีจุดเช็คอินอย่างน้อย 1 จุด', 'error');
-
-    for (let i = 0; i < locations.length; i++) {
-      if (!locations[i].lat || !locations[i].lng) {
-        return showMsg('❌ กรุณากรอกพิกัดให้ครบทุกจุด', 'error');
-      }
-    }
-
-    // เซ็ตลง LocalStorage ทันที
-    localStorage.setItem('gasApiUrl', newUrl);
-
-    showMsg('⏳ กำลังบันทึกการตั้งค่าไปยังเซิร์ฟเวอร์...', '');
-
-    try {
-      const res = await fetch(newUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify({ action: 'saveConfig', locations: locations })
-      });
-
-      if (!res.ok) throw new Error(`HTTP status ${res.status}`);
-
-      const data = await res.json();
-
-      if (data.success || data.message) {
-        Swal.fire({
-          icon: 'success',
-          title: 'บันทึกสำเร็จ!',
-          text: data.message || 'ตั้งค่าระบบเรียบร้อยแล้ว',
-          confirmButtonColor: '#10b981'
-        });
-        showMsg('✅ ' + (data.message || 'บันทึกสำเร็จ'), 'success');
-      } else {
-        showMsg('❌ บันทึกไม่สำเร็จ: ' + (data.error || 'เกิดข้อผิดพลาด'), 'error');
-      }
-
-    } catch (e) {
-      showMsg('❌ เชื่อมต่อ API ไม่ได้ ( Error 404 หรือ URL ไม่ถูกต้อง ): ' + e.message, 'error');
-      Swal.fire('เกิดข้อผิดพลาด', 'ไม่สามารถเชื่อมต่อ API ได้ กรุณาตรวจสอบ Web App URL', 'error');
-    }
-  }
-
-  function showMsg(text, type) {
-    msgDiv.innerText = text;
-    msgDiv.className = type === 'success' ? 'msg-success' : type === 'error' ? 'msg-error' : '';
-  }
-</script>
+                if (data.success || data.message) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'บันทึกสำเร็จ!',
+                        text: 'อัปเดตค่าตั้งค่าระบบเรียบร้อยแล้ว',
+                        confirmButtonColor: '#10b981'
+                    }).then(() => {
+                        window.location.href = 'index.html';
+                    });
+                } else {
+                    throw new Error(data.error || 'เกิดข้อผิดพลาดจากเซิร์ฟเวอร์');
+                }
+            } catch (err) {
+                Swal.fire('บันทึกในเครื่องสำเร็จ', 'แต่การซิงค์ไปยัง Google Apps Script มีปัญหา: ' + err.message, 'warning');
+            }
+        }
+    </script>
 </body>
 </html>
