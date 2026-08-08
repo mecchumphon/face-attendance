@@ -13,6 +13,13 @@
     <!-- Face API JS -->
     <script src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api/dist/face-api.js"></script>
     
+    <!-- PWA Settings -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0284c7">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="MEC Attendance">
+    
     <script src="js/api-config.js?v=2.1.0"></script>
     
     <style>
@@ -154,7 +161,7 @@
                 const data = await res.json();
                 if (data && data.locations) {
                     systemConfig = data;
-                    evaluateGpsStatus(); // Re-evaluate if config loads after GPS
+                    evaluateGpsStatus(); 
                 }
             } catch (e) {
                 console.warn("Config fetch offline fallback:", e);
@@ -277,6 +284,15 @@
                 Swal.fire('ข้อผิดพลาด', 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ AI ได้: ' + err.message, 'error');
             }
         }
+    </script>
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('sw.js')
+            .then(reg => console.log('Service Worker registered!', reg))
+            .catch(err => console.log('Service Worker registration failed:', err));
+        });
+      }
     </script>
 </body>
 </html>
