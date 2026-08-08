@@ -4,10 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>ระบบบันทึกเวลาปฏิบัติงานนักศึกษาแพทย์</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts Sarabun -->
   <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&display=swap" rel="stylesheet">
   
   <script>
-    // 🔑 ฝังค่า URL หลักของ Google Apps Script เพื่อใช้งานได้ทันทีทุกเครื่อง
+    // 🔑 ฝังค่า URL หลักของ Google Apps Script
     const DEFAULT_API_URL = "https://script.google.com/macros/s/AKfycbwcP4hjqvJqyLtbXhd4ifwusSVSB_Y7TP9uYUW6_LSKCzd920_Wv8BRWzH7FmqmHZRmBQ/exec";
 
     // ตรวจสอบความจำเครื่อง หากไม่มีค่า ให้บันทึกค่าเริ่มต้นลงเครื่องให้อัตโนมัติ
@@ -23,280 +26,225 @@
   </script>
 
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-
-    body {
-      font-family: 'Sarabun', sans-serif;
-      min-height: 100vh;
-      background: linear-gradient(135deg, #0f0f23 0%, #1a1a3e 50%, #0d1b2a 100%);
-      color: #e2e8f0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 40px 20px 20px;
-      position: relative;
-      overflow-x: hidden;
+    body { 
+        font-family: 'Sarabun', sans-serif; 
+        background: linear-gradient(135deg, #f0fdf4 0%, #f8fafc 50%, #eff6ff 100%);
+        color: #1e293b; 
     }
-
-    body::before, body::after {
-      content: '';
-      position: fixed;
-      border-radius: 50%;
-      filter: blur(80px);
-      opacity: 0.15;
-      pointer-events: none;
-      z-index: 0;
+    .bg-glow {
+        position: fixed; 
+        width: 60vw; 
+        height: 60vw;
+        background: radial-gradient(circle, rgba(14,165,233,0.08) 0%, rgba(248,250,252,0) 70%);
+        top: -10%; 
+        left: 50%; 
+        transform: translateX(-50%); 
+        z-index: 0;
+        pointer-events: none;
     }
-    body::before {
-      width: 400px; height: 400px;
-      background: #6366f1;
-      top: -100px; left: -100px;
+    .glass-card {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px -2px rgba(0, 0, 0, 0.02);
+        transition: all 0.25s ease;
     }
-    body::after {
-      width: 350px; height: 350px;
-      background: #10b981;
-      bottom: -80px; right: -80px;
+    .glass-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 15px -3px rgba(14, 165, 233, 0.1), 0 4px 6px -4px rgba(14, 165, 233, 0.1);
+        border-color: #38bdf8;
     }
-
-    .header {
-      text-align: center;
-      margin-bottom: 30px;
-      position: relative; z-index: 1;
-      animation: fadeInDown 0.6s ease;
-    }
-    
-    .logo-image {
-      width: 100px; 
-      height: auto;
-      display: block;
-      margin: 0 auto 16px auto;
-      filter: drop-shadow(0 0 20px rgba(99,102,241,0.6)); 
-      border-radius: 16px; 
-    }
-
-    h1 {
-      font-size: 1.7em;
-      font-weight: 700;
-      background: linear-gradient(135deg, #a5b4fc, #e2e8f0);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      margin-bottom: 6px;
-    }
-    .subtitle {
-      font-size: 0.85em;
-      color: #64748b;
-      letter-spacing: 0.03em;
-    }
-
-    .api-warning {
-      display: none;
-      background: rgba(245,158,11,0.15);
-      border: 1px solid rgba(245,158,11,0.4);
-      color: #fcd34d;
-      border-radius: 12px;
-      padding: 12px 18px;
-      width: 100%;
-      max-width: 380px;
-      margin-bottom: 20px;
-      font-size: 0.88em;
-      text-align: center;
-      position: relative; z-index: 1;
-      animation: fadeIn 0.5s ease;
-    }
-    .api-warning a { color: #fbbf24; font-weight: 600; text-decoration: none; }
-
-    .menu-cards {
-      width: 100%;
-      max-width: 380px;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-      position: relative; z-index: 1;
-    }
-
-    .btn-menu {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      padding: 20px 22px;
-      text-decoration: none;
-      border-radius: 18px;
-      background: rgba(255,255,255,0.06);
-      border: 1px solid rgba(255,255,255,0.12);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      color: #e2e8f0;
-      transition: all 0.3s ease;
-      animation: fadeInUp 0.5s ease both;
-    }
-    .btn-menu:nth-child(1) { animation-delay: 0.1s; }
-    .btn-menu:nth-child(2) { animation-delay: 0.2s; }
-    .btn-menu:nth-child(3) { animation-delay: 0.3s; }
-    .btn-menu:nth-child(4) { animation-delay: 0.4s; }
-    .btn-menu:nth-child(5) { animation-delay: 0.5s; }
-
-    .btn-menu:hover {
-      transform: translateY(-4px);
-      background: rgba(255,255,255,0.1);
-      border-color: rgba(255,255,255,0.25);
-    }
-
-    .btn-register:hover { box-shadow: 0 8px 30px rgba(99,102,241,0.35); border-color: rgba(99,102,241,0.5); }
-    .btn-scan:hover     { box-shadow: 0 8px 30px rgba(16,185,129,0.35); border-color: rgba(16,185,129,0.5); }
-    .btn-shift:hover    { box-shadow: 0 8px 30px rgba(234,179,8,0.35); border-color: rgba(234,179,8,0.5); }
-    .btn-config:hover   { box-shadow: 0 8px 30px rgba(100,116,139,0.25); border-color: rgba(148,163,184,0.4); }
-
-    .card-icon {
-      width: 52px; height: 52px;
-      border-radius: 14px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 24px;
-      flex-shrink: 0;
-    }
-    .btn-register .card-icon { background: linear-gradient(135deg, #6366f1, #4f46e5); box-shadow: 0 4px 15px rgba(99,102,241,0.4); }
-    .btn-scan     .card-icon { background: linear-gradient(135deg, #10b981, #059669); box-shadow: 0 4px 15px rgba(16,185,129,0.4); }
-    .btn-config   .card-icon { background: linear-gradient(135deg, #475569, #334155); box-shadow: 0 4px 15px rgba(71,85,105,0.4); }
-
-    .card-text { flex: 1; text-align: left; }
-    .card-title { font-size: 1.05em; font-weight: 600; color: #f1f5f9; margin-bottom: 2px; }
-    .card-desc  { font-size: 0.8em; color: #64748b; }
-
-    .card-arrow {
-      font-size: 18px; color: #475569;
-      transition: transform 0.3s ease, color 0.3s ease;
-    }
-    .btn-menu:hover .card-arrow { transform: translateX(4px); color: #94a3b8; }
-
-    .app-footer {
-      width: 100%;
-      padding: 20px 15px;
-      margin-top: auto;
-      border-top: 1px solid rgba(255, 255, 255, 0.08);
-      background: rgba(15, 23, 42, 0.6);
-      backdrop-filter: blur(8px);
-      text-align: center;
-      color: #94a3b8;
-      font-size: 0.85rem;
-      position: relative;
-      z-index: 1;
-    }
-
-    .footer-container {
-      max-width: 600px;
-      margin: 0 auto;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-
-    .developer-credit span {
-      color: #38bdf8;
-      font-weight: 600;
-    }
-
-    .system-version {
-      font-size: 0.8rem;
-      color: #64748b;
-    }
-
-    .version-badge {
-      background: rgba(56, 189, 248, 0.15);
-      color: #38bdf8;
-      padding: 2px 8px;
-      border-radius: 12px;
-      font-weight: 600;
-      font-size: 0.75rem;
-    }
-
-    @keyframes fadeIn    { from { opacity: 0; }                        to { opacity: 1; } }
-    @keyframes fadeInDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
-    @keyframes fadeInUp  { from { opacity: 0; transform: translateY(20px);  } to { opacity: 1; transform: translateY(0); } }
   </style>
 </head>
-<body>
+<body class="relative min-h-screen flex flex-col items-center justify-between p-4 selection:bg-sky-500 selection:text-white">
 
-  <div class="header">
-    <img src="logo.jpg" alt="โลโก้" class="logo-image">
-    <h1>ระบบบันทึกเวลาปฏิบัติงานนักศึกษาแพทย์</h1>
-    <p class="subtitle">Face Recognition &amp; GPS Attendance</p>
-  </div>
+    <div class="bg-glow"></div>
 
-  <div id="apiWarning" class="api-warning">
-    ⚠️ ยังไม่ได้ตั้งค่า API_URL กรุณาไปที่ <a href="config.html">ตั้งค่าระบบ</a> เพื่อตั้งค่าก่อนใช้งาน
-  </div>
+    <header class="w-full max-w-xl mt-6 sm:mt-10 mb-6 text-center relative z-10">
+        <!-- Logo -->
+        <div class="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-3 flex items-center justify-center bg-sky-500/10 rounded-2xl border border-sky-500/20 shadow-sm">
+            <span class="text-4xl sm:text-5xl">🏥</span>
+        </div>
+        
+        <h1 class="text-lg sm:text-xl font-semibold mb-1 text-slate-800 tracking-wide">ระบบบันทึกเวลาปฏิบัติงานนักศึกษาแพทย์</h1>
+        <p class="text-slate-500 text-xs sm:text-sm mb-5">Face Recognition & GPS Attendance</p>
+        
+        <!-- SEPARATED PROMINENT WIDGETS -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full">
+            <!-- Clock Widget -->
+            <div class="bg-white px-4 py-3.5 rounded-2xl border border-slate-200/80 shadow-md flex items-center justify-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center text-xl">🕒</div>
+                <div class="text-left">
+                    <div class="text-[10px] uppercase tracking-wider text-slate-400 font-medium">เวลาปัจจุบัน</div>
+                    <div id="live-time" class="text-sky-700 font-bold text-base sm:text-lg">08:00:00 น.</div>
+                </div>
+            </div>
 
-  <div class="menu-cards">
-    <a href="register.html" class="btn-menu btn-register">
-      <div class="card-icon">👤</div>
-      <div class="card-text">
-        <div class="card-title">ลงทะเบียนผู้ใช้งานใหม่</div>
-        <div class="card-desc">บันทึกข้อมูลใบหน้าใหม่</div>
-      </div>
-      <span class="card-arrow">›</span>
-    </a>
+            <!-- GPS Status Widget -->
+            <div class="bg-white px-4 py-3.5 rounded-2xl border border-slate-200/80 shadow-md flex items-center justify-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl">📍</div>
+                <div class="text-left">
+                    <div class="text-[10px] uppercase tracking-wider text-slate-400 font-medium">สถานะตำแหน่ง GPS</div>
+                    <div id="gps-status-badge" class="text-emerald-700 font-bold text-xs sm:text-sm flex items-center gap-1.5 mt-0.5">
+                        <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                        <span id="gps-text-summary">ตรวจสอบตำแหน่ง...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
 
-    <a href="scan.html" class="btn-menu btn-scan">
-      <div class="card-icon">📷</div>
-      <div class="card-text">
-        <div class="card-title">สแกนเข้างาน</div>
-        <div class="card-desc">ยืนยันตัวตนด้วยใบหน้า + GPS</div>
-      </div>
-      <span class="card-arrow">›</span>
-    </a>
+    <main class="w-full flex-1 relative z-10 flex flex-col justify-center">
 
-    <a href="scan-shift.html" class="btn-menu btn-shift">
-      <div class="card-icon" style="background: linear-gradient(135deg, #eab308, #ca8a04); box-shadow: 0 4px 15px rgba(234, 179, 8, 0.4);">🌙</div>
-      <div class="card-text">
-        <div class="card-title">สแกนเข้าเวร</div>
-        <div class="card-desc">ยืนยันตัวตนด้วยใบหน้า + GPS</div>
-      </div>
-      <span class="card-arrow">›</span>
-    </a>
+        <!-- VIEW 1: HOME MENU -->
+        <div id="view-home" class="w-full max-w-xl mx-auto flex flex-col gap-3.5 animate-fade-in">
+            
+            <!-- Register User -->
+            <a href="register.html" class="glass-card flex items-center justify-between p-4 sm:p-4.5 rounded-xl cursor-pointer group text-left">
+                <div class="flex items-center gap-3.5">
+                    <div class="w-11 h-11 bg-sky-500/10 text-sky-600 rounded-xl flex items-center justify-center text-xl group-hover:scale-105 transition-transform">👤</div>
+                    <div>
+                        <div class="font-semibold text-slate-800 text-sm sm:text-base">ลงทะเบียนผู้ใช้งานใหม่</div>
+                        <div class="text-xs text-slate-500">บันทึกข้อมูลใบหน้าใหม่ 3 มุม (AI Training)</div>
+                    </div>
+                </div>
+                <span class="text-slate-400 text-sm group-hover:translate-x-1 transition-transform">›</span>
+            </a>
 
-    <a href="history.html" class="btn-menu" style="border-color: rgba(59, 130, 246, 0.5);">
-      <div class="card-icon" style="background: linear-gradient(135deg, #3b82f6, #2563eb); box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);">📋</div>
-      <div class="card-text">
-        <div class="card-title">ประวัติการเข้างาน</div>
-        <div class="card-desc">ตรวจสอบข้อมูลการเข้างาน/เข้าเวร</div>
-      </div>
-      <span class="card-arrow">›</span>
-    </a>
-    
-    <a href="config.html" class="btn-menu btn-config">
-      <div class="card-icon">⚙️</div>
-      <div class="card-text">
-        <div class="card-title">ตั้งค่าระบบ</div>
-        <div class="card-desc">จัดการ GPS และ API (Admin)</div>
-      </div>
-      <span class="card-arrow">›</span>
-    </a>
-  </div>
+            <!-- Scan Attendance (Work) -->
+            <a href="scan.html" class="glass-card flex items-center justify-between p-4 sm:p-4.5 rounded-xl border-emerald-500/30 hover:border-emerald-500 cursor-pointer group text-left">
+                <div class="flex items-center gap-3.5">
+                    <div class="w-11 h-11 bg-emerald-500/10 text-emerald-600 rounded-xl flex items-center justify-center text-xl group-hover:scale-105 transition-transform">📸</div>
+                    <div>
+                        <div class="font-semibold text-emerald-700 text-sm sm:text-base">สแกนเข้างาน</div>
+                        <div class="text-xs text-slate-500">ยืนยันตัวตนด้วยใบหน้า + GPS</div>
+                    </div>
+                </div>
+                <span class="text-slate-400 text-sm group-hover:translate-x-1 transition-transform">›</span>
+            </a>
 
-  <footer class="app-footer">
-    <div class="footer-container">
-      <p class="developer-credit">
-        Developed with ❤️ by <span>MEC Chumphon Admin</span>
-      </p>
-      <p class="system-version">
-        System Version <span class="version-badge">v2.2.1</span> | © 2026 All Rights Reserved
-      </p>
-    </div>
-  </footer>
+            <!-- Scan Shift -->
+            <a href="scan-shift.html" class="glass-card flex items-center justify-between p-4 sm:p-4.5 rounded-xl border-amber-500/30 hover:border-amber-500 cursor-pointer group text-left">
+                <div class="flex items-center gap-3.5">
+                    <div class="w-11 h-11 bg-amber-500/10 text-amber-600 rounded-xl flex items-center justify-center text-xl group-hover:scale-105 transition-transform">🌙</div>
+                    <div>
+                        <div class="font-semibold text-amber-700 text-sm sm:text-base">สแกนเข้าเวร</div>
+                        <div class="text-xs text-slate-500">บันทึกเข้าเวรปฏิบัติงานนอกเวลา</div>
+                    </div>
+                </div>
+                <span class="text-slate-400 text-sm group-hover:translate-x-1 transition-transform">›</span>
+            </a>
 
-  <script>
-    // ตรวจสอบและซ่อนป้ายเตือนเมื่อโหลดหน้าเว็บเรียบร้อย
-    document.addEventListener('DOMContentLoaded', () => {
-      const currentApiUrl = localStorage.getItem('gasApiUrl') || localStorage.getItem('API_URL');
-      const warningEl = document.getElementById('apiWarning');
+            <!-- History Log -->
+            <a href="history.html" class="glass-card flex items-center justify-between p-4 sm:p-4.5 rounded-xl cursor-pointer group text-left">
+                <div class="flex items-center gap-3.5">
+                    <div class="w-11 h-11 bg-indigo-500/10 text-indigo-600 rounded-xl flex items-center justify-center text-xl group-hover:scale-105 transition-transform">📋</div>
+                    <div>
+                        <div class="font-semibold text-slate-800 text-sm sm:text-base">ประวัติการเข้างาน</div>
+                        <div class="text-xs text-slate-500">ตรวจสอบข้อมูลการลงเวลาย้อนหลัง & Export Excel</div>
+                    </div>
+                </div>
+                <span class="text-slate-400 text-sm group-hover:translate-x-1 transition-transform">›</span>
+            </a>
 
-      if (!currentApiUrl || currentApiUrl.includes("YOUR_WEB_APP_URL_HERE")) {
-        if (warningEl) warningEl.style.display = 'block';
-      } else {
-        if (warningEl) warningEl.style.display = 'none';
-      }
-    });
-  </script>
+            <!-- Settings -->
+            <a href="config.html" class="glass-card flex items-center justify-between p-4 sm:p-4.5 rounded-xl cursor-pointer group text-left">
+                <div class="flex items-center gap-3.5">
+                    <div class="w-11 h-11 bg-slate-500/10 text-slate-700 rounded-xl flex items-center justify-center text-xl group-hover:scale-105 transition-transform">⚙️</div>
+                    <div>
+                        <div class="font-semibold text-slate-800 text-sm sm:text-base">ตั้งค่าระบบ</div>
+                        <div class="text-xs text-slate-500">จัดการจุด GPS, รัศมี และ Web App URL (Admin)</div>
+                    </div>
+                </div>
+                <span class="text-slate-400 text-sm group-hover:translate-x-1 transition-transform">›</span>
+            </a>
 
+        </div>
+    </main>
+
+    <footer class="mt-auto pt-6 pb-3 text-xs text-slate-400 text-center relative z-10">
+        Developed with ❤️ by MEC Chumphon Admin<br>
+        System Version <span class="text-sky-600 font-medium">v2.2.1</span> | © 2026 All Rights Reserved
+    </footer>
+
+    <script>
+        // Live Clock
+        setInterval(() => {
+            const now = new Date();
+            document.getElementById('live-time').innerText = `${now.toLocaleTimeString('th-TH')} น.`;
+        }, 1000);
+
+        let currentLat = 10.4932;
+        let currentLng = 99.1801;
+        let systemConfig = { locations: [{ name: 'โรงพยาบาลชุมพรเขตรอุดมศักดิ์', lat: 10.4932, lng: 99.1801, radius: 500 }] };
+        
+        window.addEventListener('load', async () => {
+            fetchSystemConfigAndGPS();
+        });
+
+        async function fetchSystemConfigAndGPS() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    pos => {
+                        currentLat = pos.coords.latitude;
+                        currentLng = pos.coords.longitude;
+                        evaluateGpsStatus();
+                    },
+                    err => {
+                        console.warn("GPS Position error:", err);
+                        document.getElementById('gps-text-summary').innerText = 'ไม่สามารถดึง GPS ได้ (ใช้พิกัดสำรอง)';
+                    },
+                    { enableHighAccuracy: true, timeout: 10000 }
+                );
+            }
+
+            try {
+                const res = await fetch(window.GAS_API_URL + '?action=getConfig');
+                const data = await res.json();
+                if (data && data.locations) {
+                    systemConfig = data;
+                }
+            } catch (e) {
+                console.warn("Config fetch offline fallback:", e);
+            }
+        }
+
+        function evaluateGpsStatus() {
+            let inside = false;
+            let closestName = "รพ.ชุมพร";
+            let minDistance = Infinity;
+
+            if (!systemConfig.locations || systemConfig.locations.length === 0) {
+                inside = true;
+            } else {
+                systemConfig.locations.forEach(loc => {
+                    const dist = calculateDistance(currentLat, currentLng, loc.lat, loc.lng);
+                    let rad = loc.radius || 500;
+                    if (dist < minDistance) {
+                        minDistance = dist;
+                        closestName = loc.name;
+                    }
+                    if (dist <= rad) inside = true;
+                });
+            }
+
+            const badge = document.getElementById('gps-status-badge');
+            const txt = document.getElementById('gps-text-summary');
+            if (inside) {
+                badge.className = "text-emerald-700 font-bold text-xs sm:text-sm flex items-center gap-1.5 mt-0.5";
+                txt.innerHTML = `<span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span> ในรัศมี (${closestName})`;
+            } else {
+                badge.className = "text-amber-700 font-bold text-xs sm:text-sm flex items-center gap-1.5 mt-0.5";
+                txt.innerHTML = `นอกพื้นที่ (${Math.round(minDistance)}ม.)`;
+            }
+        }
+
+        function calculateDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371e3;
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) * Math.sin(dLon/2)**2;
+            return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        }
+    </script>
 </body>
 </html>
