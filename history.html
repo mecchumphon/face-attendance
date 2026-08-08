@@ -13,6 +13,13 @@
     <!-- SheetJS for Excel export -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     
+    <!-- PWA Settings -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0284c7">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="MEC Attendance">
+    
     <script src="js/api-config.js?v=2.1.0"></script>
     
     <style>
@@ -42,7 +49,7 @@
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
     </style>
 </head>
-<body class="relative min-h-full flex flex-col items-center justify-center p-2 sm:p-4">
+<body class="relative min-h-full flex flex-col items-center justify-start p-2 sm:p-6">
     <div class="bg-glow"></div>
     <div class="w-full max-w-5xl mx-auto flex flex-col items-center z-10 relative">
         <div class="glass-card w-full p-4 sm:p-6 rounded-2xl shadow-xl bg-white flex flex-col">
@@ -116,7 +123,7 @@
 
             <!-- Table Container (Scrollable) -->
             <div class="w-full overflow-hidden border border-slate-200 rounded-2xl bg-white shadow-inner flex flex-col mb-4">
-                <div class="overflow-x-auto max-h-[380px] sm:max-h-[420px] overflow-y-auto">
+                <div class="overflow-x-auto max-h-[420px] overflow-y-auto">
                     <table class="w-full text-left border-collapse min-w-[650px]">
                         <thead class="sticky top-0 bg-slate-100 z-10 shadow-sm border-b border-slate-200">
                             <tr class="text-xs sm:text-sm text-slate-700 font-bold uppercase tracking-wider">
@@ -354,6 +361,15 @@
             XLSX.utils.book_append_sheet(wb, ws, "AttendanceLogs");
             XLSX.writeFile(wb, `Attendance_MEC_${new Date().toISOString().slice(0,10)}.xlsx`);
         }
+    </script>
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('sw.js')
+            .then(reg => console.log('Service Worker registered!', reg))
+            .catch(err => console.log('Service Worker registration failed:', err));
+        });
+      }
     </script>
 </body>
 </html>
