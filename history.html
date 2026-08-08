@@ -45,15 +45,15 @@
 </head>
 <body class="relative min-h-full flex flex-col items-center justify-center p-4">
     <div class="bg-glow"></div>
-    <div class="w-full max-w-4xl mx-auto flex flex-col items-center z-10 relative">
-        <div class="glass-card w-full p-4 sm:p-6 rounded-2xl shadow-xl bg-white flex flex-col h-[90vh]">
+    <div class="w-full max-w-5xl mx-auto flex flex-col items-center z-10 relative">
+        <div class="glass-card w-full p-4 sm:p-6 rounded-2xl shadow-xl bg-white flex flex-col h-[92vh]">
             
             <!-- Header -->
             <div class="flex items-center justify-between mb-4 shrink-0">
                 <a href="index.html" class="text-sm sm:text-base bg-slate-100 hover:bg-slate-200 px-4 py-2 rounded-xl text-slate-700 transition-colors flex items-center gap-1.5 font-bold">
                     <span class="text-lg leading-none">←</span> กลับเมนูหลัก
                 </a>
-                <h2 class="text-lg sm:text-2xl font-bold text-slate-800 flex items-center gap-2">📋 ประวัติการเข้างาน</h2>
+                <h2 class="text-lg sm:text-2xl font-bold text-slate-800 flex items-center gap-2">📋 ประวัติการเข้างาน / เข้าเวร</h2>
                 <div class="w-[95px]"></div> <!-- Spacer -->
             </div>
 
@@ -116,7 +116,7 @@
             </div>
 
             <!-- Table Container (Scrollable) -->
-            <div class="flex-1 overflow-hidden border border-slate-200 rounded-2xl bg-white shadow-inner flex flex-col relative">
+            <div class="flex-1 overflow-hidden border border-slate-200 rounded-2xl bg-white shadow-inner flex flex-col relative min-h-[350px]">
                 <div class="overflow-y-auto overflow-x-auto flex-1 custom-scrollbar">
                     <table class="w-full text-left border-collapse min-w-[700px]">
                         <thead class="sticky top-0 bg-slate-100 z-10 shadow-sm border-b border-slate-200">
@@ -145,15 +145,15 @@
                         <option value="50">50</option>
                         <option value="100">100</option>
                     </select>
-                    <span>รายการต่อหน้า</span>
+                    <span>รายการ / หน้า</span>
                 </div>
 
                 <div class="flex items-center gap-1.5 font-bold">
-                    <button id="btn-first" onclick="goToPage(1)" class="px-3.5 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-100 text-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors font-bold">หน้าแรก</button>
-                    <button id="btn-prev" onclick="prevPage()" class="px-3.5 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-100 text-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors font-bold">‹ ก่อนหน้า</button>
-                    <span id="page-indicator" class="px-3.5 py-2 text-slate-800 font-extrabold">หน้า 1 จาก 1</span>
-                    <button id="btn-next" onclick="nextPage()" class="px-3.5 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-100 text-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors font-bold">ถัดไป ›</button>
-                    <button id="btn-last" onclick="goToPage('last')" class="px-3.5 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-100 text-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors font-bold">หน้าสุดท้าย</button>
+                    <button id="btn-first" onclick="goToPage(1)" class="px-3 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-100 text-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors font-bold">««</button>
+                    <button id="btn-prev" onclick="prevPage()" class="px-3 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-100 text-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors font-bold">‹ ก่อนหน้า</button>
+                    <span id="page-indicator" class="px-3.5 py-1.5 text-slate-800 font-extrabold">หน้า 1 จาก 1</span>
+                    <button id="btn-next" onclick="nextPage()" class="px-3 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-100 text-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors font-bold">ถัดไป ›</button>
+                    <button id="btn-last" onclick="goToPage('last')" class="px-3 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-100 text-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors font-bold">»»</button>
                 </div>
             </div>
 
